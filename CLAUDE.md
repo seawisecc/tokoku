@@ -13,6 +13,10 @@ tampilan, buka file itu dulu.
 Terakhir dikerjakan **10 Agustus 2026**. Semua yang di bawah ini sudah dibangun,
 diuji lewat browser, dan migrasinya sudah diterapkan ke Supabase.
 
+**Sudah di-deploy ke Vercel** lewat GitHub (`seawisecc/tokoku`, commit pertama
+10 Agu). Ada satu laporan terbuka soal deploy itu — baca bagian bertanda ⚠
+sebelum mengerjakan apa pun.
+
 **Sudah jalan:**
 - Auth split-panel dengan animasi clip-path · pendaftaran toko mandiri ·
   undangan anggota tim (terima lewat `/undangan/[token]`)
@@ -52,6 +56,10 @@ diuji lewat browser, dan migrasinya sudah diterapkan ke Supabase.
   laporan, tim. Empat masalah ditemukan dan diperbaiki; lihat "Mobile" di bawah.
 
 **Belum dikerjakan — urutan yang disarankan:**
+0. **Deploy dilaporkan "tidak responsif"** (10 Agu, belum direproduksi) — ini
+   yang pertama dikerjakan. Lihat bagian bertanda ⚠ di bawah; di sana sudah
+   tercatat apa yang SUDAH dicoret dari daftar tersangka dan apa yang perlu
+   ditanyakan lebih dulu.
 1. Email undangan: KODENYA SUDAH JADI, tinggal isi `RESEND_API_KEY` +
    `EMAIL_FROM` di `.env.local`. Butuh akun Resend (gratis 3.000 email/bulan)
    dan domain terverifikasi. Tanpa kunci, aplikasi tetap jalan penuh — lihat
@@ -68,6 +76,46 @@ lingkup yang masih terhutang.
 
 **Mobile:** seluruh aplikasi sudah ditelusuri di 390px, termasuk `/admin/*`.
 Tabel Super Admin tetap tabel geser di ponsel — disengaja, itu alat desktop.
+
+## ⚠ BELUM SELESAI: deploy dilaporkan "tidak responsif"
+
+**Dilaporkan pemilik project 10 Agu setelah deploy pertama ke Vercel. BELUM
+direproduksi, belum didiagnosis.** Ini catatan supaya sesi berikutnya tidak
+mulai dari nol — bukan kesimpulan.
+
+**Yang belum diketahui, dan menentukan arah:** "tidak responsif" bisa berarti
+tata letaknya tidak menyesuaikan layar, atau situsnya lambat/menggantung.
+Tanyakan dulu sebelum mengejar salah satunya.
+
+**Sudah dicoret dari daftar tersangka:** `viewport` di `app/layout.tsx` sudah
+benar (`width: device-width, initialScale: 1`). Tanpa itu, browser ponsel
+merender pada lebar 980px dan seluruh aplikasi tampak seperti desktop yang
+dikecilkan — gejala yang persis cocok, tapi bukan ini penyebabnya.
+
+**Celah nyata yang paling mungkin jadi sebabnya:** SELURUH pengujian responsif
+di project ini dilakukan lewat **iframe same-origin**, tidak pernah di perangkat
+sungguhan. Alat resize browser melaporkan "berhasil" tapi `innerWidth` tidak
+berubah — sudah beberapa sesi, lihat bagian "Mobile". Iframe punya viewport
+sendiri sehingga media query benar-benar dievaluasi pada lebar yang diminta, dan
+itu memang cukup untuk membuktikan tata letak. Tapi iframe TIDAK menguji:
+
+- tinggi `100vh` versus bilah alamat browser ponsel yang muncul-hilang
+- `env(safe-area-inset-*)` di iPhone bernotch
+- sentuhan sungguhan, kecepatan gulir, momentum
+- device pixel ratio dan penyesuaian ukuran font otomatis
+- jaringan sungguhan — dan ini yang menghubungkan ke pembacaan "lambat"
+
+Jadi masalah yang hanya muncul di perangkat sungguhan memang bisa lolos dari
+seluruh pengujian yang sudah dilakukan. Jangan berasumsi tata letaknya sudah
+benar hanya karena tercatat "sudah diuji di 390px".
+
+**Yang dibutuhkan untuk mulai:** URL deploy-nya, perangkat & browser yang
+dipakai mencoba, dan tangkapan layarnya kalau ada.
+
+**Langkah pertama yang disarankan:** buka URL produksinya langsung di browser
+(bukan iframe), bandingkan dengan `npm start` lokal — bukan `npm run dev`.
+Perbedaan antara build produksi dan dev adalah tempat pertama yang masuk akal
+dilihat, dan `npm start` adalah satu-satunya cara mereproduksinya secara lokal.
 
 ## Layar lebar
 
