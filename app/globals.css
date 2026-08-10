@@ -1,0 +1,1194 @@
+@import 'tailwindcss';
+
+/* ============================================================
+   TokoKu — tema "Lime Crush"
+   Nilai diambil persis dari REFERENCE-wireframe.html.
+   Didaftarkan lewat @theme agar tersedia sebagai utility Tailwind
+   (bg-forest, text-ink-soft, rounded-md, …) sekaligus sebagai
+   CSS variable biasa untuk kebutuhan di luar Tailwind.
+   ============================================================ */
+@theme {
+  --color-lime: #f9f586;
+  --color-mint: #a1ffce;
+  --color-forest: #0e2419;
+  --color-forest-soft: #173c2b;
+  --color-forest-softer: #20493a;
+
+  --color-paper: #fafbf6;
+  --color-card: #ffffff;
+  --color-ink: #17231c;
+  --color-ink-soft: #5b6b60;
+  --color-ink-faint: #8b9a90;
+  --color-line: #e4eae2;
+
+  --color-coral: #e8543e;
+  --color-coral-soft: #ffedea;
+  --color-amber-soft: #fff6d6;
+  --color-amber-ink: #8a6a00;
+  --color-blue-soft: #eaf1ff;
+  --color-blue-ink: #2c5fc4;
+  --color-success: #146b3a;
+  --color-success-soft: #e3fbec;
+
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 10px;
+
+  --shadow-sm: 0 1px 2px rgba(14, 36, 25, 0.06);
+  --shadow-md: 0 8px 24px rgba(14, 36, 25, 0.08);
+
+  --font-display: var(--font-sora), sans-serif;
+  --font-sans: var(--font-jakarta), sans-serif;
+  --font-mono: var(--font-mono-jb), monospace;
+}
+
+:root {
+  --grad: linear-gradient(135deg, var(--color-lime) 0%, var(--color-mint) 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background: var(--color-mint);
+  color: var(--color-forest);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-forest-softer);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Gradien tanda tangan TokoKu — dipakai brand mark, tombol utama, hero. */
+.bg-grad {
+  background: var(--grad);
+}
+
+/* ============================================================
+   Lapisan komponen — dipindah dari REFERENCE-wireframe.html.
+   Ditulis sebagai CSS biasa (bukan utility Tailwind) supaya tetap
+   sedekat mungkin dengan wireframe dan mudah dibandingkan ulang.
+   ============================================================ */
+
+/* ---------- shell ---------- */
+/* Kolom gelap membentang penuh dari tepi atas; topbar hanya di atas konten.
+   Lihat catatan di components/layout/AppShell.tsx. */
+.app { min-height: 100vh; display: flex; }
+.main-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+
+.topbar {
+  height: 64px; flex: 0 0 auto; display: flex; align-items: center; gap: 16px;
+  padding: 0 16px; background: var(--color-card); border-bottom: 1px solid var(--color-line);
+  position: sticky; top: 0; z-index: 40;
+}
+.topbar-brand { display: flex; }
+.brand { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
+.brand-mark {
+  width: 34px; height: 34px; border-radius: 10px; background: var(--grad);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 800; color: var(--color-forest);
+  font-size: 16px; box-shadow: var(--shadow-sm); flex: 0 0 auto;
+}
+.brand-name { font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: -.01em; }
+.brand-name small {
+  display: block; font-family: var(--font-sans); font-weight: 500;
+  color: var(--color-ink-faint); font-size: 10.5px; letter-spacing: .03em;
+  text-transform: uppercase; margin-top: 1px;
+}
+.topbar-right { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; margin-left: auto; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--color-line);
+  background: var(--color-card); display: flex; align-items: center; justify-content: center;
+  color: var(--color-ink-soft); cursor: pointer;
+}
+.icon-btn:hover { background: var(--color-paper); color: var(--color-ink); }
+.avatar {
+  width: 36px; height: 36px; border-radius: 10px; background: var(--color-forest);
+  color: var(--color-mint); display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12.5px; font-family: var(--font-display);
+}
+
+/* Kolom gelap. Gradasi tipis forest -> forest-soft supaya tidak terbaca
+   sebagai bidang hitam datar di sebelah konten yang terang. */
+.sidebar {
+  display: none; flex: 0 0 auto; flex-direction: column;
+  background: linear-gradient(180deg, var(--color-forest) 0%, #122E20 100%);
+  color: #D8F0E4;
+  position: sticky; top: 0; height: 100vh;
+}
+.sidebar-brand {
+  display: flex; align-items: center; gap: 10px;
+  height: 64px; flex: 0 0 auto; padding: 0 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, .07);
+}
+.sidebar-brand-text {
+  font-family: var(--font-display); font-weight: 700; font-size: 16px;
+  letter-spacing: -.01em; color: #FFFFFF; white-space: nowrap; overflow: hidden;
+}
+.sidebar-brand-text small {
+  display: block; font-family: var(--font-sans); font-weight: 500;
+  color: #7FA792; font-size: 10.5px; letter-spacing: .03em;
+  text-transform: uppercase; margin-top: 1px; text-overflow: ellipsis; overflow: hidden;
+}
+.sidebar-nav { flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; padding: 14px 10px; overflow-y: auto; }
+.sidebar-foot {
+  flex: 0 0 auto; padding: 14px 16px; border-top: 1px solid rgba(255, 255, 255, .07);
+  font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #6E9382;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 12px;
+  color: #D8F0E4; cursor: pointer; font-size: 13.5px; font-weight: 600;
+  border: none; background: transparent; width: 100%; text-align: left;
+  transition: background .15s, color .15s;
+}
+.nav-item svg { color: #93B8A5; }
+.nav-item:hover { background: rgba(255, 255, 255, .06); color: #FFFFFF; }
+.nav-item:hover svg { color: var(--color-mint); }
+.nav-item.active { background: var(--grad); color: var(--color-forest); }
+.nav-item.active svg { color: var(--color-forest); }
+.nav-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.content { flex: 1 1 auto; min-width: 0; padding: 20px 16px 96px; overflow-x: hidden; }
+.page-eyebrow {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--color-ink-faint); margin: 0 0 4px;
+}
+.page-title { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
+.page-sub { color: var(--color-ink-soft); font-size: 13px; margin-top: 4px; }
+.page-head { margin-bottom: 18px; }
+
+.bottomnav {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--color-card);
+  border-top: 1px solid var(--color-line); display: flex; justify-content: space-around;
+  align-items: center; padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+}
+.bnav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px; background: none;
+  border: none; color: var(--color-ink-faint); font-size: 10.5px; font-weight: 600;
+  padding: 4px 2px; cursor: pointer; flex: 1 1 0; min-width: 0;
+  font-family: inherit;
+}
+/* Label menu tidak boleh melebar melewati slotnya. Sebelum ada batas ini,
+   menu terakhir terpotong tepi kanan layar. */
+.bnav-item span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bnav-item.active { color: var(--color-forest); }
+.bnav-item .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--grad); margin-bottom: -2px; opacity: 0; }
+.bnav-item.active .dot { opacity: 1; }
+.bnav-item.fab svg { color: var(--color-forest); }
+.fab-circle {
+  width: 44px; height: 44px; border-radius: 14px; background: var(--grad);
+  display: flex; align-items: center; justify-content: center; margin-top: -22px;
+  box-shadow: var(--shadow-md); border: 4px solid var(--color-card);
+}
+
+/* Lembar "Lainnya" — menu yang tidak kebagian slot di bottom nav.
+   Lihat splitBottomNav() di lib/navigation.ts. */
+.nav-sheet { padding: 8px 8px calc(14px + env(safe-area-inset-bottom)); }
+.nav-sheet-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 8px 10px 14px; font-weight: 700; font-size: 14.5px;
+}
+.nav-sheet-item {
+  display: flex; align-items: center; gap: 12px; padding: 13px 14px;
+  border-radius: 12px; color: var(--color-ink); font-size: 14px; font-weight: 600;
+}
+.nav-sheet-item span { flex: 1 1 auto; }
+.nav-sheet-item svg:last-child { color: var(--color-ink-faint); }
+.nav-sheet-item:hover { background: var(--color-paper); }
+.nav-sheet-item.active { background: var(--grad); color: var(--color-forest); }
+.nav-sheet-item.active svg { color: var(--color-forest); }
+
+/* ---------- kartu & grid ---------- */
+.grid { display: grid; gap: 14px; }
+.grid-stats { grid-template-columns: repeat(2, 1fr); }
+.card { background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-md); padding: 18px; }
+.hero {
+  position: relative; overflow: hidden; border-radius: var(--radius-lg); padding: 26px 22px;
+  color: var(--color-forest);
+  /* Gradient brand HARUS jadi lapisan terakhir di dalam background-image.
+     Menulis `background: var(--grad)` lalu `background-image: …` akan
+     menimpanya habis — dan gradient tanda tangan TokoKu hilang tanpa jejak. */
+  background-image:
+    radial-gradient(120px 120px at 92% -10%, rgba(255,255,255,.55), transparent 60%),
+    radial-gradient(160px 160px at 105% 90%, rgba(255,255,255,.35), transparent 60%),
+    radial-gradient(circle, rgba(14,36,25,.07) 1px, transparent 1.4px),
+    var(--grad);
+  background-size: auto, auto, 14px 14px, auto;
+  margin-bottom: 14px;
+}
+.hero-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .75; }
+.hero-num { font-size: clamp(28px, 6vw, 40px); font-weight: 800; margin: 6px 0 14px; letter-spacing: -.02em; font-family: var(--font-display); }
+.hero-meta { display: flex; flex-wrap: wrap; gap: 18px; font-size: 12.5px; font-weight: 600; }
+.hero-meta b { font-family: var(--font-display); font-size: 14px; display: block; }
+.hero-meta span { opacity: .7; font-weight: 500; }
+
+.stat { position: relative; }
+.stat-icon { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+.stat-val { font-size: 22px; font-weight: 700; letter-spacing: -.01em; font-family: var(--font-display); }
+.stat-label { font-size: 12px; color: var(--color-ink-soft); margin-top: 2px; }
+
+.section-title { font-size: 14.5px; font-weight: 700; margin: 22px 0 10px; display: flex; align-items: center; justify-content: space-between; }
+.section-title .link { font-size: 12px; font-weight: 600; color: var(--color-ink-soft); display: inline-flex; align-items: center; gap: 4px; }
+
+/* ---------- badge ---------- */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+.badge-starter { background: #EEF1EC; color: #4B5A50; }
+.badge-growth { background: var(--color-success-soft); color: var(--color-success); }
+.badge-enterprise { background: var(--color-forest); color: var(--color-mint); }
+.badge-active { background: var(--color-success-soft); color: var(--color-success); }
+.badge-trial { background: var(--color-amber-soft); color: var(--color-amber-ink); }
+.badge-inactive { background: #F1EDE9; color: #8A7F76; }
+.badge-low { background: var(--color-coral-soft); color: var(--color-coral); }
+.badge-ok { background: #EEF1EC; color: #4B5A50; }
+
+.cat-chip { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; font-family: var(--font-display); flex: 0 0 auto; }
+.cat-sembako { background: #FFF6C9; color: #7A6A00; }
+.cat-minuman { background: var(--color-success-soft); color: var(--color-success); }
+.cat-snack { background: var(--color-coral-soft); color: var(--color-coral); }
+.cat-kebutuhan { background: var(--color-blue-soft); color: var(--color-blue-ink); }
+.cat-default { background: #EEF1EC; color: #4B5A50; }
+
+/* ---------- tombol ---------- */
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; border: none; border-radius: 11px;
+  padding: 9px 15px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  font-family: var(--font-sans);
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn-primary { background: var(--grad); color: var(--color-forest); }
+.btn-primary:hover:not(:disabled) { filter: brightness(.97); }
+.btn-dark { background: var(--color-forest); color: var(--color-mint); }
+.btn-ghost { background: var(--color-card); color: var(--color-ink); border: 1px solid var(--color-line); }
+.btn-ghost:hover:not(:disabled) { background: var(--color-paper); }
+.btn-block { width: 100%; justify-content: center; }
+.btn-sm { padding: 7px 11px; font-size: 12px; border-radius: 9px; }
+
+/* ---------- tabel ---------- */
+.table-card { background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-md); overflow: hidden; }
+.table-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 14px 16px; border-bottom: 1px solid var(--color-line); }
+/* Tabel lebih lebar dari layar ponsel, dan tombol aksi baris ada di kolom
+   paling kanan. Scrollbar overlay macOS/iOS tidak terlihat sampai disentuh,
+   jadi tabel tampak seperti berhenti di tepi kartu — tombol Ubah/Hapus tidak
+   pernah ditemukan. Bayangan tepi ini muncul selama masih ada isi ke samping
+   dan menghilang begitu mentok, tanpa JavaScript.
+   `local` membuat lapisan penutup ikut bergeser bersama isi; `scroll` membuat
+   bayangannya diam menempel di tepi. */
+.table-scroll {
+  overflow-x: auto;
+  background:
+    linear-gradient(to right, var(--color-card) 40%, rgba(255, 255, 255, 0)) left center,
+    linear-gradient(to left, var(--color-card) 40%, rgba(255, 255, 255, 0)) right center,
+    radial-gradient(farthest-side at 0 50%, rgba(14, 36, 25, .3), rgba(14, 36, 25, 0)) left center,
+    radial-gradient(farthest-side at 100% 50%, rgba(14, 36, 25, .3), rgba(14, 36, 25, 0)) right center;
+  background-repeat: no-repeat;
+  background-size: 34px 100%, 34px 100%, 22px 100%, 22px 100%;
+  background-attachment: local, local, scroll, scroll;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--color-ink-faint); padding: 10px 16px; border-bottom: 1px solid var(--color-line); font-weight: 700; white-space: nowrap; }
+tbody td { padding: 12px 16px; border-bottom: 1px solid var(--color-line); vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: var(--color-paper); }
+.cell-name { font-weight: 700; }
+.cell-sub { color: var(--color-ink-faint); font-size: 11.5px; margin-top: 1px; }
+.row-flex { display: flex; align-items: center; gap: 10px; }
+.mono { font-family: var(--font-mono); }
+
+/* Daftar transaksi di layar sempit.
+   Sebagai tabel, empat kolomnya butuh ~360px sementara layarnya 358px: nomor
+   transaksi pecah tiga baris dan kolom Total — satu-satunya angka yang dicari
+   orang saat membuka daftar ini — terdorong ke luar layar. Di bawah 640px
+   barisnya berhenti jadi baris tabel dan menjadi tumpukan:
+
+     TRX-20260807-K3-0008        Rp 118.000
+     19.22
+     [Tunai] [Offline]         Rina Kartika
+
+   Tabelnya sendiri dipertahankan (bukan diganti div) supaya header kolom dan
+   semantik tabel tetap utuh di layar lebar. */
+@media (max-width: 639px) {
+  .trx-table thead { display: none; }
+  .trx-table,
+  .trx-table tbody,
+  .trx-table tr,
+  .trx-table td {
+    display: block;
+  }
+  .trx-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .trx-table tr:last-child { border-bottom: none; }
+  .trx-table td { padding: 0; border-bottom: none; }
+  .trx-table .trx-code { grid-column: 1; grid-row: 1; min-width: 0; }
+  .trx-table .trx-total { grid-column: 2; grid-row: 1; }
+  .trx-table .trx-method { grid-column: 1; grid-row: 2; margin-top: 8px; }
+  .trx-table .trx-cashier {
+    grid-column: 2; grid-row: 2; margin-top: 8px;
+    text-align: right; font-size: 11.5px; color: var(--color-ink-faint);
+  }
+}
+
+/* ---------- form ---------- */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 700; color: var(--color-ink-soft); margin-bottom: 6px; }
+.field input, .field select {
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--color-line);
+  background: var(--color-paper); font-size: 13.5px; color: var(--color-ink); font-family: inherit;
+}
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* Tiga kolom di layar 390px menyisakan ~68px isi per kartu, sementara
+   "Rp 118.000" pada 17px butuh ~95px — angkanya pecah dua baris tepat di layar
+   tutup shift, saat kasir sedang mencocokkan uang di laci. Mengecilkan font
+   tidak menolong: nominal jutaan tetap tidak muat. Jadi barisnya dibiarkan
+   membungkus jadi dua kolom, dan angkanya tetap terbaca utuh. */
+.mini-stat-row { display: flex; gap: 10px; }
+.mini-stat { flex: 1; background: var(--color-paper); border-radius: 12px; padding: 12px; text-align: center; }
+.mini-stat b { display: block; font-family: var(--font-display); font-size: 17px; }
+/* Dibatasi ke layar sempit: basis 40% × 3 kartu = 120%, jadi tanpa batas ini
+   desktop pun ikut membungkus padahal di sana ketiganya muat sebaris. */
+@media (max-width: 639px) {
+  .mini-stat-row { flex-wrap: wrap; }
+  .mini-stat { flex: 1 1 40%; }
+}
+.mini-stat span { font-size: 10.5px; color: var(--color-ink-soft); }
+
+.empty-note {
+  display: flex; gap: 10px; background: var(--color-coral-soft); color: var(--color-coral);
+  border-radius: 12px; padding: 12px 14px; font-size: 12.5px; font-weight: 600; align-items: flex-start;
+}
+.placeholder-card { border: 1px dashed var(--color-line); border-radius: var(--radius-md); padding: 40px 20px; text-align: center; color: var(--color-ink-faint); }
+
+.team-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-line); }
+.team-row:last-child { border-bottom: none; }
+.team-avatar { width: 38px; height: 38px; border-radius: 11px; background: var(--color-paper); border: 1px solid var(--color-line); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-weight: 700; font-size: 12px; flex: 0 0 auto; }
+.team-info { flex: 1; min-width: 0; }
+.team-info b { font-size: 13px; display: block; }
+.team-info span { font-size: 11.5px; color: var(--color-ink-faint); }
+.team-row .row-actions { margin-left: 10px; }
+
+/* Di layar sempit badge peran + dua tombol aksi menyisakan ~135px untuk nama
+   dan daftar izin, sehingga "Kasir, Produk & Stok, Laporan" pecah satu kata
+   per baris. Turunkan badge dan tombolnya ke baris kedua, sejajar di bawah
+   teks (38px avatar + 12px gap). */
+@media (max-width: 639px) {
+  .team-row { flex-wrap: wrap; row-gap: 8px; }
+  /* Persis mengisi sisa baris pertama (lebar penuh dikurangi avatar + gap),
+     sehingga apa pun setelahnya dijamin turun — bukan bergantung tebakan. */
+  .team-info { flex: 1 1 calc(100% - 50px); }
+  .team-row .badge { margin-left: 50px; }
+  .team-row .row-actions { margin-left: auto; }
+}
+
+/* ---------- responsif ---------- */
+@media (min-width: 640px) {
+  .content { padding-bottom: 24px; }
+  .bottomnav { display: none; }
+  .sidebar { display: flex; width: 76px; }
+  .sidebar-brand { justify-content: center; padding: 0; }
+  .sidebar-brand-text, .sidebar-foot { display: none; }
+  .nav-label { display: none; }
+  .topbar-brand { display: none; }          /* brand sudah ada di kolom gelap */
+  .grid-stats { grid-template-columns: repeat(4, 1fr); }
+}
+@media (min-width: 1024px) {
+  .sidebar { width: 236px; }
+  .sidebar-brand { justify-content: flex-start; padding: 0 14px; }
+  .sidebar-brand-text, .sidebar-foot { display: block; }
+  .nav-label { display: inline; }
+  .content { padding: 28px 32px 32px; }
+}
+
+/* ---------- POS ---------- */
+.pos-layout { display: flex; flex-direction: column; gap: 14px; }
+.cat-pills { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.cat-pills button {
+  flex: 0 0 auto; border: 1px solid var(--color-line); background: var(--color-card);
+  padding: 8px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+  color: var(--color-ink-soft); cursor: pointer; font-family: inherit;
+}
+.cat-pills button.active { background: var(--color-forest); color: var(--color-mint); border-color: var(--color-forest); }
+
+.pos-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+.prod-card {
+  background: var(--color-card); border: 1px solid var(--color-line);
+  border-radius: var(--radius-md); padding: 12px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 8px; text-align: left;
+  font-family: inherit; color: inherit;
+}
+.prod-card:hover:not(:disabled) { border-color: var(--color-forest-softer); }
+.prod-thumb {
+  height: 64px; border-radius: 10px; display: flex; align-items: center;
+  justify-content: center; font-weight: 800; font-family: var(--font-display); font-size: 13px;
+}
+.prod-name { font-size: 12.5px; font-weight: 700; line-height: 1.3; }
+.prod-price { font-size: 13px; font-weight: 800; font-family: var(--font-display); }
+.prod-stock { font-size: 10.5px; color: var(--color-ink-faint); }
+
+.cart-panel {
+  background: var(--color-card); border: 1px solid var(--color-line);
+  border-radius: var(--radius-md); display: flex; flex-direction: column; overflow: hidden;
+  /* Topbar lengket setinggi 64px; tanpa ini lompatan dari CartBar menaruh
+     judul "Keranjang" persis di baliknya. */
+  scroll-margin-top: 80px;
+}
+
+/* Bar keranjang melayang — hanya layar sempit. Lihat components/pos/CartBar.tsx. */
+.cart-bar {
+  position: fixed; left: 0; right: 0; bottom: calc(65px + env(safe-area-inset-bottom));
+  z-index: 45; display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; background: var(--color-card);
+  border-top: 1px solid var(--color-line); box-shadow: 0 -6px 20px rgba(14, 36, 25, .08);
+}
+.cart-bar-info {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 9px;
+  border: none; background: none; padding: 0; cursor: pointer; font-family: inherit;
+  color: var(--color-ink); text-align: left;
+}
+.cart-bar-count {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px;
+  background: var(--color-forest); color: var(--color-mint);
+  border-radius: 999px; padding: 5px 11px; font-size: 12.5px; font-weight: 700;
+}
+.cart-bar-total { font-size: 15px; font-weight: 800; font-family: var(--font-display); }
+.cart-bar-hint {
+  font-size: 11px; color: var(--color-ink-faint); font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cart-bar .btn { flex: 0 0 auto; padding: 11px 22px; }
+/* Ruang agar tombol Bayar di panel keranjang tidak tertutup bar. */
+.pos-layout.with-cart-bar { padding-bottom: 66px; }
+.cart-head {
+  padding: 14px 16px; border-bottom: 1px solid var(--color-line); font-weight: 700;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.cart-items { max-height: 320px; overflow-y: auto; }
+.cart-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--color-line); }
+.cart-row:last-child { border-bottom: none; }
+.cart-row .ci-name { font-size: 12.5px; font-weight: 700; }
+.cart-row .ci-price { font-size: 11px; color: var(--color-ink-faint); }
+.qty { display: flex; align-items: center; gap: 6px; }
+.qty button {
+  width: 24px; height: 24px; border-radius: 7px; border: 1px solid var(--color-line);
+  background: var(--color-paper); cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.qty span { font-size: 12.5px; font-weight: 700; width: 18px; text-align: center; }
+.cart-empty { padding: 30px 16px; text-align: center; color: var(--color-ink-faint); font-size: 12.5px; }
+.cart-total { padding: 14px 16px; border-top: 1px solid var(--color-line); }
+.cart-total .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; color: var(--color-ink-soft); }
+.cart-total .row.total { font-size: 16px; font-weight: 800; color: var(--color-ink); margin: 8px 0 12px; font-family: var(--font-display); }
+
+.tf-input { position: relative; }
+.tf-input input {
+  width: 100%; padding: 9px 10px 9px 32px; border-radius: 10px;
+  border: 1px solid var(--color-line); background: var(--color-paper);
+  font-size: 13px; font-family: inherit; color: var(--color-ink);
+}
+.tf-input svg { position: absolute; left: 9px; top: 10px; color: var(--color-ink-faint); }
+
+/* ---------- overlay & modal ---------- */
+.overlay { position: fixed; inset: 0; background: rgba(14, 36, 25, .35); z-index: 60; display: none; }
+.overlay.show { display: block; }
+.modal { position: fixed; inset: 0; z-index: 70; display: none; align-items: flex-end; justify-content: center; }
+.modal.show { display: flex; }
+.modal-card { background: var(--color-card); width: 100%; max-width: 380px; border-radius: 22px 22px 0 0; padding: 22px; }
+.pay-methods { display: flex; gap: 10px; margin: 16px 0; }
+.pay-methods button {
+  flex: 1; padding: 14px 8px; border-radius: 12px; border: 1.5px solid var(--color-line);
+  background: var(--color-paper); font-size: 12.5px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.pay-methods button.active { border-color: var(--color-forest); background: var(--color-card); box-shadow: 0 0 0 2px var(--color-forest) inset; }
+.modal-card.success-wrap { text-align: center; padding: 32px 22px 22px; }
+.success-circle {
+  width: 64px; height: 64px; border-radius: 50%; background: var(--grad);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 14px; color: var(--color-forest);
+}
+.kv { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px dashed var(--color-line); font-size: 13px; }
+.kv:last-child { border-bottom: none; }
+.kv span:first-child { color: var(--color-ink-soft); }
+.kv span:last-child { font-weight: 700; }
+
+@media (min-width: 640px) {
+  .modal { align-items: center; }
+  .modal-card { border-radius: 22px; }
+  .pos-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 900px) {
+  .pos-layout { display: grid; grid-template-columns: 1fr 340px; align-items: flex-start; }
+  .pos-layout.with-cart-bar { padding-bottom: 0; }
+  .cart-panel { position: sticky; top: 80px; }
+  /* Keranjang sudah jadi kolom lengket di sini — bar melayang hanya menutupi. */
+  .cart-bar { display: none; }
+}
+@media (min-width: 1024px) {
+  .pos-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+/* ---------- struk thermal ---------- */
+/* Monospace penuh dan lebar tetap: printer thermal murah menyelaraskan kolom
+   berdasarkan jumlah karakter, bukan lebar piksel. */
+.receipt {
+  width: 48mm; margin: 0 auto; padding: 4mm 0;
+  font-family: var(--font-mono); font-size: 9px; line-height: 1.45;
+  color: #000; background: #fff;
+}
+.receipt .r-center { text-align: center; }
+.receipt .r-bold { font-weight: 700; }
+.receipt .r-dim { color: #444; }
+.receipt .r-rule { border-top: 1px dashed #000; margin: 5px 0; }
+.receipt .r-row { display: flex; justify-content: space-between; gap: 6px; }
+.receipt .r-row span:last-child { white-space: nowrap; }
+.receipt .r-item { margin-bottom: 3px; }
+.receipt .r-total { font-size: 11px; margin: 3px 0; }
+.receipt .r-brand { margin-top: 6px; font-size: 8px; }
+
+/* Pratinjau struk di layar diberi bingkai kertas; saat dicetak bingkainya hilang. */
+.receipt-preview {
+  background: #fff; border: 1px solid var(--color-line);
+  border-radius: 10px; box-shadow: var(--shadow-sm); overflow: hidden;
+}
+
+@media print {
+  @page { size: 58mm auto; margin: 0; }
+  body { background: #fff; }
+  body * { visibility: hidden; }
+  .receipt, .receipt * { visibility: visible; }
+  .receipt { position: absolute; left: 0; top: 0; width: 58mm; padding: 3mm 5mm; }
+  .receipt-preview { border: none; box-shadow: none; border-radius: 0; }
+}
+
+/* ---------- drawer ---------- */
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 92vw);
+  background: var(--color-card); z-index: 61;
+  box-shadow: -8px 0 30px rgba(14, 36, 25, .15);
+  transform: translateX(100%); transition: transform .25s ease;
+  display: flex; flex-direction: column;
+}
+.drawer.show { transform: translateX(0); }
+.drawer-head {
+  padding: 18px; border-bottom: 1px solid var(--color-line);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+}
+.drawer-body { padding: 18px; overflow-y: auto; flex: 1 1 auto; }
+.drawer-foot {
+  /* Drawer menempel `bottom: 0`, jadi di iPhone tombol Simpan/Batal jatuh
+     tepat di bawah garis home indicator. */
+  padding: 16px 18px calc(16px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-line);
+  display: flex; gap: 10px; flex: 0 0 auto;
+}
+.field-hint { font-size: 11.5px; color: var(--color-ink-faint); margin-top: 4px; }
+.field-error { font-size: 11.5px; color: var(--color-coral); margin-top: 4px; font-weight: 600; }
+.field input[aria-invalid='true'] { border-color: var(--color-coral); }
+
+/* Tombol aksi di dalam baris tabel */
+.icon-action {
+  width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--color-line);
+  background: var(--color-card); display: inline-flex; align-items: center;
+  justify-content: center; color: var(--color-ink-soft); cursor: pointer;
+}
+.icon-action:hover { background: var(--color-paper); color: var(--color-ink); }
+.icon-action.danger:hover { background: var(--color-coral-soft); color: var(--color-coral); border-color: var(--color-coral-soft); }
+.row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+/* ============================================================
+   Token chart.
+   Nilainya BUKAN lime/mint: kedua warna brand terlalu terang untuk
+   dipakai sebagai tanda data di atas kartu putih — gagal ambang
+   kontras dan pita lightness. Nilai di bawah sudah divalidasi
+   (skrip validate_palette, surface #FFFFFF):
+     #146B3A  kontras 3:1+, dipakai untuk seri tunggal
+     #146B3A + #2a78d6  CVD ΔE 23.0 · normal ΔE 24.2 · kontras lolos
+   Brand tetap terasa lewat permukaan, tipografi, dan gradient di luar chart.
+   ============================================================ */
+.viz {
+  --series-1: #146B3A;
+  --series-2: #2a78d6;
+  --viz-grid: #EDF1EC;
+  --viz-axis: var(--color-ink-faint);
+}
+.viz-grid line { stroke: var(--viz-grid); stroke-width: 1; }
+.viz-axis-label { font-size: 10.5px; fill: var(--color-ink-faint); font-family: var(--font-sans); }
+.viz-value-label { font-size: 10.5px; fill: var(--color-ink-soft); font-weight: 700; font-family: var(--font-sans); }
+.viz-bar { transition: opacity .12s; }
+.viz-col:hover .viz-bar { opacity: .78; }
+
+.viz-tooltip {
+  position: absolute; pointer-events: none; z-index: 5;
+  background: var(--color-forest); color: #fff; border-radius: 9px;
+  padding: 7px 10px; font-size: 11.5px; line-height: 1.45;
+  box-shadow: var(--shadow-md); white-space: nowrap; transform: translate(-50%, -100%);
+}
+.viz-tooltip b { font-family: var(--font-display); font-size: 12.5px; display: block; }
+
+.viz-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; margin-top: 12px; }
+.viz-legend span.swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; }
+.viz-legend > div { display: flex; align-items: center; color: var(--color-ink-soft); }
+
+.split-bar { display: flex; gap: 2px; height: 34px; border-radius: 9px; overflow: hidden; }
+.split-bar > div { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 11.5px; font-weight: 700; min-width: 2px; }
+
+.rank-row { display: grid; grid-template-columns: 1fr; gap: 4px; padding: 9px 0; }
+.rank-head { display: flex; justify-content: space-between; font-size: 12.5px; gap: 12px; }
+.rank-head b { font-weight: 700; }
+.rank-track { height: 8px; background: var(--viz-grid); border-radius: 4px; overflow: hidden; }
+.rank-fill { height: 100%; border-radius: 4px; background: var(--series-1); }
+
+.period-tabs { display: flex; gap: 6px; }
+
+/* ---------- kuota paket (Super Admin) ---------- */
+/* Warna sengaja bukan token chart: ini indikator status, bukan tanda data.
+   Coral dipakai hanya untuk yang benar-benar sudah penuh, supaya "penuh"
+   tidak tenggelam di antara batang-batang lain yang cuma hampir. */
+.quota-list { display: grid; gap: 14px; }
+.quota-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.quota-label { font-size: 12.5px; font-weight: 700; color: var(--color-ink-soft); }
+.quota-num { font-size: 13px; font-weight: 800; font-family: var(--font-display); white-space: nowrap; }
+.quota-num.is-near { color: var(--color-amber-ink); }
+.quota-num.is-full { color: var(--color-coral); }
+.quota-max { font-weight: 500; font-family: var(--font-sans); color: var(--color-ink-faint); font-size: 11.5px; }
+.quota-track { display: block; height: 7px; background: var(--color-line); border-radius: 4px; overflow: hidden; }
+.quota-fill { height: 100%; border-radius: 4px; background: var(--color-success); transition: width .2s; }
+.quota-fill.is-near { background: var(--color-amber-ink); }
+.quota-fill.is-full { background: var(--color-coral); }
+.quota-warn {
+  display: flex; align-items: flex-start; gap: 6px; margin-top: 6px;
+  font-size: 11.5px; font-weight: 600; color: var(--color-coral);
+}
+
+/* Ringkasan satu baris di tabel daftar klien. */
+.quota-chip { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; }
+.quota-chip .quota-track { width: 54px; flex: 0 0 auto; }
+
+/* ============================================================
+   Halaman auth — panel geser dengan tepi miring.
+   Overlay bergerak DAN sudut kemiringannya ikut berbalik, jadi
+   panelnya terasa berayun, bukan sekadar bergeser.
+   ============================================================ */
+.auth-page {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 24px 16px; background: var(--color-forest);
+  background-image:
+    radial-gradient(560px 380px at 12% 8%, rgba(161, 255, 206, .16), transparent 62%),
+    radial-gradient(520px 420px at 88% 92%, rgba(249, 245, 134, .13), transparent 62%);
+}
+.auth-shell { width: 100%; max-width: 880px; }
+
+.auth-container {
+  position: relative; background: var(--color-card);
+  border-radius: var(--radius-lg); overflow: hidden;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, .38);
+}
+
+/* Kedua form menempati SEL GRID yang sama, jadi tingginya = form tertinggi.
+   Sebelumnya keduanya `position:absolute` di atas container ber-min-height tetap —
+   form daftar lebih tinggi dari itu, dan tombol terakhirnya terpotong tepi kartu. */
+.auth-forms { display: grid; min-height: 520px; }
+.form-panel {
+  grid-area: 1 / 1;
+  width: 50%;
+  padding: 44px 40px;
+  display: flex; flex-direction: column; justify-content: center;
+  transition: opacity 700ms cubic-bezier(.77, 0, .18, 1),
+              transform 900ms cubic-bezier(.77, 0, .18, 1),
+              filter 700ms cubic-bezier(.77, 0, .18, 1);
+}
+.form-panel--login { justify-self: start; opacity: 1; }
+.form-panel--register {
+  justify-self: end; opacity: 0;
+  transform: translateX(80px); filter: blur(6px); pointer-events: none;
+}
+
+.auth-container.active .form-panel--login {
+  opacity: 0; transform: translateX(-80px); filter: blur(6px); pointer-events: none;
+}
+.auth-container.active .form-panel--register {
+  opacity: 1; transform: translateX(0); filter: blur(0);
+  pointer-events: auto;
+}
+
+/* Panel gradient. clip-path memberi tepi miring yang berbalik arah saat bergeser. */
+.overlay-panel {
+  position: absolute; top: 0; right: 0; width: 50%; height: 100%;
+  clip-path: polygon(14% 0, 100% 0, 100% 100%, 0 100%);
+  background-image:
+    radial-gradient(150px 150px at 88% 6%, rgba(255, 255, 255, .55), transparent 62%),
+    radial-gradient(190px 190px at 104% 88%, rgba(255, 255, 255, .35), transparent 62%),
+    radial-gradient(circle, rgba(14, 36, 25, .07) 1px, transparent 1.4px),
+    var(--grad);
+  background-size: auto, auto, 14px 14px, auto;
+  color: var(--color-forest);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 40px 44px; z-index: 2;
+  transition: transform 900ms cubic-bezier(.77, 0, .18, 1),
+              clip-path 900ms cubic-bezier(.77, 0, .18, 1);
+}
+.auth-container.active .overlay-panel {
+  transform: translateX(-100%);
+  clip-path: polygon(0 0, 86% 0, 100% 100%, 0 100%);
+}
+.overlay-title { font-family: var(--font-display); font-size: 24px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 8px; }
+.overlay-text { font-size: 13px; line-height: 1.65; opacity: .78; margin: 0 0 22px; max-width: 260px; }
+.overlay-inner { transition: opacity 500ms ease 180ms; }
+.btn-outline-forest {
+  background: transparent; border: 1.5px solid var(--color-forest); color: var(--color-forest);
+  border-radius: 11px; padding: 10px 22px; font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.btn-outline-forest:hover { background: var(--color-forest); color: var(--color-mint); }
+
+/* Halaman auth satu kolom — lupa sandi & atur sandi. Tidak memakai panel
+   geser: keduanya satu langkah tunggal, tidak ada yang perlu dipertukarkan. */
+.auth-help { margin: -6px 0 14px; text-align: right; font-size: 12px; }
+.auth-help a { color: var(--color-ink-soft); font-weight: 600; text-decoration: none; }
+.auth-help a:hover { color: var(--color-forest); text-decoration: underline; }
+
+.auth-single { max-width: 430px; margin: 0 auto; }
+.auth-single .auth-container { padding: 34px 30px; }
+@media (max-width: 767px) {
+  .auth-single .auth-container { padding: 26px 22px; }
+}
+
+.auth-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--color-ink-faint); margin: 0 0 6px; }
+.auth-title { font-family: var(--font-display); font-size: 26px; font-weight: 800; letter-spacing: -.02em; margin: 0 0 4px; }
+.auth-sub { font-size: 13px; color: var(--color-ink-soft); margin: 0 0 22px; }
+.form-panel .field { margin-bottom: 12px; }
+.form-panel .field-row { gap: 12px; }
+.auth-foot { text-align: center; margin-top: 18px; font-size: 11.5px; color: rgba(255, 255, 255, .5); }
+.auth-foot strong { color: var(--color-mint); }
+
+/* Satu kolom di layar sempit: panel gradient jadi pita atas, tanpa geseran.
+   Di sini form yang tidak aktif dikeluarkan dari alur supaya kartunya tidak
+   ikut setinggi form terpanjang — di layar HP itu terasa sebagai ruang kosong. */
+@media (max-width: 767px) {
+  .auth-container { display: flex; flex-direction: column; min-height: 0; }
+  .auth-forms { display: block; min-height: 0; position: relative; }
+  .form-panel { width: 100%; padding: 28px 22px; }
+  .form-panel--login { position: relative; }
+  .form-panel--register { position: absolute; inset: 0; }
+  .auth-container.active .form-panel--login { position: absolute; inset: 0; }
+  .auth-container.active .form-panel--register { position: relative; inset: auto; }
+  .overlay-panel {
+    position: relative; width: 100%; height: auto; clip-path: none;
+    padding: 26px 22px; order: -1;
+  }
+  .auth-container.active .overlay-panel { transform: none; clip-path: none; }
+}
+
+/* Hormati preferensi gerakan: pindah tetap terjadi, hanya tanpa animasi. */
+@media (prefers-reduced-motion: reduce) {
+  .overlay-panel, .form-panel { transition: none !important; }
+  .form-panel--register, .auth-container.active .form-panel--login { filter: none; transform: none; }
+}
+
+/* ---------- spanduk langganan ---------- */
+/* Ditaruh di bawah topbar dan di ATAS konten, bukan melayang: kabar seperti ini
+   harus ikut tergulung bersama halaman, bukan menutupi tombol. */
+.sub-banner {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px 16px; font-size: 12.5px; font-weight: 600; line-height: 1.55;
+  border-bottom: 1px solid var(--color-line);
+}
+.sub-banner strong { font-weight: 800; }
+.sub-banner.is-warn { background: var(--color-amber-soft); color: var(--color-amber-ink); }
+.sub-banner.is-bad { background: var(--color-coral-soft); color: var(--color-coral); }
+@media (min-width: 1024px) {
+  .sub-banner { padding: 12px 32px; }
+}
+
+/* Laporan shift di layar sempit — enam kolom tidak muat di 390px, dan yang
+   paling penting (selisih kas) justru kolom paling kanan. Ditumpuk seperti
+   .trx-table supaya tidak ada yang terdorong ke luar layar. */
+@media (max-width: 639px) {
+  .shift-table thead { display: none; }
+  .shift-table,
+  .shift-table tbody,
+  .shift-table tr,
+  .shift-table td {
+    display: block;
+  }
+  .shift-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .shift-table tr:last-child { border-bottom: none; }
+  .shift-table td { padding: 0; border-bottom: none; text-align: left !important; }
+  .shift-table .sh-who { grid-column: 1; grid-row: 1; min-width: 0; }
+  .shift-table .sh-gap { grid-column: 2; grid-row: 1; text-align: right !important; }
+  .shift-table .sh-time { grid-column: 1; grid-row: 2; margin-top: 6px; font-size: 12px; color: var(--color-ink-soft); }
+  .shift-table .sh-trx { grid-column: 2; grid-row: 2; margin-top: 6px; text-align: right !important; font-size: 12px; color: var(--color-ink-soft); }
+  .shift-table .sh-cash { grid-column: 1; grid-row: 3; margin-top: 6px; font-size: 12.5px; font-weight: 700; }
+  .shift-table .sh-noncash { grid-column: 2; grid-row: 3; margin-top: 6px; text-align: right !important; font-size: 12.5px; color: var(--color-ink-soft); }
+}
+
+/* Kartu stok di layar sempit — empat kolom tidak muat di 390px. */
+@media (max-width: 639px) {
+  .move-table thead { display: none; }
+  .move-table,
+  .move-table tbody,
+  .move-table tr,
+  .move-table td {
+    display: block;
+  }
+  .move-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .move-table tr:last-child { border-bottom: none; }
+  .move-table td { padding: 0; border-bottom: none; text-align: left !important; }
+  .move-table .mv-what { grid-column: 1; grid-row: 1; min-width: 0; }
+  .move-table .mv-delta { grid-column: 2; grid-row: 1; text-align: right !important; }
+  .move-table .mv-when { grid-column: 1; grid-row: 2; margin-top: 6px; font-size: 11.5px; color: var(--color-ink-faint); }
+  .move-table .mv-balance { grid-column: 2; grid-row: 2; margin-top: 6px; text-align: right !important; font-size: 12.5px; }
+}
+
+/* ---------- pembelian ---------- */
+.buy-line { padding: 12px 0; border-bottom: 1px dashed var(--color-line); }
+.buy-line:last-of-type { border-bottom: none; }
+.buy-line-row { display: flex; gap: 10px; align-items: flex-end; }
+.buy-line-row .field { flex: 1; min-width: 0; }
+.buy-line-row .icon-action { flex: 0 0 auto; margin-bottom: 2px; }
+
+/* Empat kolom nota tidak muat di 390px — ditumpuk seperti tabel lain. */
+@media (max-width: 639px) {
+  .buy-table thead { display: none; }
+  .buy-table,
+  .buy-table tbody,
+  .buy-table tr,
+  .buy-table td {
+    display: block;
+  }
+  .buy-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .buy-table tr:last-child { border-bottom: none; }
+  .buy-table td { padding: 0; border-bottom: none; text-align: left !important; }
+  .buy-table .by-code { grid-column: 1; grid-row: 1; min-width: 0; }
+  .buy-table .by-total { grid-column: 2; grid-row: 1; text-align: right !important; }
+  .buy-table .by-date { grid-column: 1; grid-row: 2; margin-top: 6px; font-size: 11.5px; color: var(--color-ink-faint); }
+  .buy-table .by-pay { grid-column: 1 / -1; grid-row: 3; margin-top: 8px; }
+}
+
+/* ---------- konsinyasi ---------- */
+.consign-due {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px; border-bottom: 1px solid var(--color-line);
+}
+.consign-due:last-child { border-bottom: none; }
+
+/* Lima kolom titipan butuh ~460px; layar ponsel 358px. Ditumpuk seperti
+   .buy-table dan .trx-table — angka "belum disetor" adalah yang dicari orang
+   saat membuka halaman ini, jadi ia yang naik ke baris pertama sebelah kanan,
+   bukan yang terdorong keluar layar. */
+@media (max-width: 639px) {
+  .consign-due { flex-wrap: wrap; }
+  .consign-due .btn { width: 100%; justify-content: center; }
+
+  .consign-table thead { display: none; }
+  .consign-table,
+  .consign-table tbody,
+  .consign-table tr,
+  .consign-table td {
+    display: block;
+  }
+  .consign-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .consign-table tr:last-child { border-bottom: none; }
+  .consign-table td { padding: 0; border-bottom: none; text-align: left !important; }
+  .consign-table .cn-what { grid-column: 1; grid-row: 1; min-width: 0; }
+  .consign-table .cn-due { grid-column: 2; grid-row: 1; text-align: right !important; }
+  .consign-table .cn-left,
+  .consign-table .cn-sold {
+    grid-row: 2; margin-top: 6px;
+    font-size: 11.5px; color: var(--color-ink-faint);
+    text-align: left !important;
+  }
+  .consign-table .cn-left { grid-column: 1; }
+  .consign-table .cn-sold { grid-column: 2; text-align: right !important; }
+  /* Tanpa thead, dua angka telanjang bersebelahan ("26 pcs   12 pcs") tidak
+     bisa dibedakan mana sisa mana terjual — padahal itu justru perbandingan
+     yang dicari. Labelnya ikut turun bersama angkanya. */
+  .consign-table .cn-left::before { content: 'Sisa '; }
+  .consign-table .cn-sold::before { content: 'Terjual '; }
+  .consign-table .cn-act { grid-column: 1 / -1; grid-row: 3; }
+  .consign-table .cn-act:empty { display: none; }
+  .consign-table .cn-act .row-flex { margin-top: 8px; justify-content: flex-start !important; }
+}
+
+/* Pintu masuk ke sub-halaman yang berdiri sendiri (Konsinyasi dari Pembelian).
+   Sengaja lebih besar dari `.link` yang dipakai Laporan Shift: itu varian dari
+   laporan yang sedang dibuka, sedangkan ini modul lain yang kebetulan tinggal
+   serumah karena bottom nav ponsel sudah penuh. */
+.link-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  color: inherit;
+}
+.link-card:hover { background: var(--color-paper); }
+
+/* ---------- pembatas paket ---------- */
+/* Menggantikan isi yang dikunci, bukan menghilangkannya — bagian yang lenyap
+   tanpa jejak terbaca sebagai aplikasi yang belum jadi, bukan sebagai paket
+   yang bisa dinaikkan. Bergaris putus-putus supaya jelas ini bukan kartu data. */
+.plan-lock {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 16px;
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-paper);
+  color: var(--color-ink-soft);
+}
+.plan-lock svg { color: var(--color-ink-faint); flex: 0 0 auto; margin-top: 1px; }
+.plan-lock .badge { flex: 0 0 auto; }
+.plan-lock-body { font-size: 12.5px; margin-top: 3px; }
+
+/* Periode di luar paket: tetap terlihat, tidak bisa ditekan. */
+.period-locked {
+  opacity: .5; cursor: not-allowed;
+  border-style: dashed;
+}
+
+/* Tanpa aturan khusus ponsel: badge-nya `flex: 0 0 auto` dan yang mengalah
+   adalah teksnya, jadi susunannya sudah benar di 390px tanpa dibungkus. */
+
+/* ---------- pemilih outlet ---------- */
+/* Sebelum pemilih ini ada, isi kanan topbar cuma tiga tombol 36px dan tidak
+   pernah perlu menyusut. Ditambah pemilih outlet, di 390px totalnya melewati
+   lebar layar dan tombol Keluar terdorong keluar — persis kesalahan yang sama
+   dengan bottom nav tujuh menu. Yang mengalah harus NAMA OUTLET, bukan tombolnya. */
+.topbar-right { flex: 0 1 auto; min-width: 0; }
+/* Tombolnya berukuran tetap dan TIDAK boleh ikut menyusut — dibiarkan, lonceng
+   dan avatar gepeng jadi beberapa piksel sebelum nama outlet mengalah sedikit
+   pun. Hanya pemilih outlet yang lentur. */
+.topbar-right > * { flex: 0 0 auto; }
+.topbar-right .outlet-switch { flex: 0 1 auto; }
+/* Nama toko di kiri juga ikut mengalah: di 390px brand + pemilih + tiga tombol
+   memang tidak muat kalau keduanya sama-sama kaku. */
+.topbar-brand { min-width: 0; flex: 0 1 auto; }
+/* `flex: 0 0 auto` bawaannya membuat brand menolak menyusut sama sekali, jadi
+   yang terdorong keluar layar justru tombol di kanan. */
+.topbar-brand .brand { min-width: 0; flex: 0 1 auto; }
+.topbar-brand .brand-name { min-width: 0; overflow: hidden; }
+.topbar-brand .brand-name small { white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.outlet-switch { position: relative; min-width: 0; max-width: 190px; }
+.outlet-switch-btn {
+  display: flex; align-items: center; gap: 7px;
+  height: 36px; padding: 0 10px;
+  border: 1px solid var(--color-line); border-radius: 10px;
+  background: var(--color-card); color: var(--color-ink);
+  font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  /* Terikat ke lebar wrapper-nya. Dibiarkan dengan max-width sendiri, tombolnya
+     tidak ikut menyusut saat wrapper mengecil dan menimpa tombol lonceng. */
+  max-width: 100%; min-width: 0;
+}
+.outlet-switch-btn:hover:not(:disabled) { background: var(--color-paper); }
+.outlet-switch-btn:disabled { opacity: .6; cursor: default; }
+.outlet-switch-btn svg { color: var(--color-ink-faint); flex: 0 0 auto; }
+/* Nama cabang bisa panjang ("Cabang Denpasar Selatan"); ia yang mengalah,
+   bukan ikon atau panahnya — tanpa ini tombolnya mendorong avatar dan tombol
+   keluar ke luar layar di ponsel. */
+.outlet-switch-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+
+.outlet-switch-backdrop { position: fixed; inset: 0; z-index: 45; }
+.outlet-switch-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 46;
+  min-width: 220px; max-width: min(280px, calc(100vw - 24px));
+  background: var(--color-card); border: 1px solid var(--color-line);
+  border-radius: 12px; box-shadow: var(--shadow-md); overflow: hidden;
+}
+.outlet-switch-head {
+  padding: 9px 12px; font-size: 10.5px; font-weight: 700; letter-spacing: .05em;
+  text-transform: uppercase; color: var(--color-ink-faint);
+  border-bottom: 1px solid var(--color-line);
+}
+.outlet-switch-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border: none; background: none; text-align: left;
+  font-family: inherit; font-size: 13px; color: var(--color-ink); cursor: pointer;
+}
+.outlet-switch-item:hover { background: var(--color-paper); }
+.outlet-switch-item.active { background: var(--color-success-soft); }
+.outlet-switch-item.active svg { color: var(--color-success); }
+
+/* Di ponsel namanya dipendekkan lebih jauh — brand di kiri topbar sudah
+   menyebut nama tokonya, jadi yang perlu di sini cuma cabang mana. */
+@media (max-width: 639px) {
+  /* Di 390px, brand + pemilih outlet + tiga tombol memang tidak muat bersamaan.
+     Yang dilepas adalah TEKS brand: logonya tetap ada, dan nama cabang jauh
+     lebih menentukan bagi kasir yang sedang berdiri di salah satu dari dua toko
+     daripada nama toko yang sudah ia tahu. Hanya berlaku saat outletnya memang
+     lebih dari satu. */
+  .topbar.has-outlet-switch .brand-name { display: none; }
+  .outlet-switch { min-width: 116px; }
+  .outlet-switch-btn { padding: 0 8px; gap: 5px; }
+}
+
+/* Perbandingan antar cabang di Laporan. Empat kolom tidak muat di 390px —
+   ditumpuk seperti .buy-table dan .consign-table. Omset naik ke baris pertama
+   sebelah kanan: itu angka yang dipakai membandingkan cabang. */
+@media (max-width: 639px) {
+  .cmp-table thead { display: none; }
+  .cmp-table,
+  .cmp-table tbody,
+  .cmp-table tr,
+  .cmp-table td {
+    display: block;
+  }
+  .cmp-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .cmp-table tr:last-child { border-bottom: none; }
+  .cmp-table td { padding: 0; border-bottom: none; text-align: left !important; }
+  .cmp-table .cm-name { grid-column: 1; grid-row: 1; min-width: 0; }
+  .cmp-table .cm-rev { grid-column: 2; grid-row: 1; text-align: right !important; }
+  .cmp-table .cm-trx,
+  .cmp-table .cm-profit {
+    grid-row: 2; margin-top: 6px;
+    font-size: 11.5px; color: var(--color-ink-faint);
+  }
+  .cmp-table .cm-trx { grid-column: 1; text-align: left !important; }
+  .cmp-table .cm-profit { grid-column: 2; text-align: right !important; }
+  /* Tanpa thead, angka telanjang tidak bisa dibedakan. */
+  .cmp-table .cm-trx::before { content: 'Transaksi '; }
+  .cmp-table .cm-profit::before { content: 'Laba '; }
+}
+
+/* Pintu "daftarkan toko baru" di dasar menu pemilih. Dipisah garis supaya tidak
+   terbaca sebagai salah satu toko yang bisa dipilih. */
+.outlet-switch-add {
+  border-top: 1px solid var(--color-line);
+  color: var(--color-ink-soft);
+  font-weight: 600;
+  text-decoration: none;
+}
+.outlet-switch-add svg { color: var(--color-ink-faint); }
+
+/* ============================================================
+   Lebar layar besar
+   ============================================================
+   Sampai sekarang `.content` tidak punya batas lebar sama sekali — wireframe
+   pun tidak, karena ia digambar di lebar sempit. Di monitor 1920px isinya
+   melar ~1680px dan hasilnya terbaca murah: hero jadi bidang hijau kosong
+   raksasa dengan tulisan kecil di pojok, dan baris transaksi merentang
+   sekitar seribu piksel antara nomor dan nominalnya sehingga mata harus
+   melompat jauh untuk memasangkan keduanya.
+
+   Batasnya 1240px — cukup lebar untuk tabel enam kolom Laporan Shift, cukup
+   sempit supaya satu baris teks masih bisa dibaca tanpa menggerakkan kepala.
+   Hanya menggigit di atas ~1300px; di laptop biasa tidak ada yang berubah. */
+.content { max-width: 1240px; width: 100%; margin-inline: auto; }
+
+/* Kasir dikecualikan dan diberi ruang lebih. Grid produknya BUKAN teks yang
+   dibaca menyamping melainkan sasaran sentuh yang dicari mata — makin banyak
+   yang terlihat sekaligus, makin sedikit kasir menggulir di depan antrean. */
+.content:has(.pos-layout) { max-width: 1560px; }
+@media (min-width: 1400px) {
+  .pos-grid { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* ---------- susunan dua kolom di layar lebar ----------
+   Alih-alih satu kolom yang melar, bagian yang pendek disandingkan. Di bawah
+   ambang ini semuanya kembali menumpuk seperti biasa. */
+.wide-cols { display: grid; gap: 16px; align-items: start; }
+@media (min-width: 1100px) {
+  .wide-cols { grid-template-columns: 1fr 1fr; }
+  /* Kolom kiri sering lebih penting (peringatan, tagihan); beri sedikit lebih. */
+  .wide-cols.lead-left { grid-template-columns: 1.15fr 1fr; }
+}
+/* `.section-title` punya margin atas 22px yang benar saat bagian menumpuk,
+   tapi di dalam kolom ia mendorong judul kolom kanan turun tidak sejajar. */
+.wide-cols > div > .section-title:first-child { margin-top: 0; }
+
+/* Borang tidak boleh selebar tabel. Input teks sepanjang 1200px membuat mata
+   kehilangan pasangan label-isiannya, dan tidak ada satu pun isian di aplikasi
+   ini yang isinya sepanjang itu. */
+.form-narrow { max-width: 760px; }
+
+/* Detail transaksi: kartu rincian + struk berdampingan begitu ada ruang.
+   Sebelumnya struk selalu jatuh di bawah sementara kartunya melar penuh. */
+.trx-detail { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 900px) {
+  .trx-detail { grid-template-columns: minmax(0, 1fr) 300px; }
+}
+
+/* Hero di layar lebar.
+   Sebagai tumpukan biasa, pita gradiennya jadi bidang hijau kosong selebar
+   layar dengan angka kecil menempel di pojok kiri — mahal secara ruang, murah
+   secara tampilan. Angka besar tetap di kiri, ringkasannya digeser ke ujung
+   kanan dan disejajarkan pada garis dasar yang sama, sehingga pitanya terisi
+   oleh isi, bukan oleh jarak. */
+@media (min-width: 900px) {
+  .hero {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: end;
+    column-gap: 32px;
+  }
+  .hero-label { grid-column: 1; grid-row: 1; }
+  .hero-num { grid-column: 1; grid-row: 2; margin-bottom: 0; }
+  .hero-meta { grid-column: 2; grid-row: 2; justify-content: flex-end; gap: 28px; }
+}
