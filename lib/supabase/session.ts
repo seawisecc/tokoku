@@ -31,7 +31,18 @@ export async function updateSession(request: NextRequest) {
   })
 
   // Jangan hapus: panggilan inilah yang memicu penyegaran token.
-  await supabase.auth.getUser()
+  //
+  // `getClaims()`, BUKAN `getUser()`. Keduanya sama-sama membuktikan token itu
+  // sah, tapi `getUser()` selalu bertanya ke server Auth — satu pulang-pergi
+  // jaringan di SETIAP request, termasuk tiap perpindahan halaman. Proyek ini
+  // menandatangani token dengan ES256 (kunci asimetris), jadi `getClaims()`
+  // memverifikasi tanda tangannya sendiri lewat WebCrypto memakai JWKS yang
+  // di-cache di tingkat modul: nol pulang-pergi setelah request pertama.
+  //
+  // Penyegaran tokennya tetap jalan — di dalamnya `getClaims()` memanggil
+  // `getSession()`, dan itulah yang memperbarui token kedaluwarsa lalu menulis
+  // cookie barunya lewat `setAll` di atas.
+  await supabase.auth.getClaims()
 
   return response
 }

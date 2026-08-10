@@ -188,6 +188,38 @@ h3,
 .page-sub { color: var(--color-ink-soft); font-size: 13px; margin-top: 4px; }
 .page-head { margin-bottom: 18px; }
 
+/* ── Kerangka pemuatan ─────────────────────────────────────────────────────
+   Halaman toko semuanya dirender server dan tidak bisa di-cache — isinya stok
+   dan uang hari ini. Artinya menekan menu SELALU menunggu jawaban server.
+   Tanpa kerangka ini, App Router menahan layar lama pada halaman sebelumnya
+   sampai jawabannya lengkap: tidak ada satu piksel pun yang berubah saat
+   ditekan, jadi terbaca seperti tombol mati — dan orang menekannya lagi.
+
+   Yang diperbaiki bukan lamanya, melainkan kebisuannya. */
+@keyframes tk-skeleton {
+  0%   { opacity: 1; }
+  50%  { opacity: .45; }
+  100% { opacity: 1; }
+}
+.skeleton {
+  background: var(--color-line);
+  border-radius: var(--radius-sm);
+  animation: tk-skeleton 1.2s ease-in-out infinite;
+}
+.skeleton-hero {
+  height: 148px;
+  border-radius: var(--radius-lg);
+  margin-bottom: 14px;
+}
+.skeleton-line { height: 12px; }
+.skeleton-title { height: 20px; width: 40%; margin-bottom: 8px; }
+
+/* Kerangka tidak boleh ikut berkedip untuk orang yang mematikan animasi;
+   bentuknya sendiri sudah cukup memberi tahu bahwa sesuatu sedang dimuat. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
 .bottomnav {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: var(--color-card);
   border-top: 1px solid var(--color-line); display: flex; justify-content: space-around;

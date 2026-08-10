@@ -56,10 +56,6 @@ sebelum mengerjakan apa pun.
   laporan, tim. Empat masalah ditemukan dan diperbaiki; lihat "Mobile" di bawah.
 
 **Belum dikerjakan — urutan yang disarankan:**
-0. **Deploy dilaporkan "tidak responsif"** (10 Agu, belum direproduksi) — ini
-   yang pertama dikerjakan. Lihat bagian bertanda ⚠ di bawah; di sana sudah
-   tercatat apa yang SUDAH dicoret dari daftar tersangka dan apa yang perlu
-   ditanyakan lebih dulu.
 1. Email undangan: KODENYA SUDAH JADI, tinggal isi `RESEND_API_KEY` +
    `EMAIL_FROM` di `.env.local`. Butuh akun Resend (gratis 3.000 email/bulan)
    dan domain terverifikasi. Tanpa kunci, aplikasi tetap jalan penuh — lihat
@@ -77,45 +73,53 @@ lingkup yang masih terhutang.
 **Mobile:** seluruh aplikasi sudah ditelusuri di 390px, termasuk `/admin/*`.
 Tabel Super Admin tetap tabel geser di ponsel — disengaja, itu alat desktop.
 
-## ⚠ BELUM SELESAI: deploy dilaporkan "tidak responsif"
+## Deploy "tidak responsif" — SUDAH DIPERBAIKI (11 Agu)
 
-**Dilaporkan pemilik project 10 Agu setelah deploy pertama ke Vercel. BELUM
-direproduksi, belum didiagnosis.** Ini catatan supaya sesi berikutnya tidak
-mulai dari nol — bukan kesimpulan.
+Laporannya ternyata bukan soal tata letak sama sekali. "Tidak responsif"
+berarti **lambat**: tiap pindah halaman atau tekan tombol menunggu 2–10 detik,
+di semua perangkat (MacBook Safari & Chrome, iPhone 15 Pro Max, Samsung Note 8).
+Tata letaknya memang sudah benar — dugaan lama soal iframe vs perangkat
+sungguhan tidak ada hubungannya.
 
-**Yang belum diketahui, dan menentukan arah:** "tidak responsif" bisa berarti
-tata letaknya tidak menyesuaikan layar, atau situsnya lambat/menggantung.
-Tanyakan dulu sebelum mengejar salah satunya.
+**Penyebabnya geografi, bukan kode.** Function Vercel berjalan di `iad1`
+(Washington DC) sementara Supabase ada di `ap-southeast-1` (Singapura) dan
+seluruh penggunanya di Indonesia. Jadi tiap render: Indonesia → edge Singapura
+→ **function Washington** → **balik ke Singapura untuk tiap query** → Washington
+→ Indonesia. Satu pulang-pergi Washington↔Singapura ≈ 220 ms, dan
+`getSessionContext()` menembak lima query berurutan sebelum halamannya sendiri
+mulai bekerja.
 
-**Sudah dicoret dari daftar tersangka:** `viewport` di `app/layout.tsx` sudah
-benar (`width: device-width, initialScale: 1`). Tanpa itu, browser ponsel
-merender pada lebar 980px dan seluruh aplikasi tampak seperti desktop yang
-dikecilkan — gejala yang persis cocok, tapi bukan ini penyebabnya.
+Terukur sebelum: `/beranda` 3,44 s · `/produk` 2,41 s · `/pengaturan/tim` 1,68 s.
+Sesudah: **0,20–0,51 s.** Header `x-vercel-id` berubah dari `sin1::iad1` menjadi
+`sin1::sin1`.
 
-**Celah nyata yang paling mungkin jadi sebabnya:** SELURUH pengujian responsif
-di project ini dilakukan lewat **iframe same-origin**, tidak pernah di perangkat
-sungguhan. Alat resize browser melaporkan "berhasil" tapi `innerWidth` tidak
-berubah — sudah beberapa sesi, lihat bagian "Mobile". Iframe punya viewport
-sendiri sehingga media query benar-benar dievaluasi pada lebar yang diminta, dan
-itu memang cukup untuk membuktikan tata letak. Tapi iframe TIDAK menguji:
+Tiga yang dikerjakan, berurut dari yang paling menentukan:
 
-- tinggi `100vh` versus bilah alamat browser ponsel yang muncul-hilang
-- `env(safe-area-inset-*)` di iPhone bernotch
-- sentuhan sungguhan, kecepatan gulir, momentum
-- device pixel ratio dan penyesuaian ukuran font otomatis
-- jaringan sungguhan — dan ini yang menghubungkan ke pembacaan "lambat"
+1. **Region function `iad1` → `sin1`.** Ini ~90% perbaikannya. Ditulis di
+   `vercel.json` (`"regions": ["sin1"]`) DAN di setelan project Vercel, supaya
+   deploy yang kebetulan tanpa `vercel.json` tetap mendarat di tempat yang benar.
+   **Region function harus selalu satu benua dengan Supabase.** Kalau nanti
+   database dipindah, region ini ikut — kalau tidak, gejalanya persis kembali.
+2. **`auth.getUser()` → `auth.getClaims()`** di `lib/supabase/session.ts` dan
+   `lib/auth.ts`. `getUser()` bertanya ke server Auth setiap kali dipanggil; ia
+   dipanggil sekali di proxy dan sekali lagi tiap render halaman, jadi dua
+   pulang-pergi jaringan sebelum query pertama. Token project ini
+   ditandatangani ES256, jadi `getClaims()` memverifikasinya lokal lewat
+   WebCrypto. Penyegaran token tetap jalan — `getClaims()` memanggil
+   `getSession()` di dalamnya. Lihat komentar di kedua file untuk batasnya.
+3. **`loading.tsx`** di `(toko)`, `(toko)/pengaturan`, dan `(platform)/admin`.
+   Ini yang memperbaiki *rasa* tidak responsifnya, bukan angkanya. Seluruh
+   halaman toko `force-dynamic`, jadi menekan menu selalu menunggu server —
+   dan tanpa batas Suspense, App Router menahan layar pada halaman LAMA sampai
+   jawabannya lengkap. Tidak ada satu piksel pun yang berubah saat ditekan,
+   jadi tombolnya terbaca mati dan orang menekannya lagi. Jangan hapus.
 
-Jadi masalah yang hanya muncul di perangkat sungguhan memang bisa lolos dari
-seluruh pengujian yang sudah dilakukan. Jangan berasumsi tata letaknya sudah
-benar hanya karena tercatat "sudah diuji di 390px".
+**Yang sengaja TIDAK dikerjakan:** menggabungkan lima query `getSessionContext()`
+jadi satu RPC. Sempat direncanakan, lalu dibatalkan — setelah function duduk di
+sebelah database, tiap pulang-pergi tinggal ~2 ms, jadi seluruh perombakan itu
+cuma menghemat ~6 ms sambil mengaduk jalur auth. Kalau nanti terasa kurang,
+ukur dulu; kemungkinan besar bukan di sana lagi tempatnya.
 
-**Yang dibutuhkan untuk mulai:** URL deploy-nya, perangkat & browser yang
-dipakai mencoba, dan tangkapan layarnya kalau ada.
-
-**Langkah pertama yang disarankan:** buka URL produksinya langsung di browser
-(bukan iframe), bandingkan dengan `npm start` lokal — bukan `npm run dev`.
-Perbedaan antara build produksi dan dev adalah tempat pertama yang masuk akal
-dilihat, dan `npm start` adalah satu-satunya cara mereproduksinya secara lokal.
 
 ## Layar lebar
 

@@ -99,20 +99,36 @@ export function initialsOf(name: string): string {
 export const getSessionContext = cache(async (): Promise<SessionContext | null> => {
   const supabase = await createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
+  /**
+   * `getClaims()`, BUKAN `getUser()`.
+   *
+   * Yang dibutuhkan di sini cuma dua hal dari user: id dan email — keduanya ada
+   * di dalam token itu sendiri (`sub` dan `email`). `getUser()` mengambilnya
+   * dengan bertanya ke server Auth, dan di halaman yang dirender server itu
+   * berarti satu pulang-pergi jaringan tambahan sebelum query pertama bahkan
+   * dimulai. `getClaims()` memverifikasi tanda tangan ES256-nya secara lokal,
+   * jadi jawabannya sama sahnya tanpa menunggu jaringan.
+   *
+   * Bedanya yang nyata: token yang sudah diverifikasi tetap dipercaya sampai
+   * kedaluwarsa (1 jam), jadi keanggotaan yang dicabut di tengah jam itu baru
+   * menggigit di token berikutnya. Aman di sini — setiap halaman tetap tunduk
+   * pada RLS, dan RLS membaca keanggotaan langsung dari database tiap query.
+   */
+  const { data: claims } = await supabase.auth.getClaims()
+  if (!claims) return null
+
+  const userId = claims.claims.sub
+  const userEmail = claims.claims.email ?? ''
 
   const [{ data: profile }, { data: platformAdmin }] = await Promise.all([
-    supabase.from('profiles').select('full_name').eq('id', user.id).maybeSingle(),
-    supabase.from('platform_admins').select('user_id').eq('user_id', user.id).maybeSingle(),
+    supabase.from('profiles').select('full_name').eq('id', userId).maybeSingle(),
+    supabase.from('platform_admins').select('user_id').eq('user_id', userId).maybeSingle(),
   ])
 
-  const fullName = profile?.full_name || user.email?.split('@')[0] || 'Pengguna'
+  const fullName = profile?.full_name || userEmail.split('@')[0] || 'Pengguna'
   const base = {
-    userId: user.id,
-    email: user.email ?? '',
+    userId,
+    email: userEmail,
     fullName,
     initials: initialsOf(fullName),
   }
@@ -191,7 +207,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     .select(
       'id, role, permissions, default_outlet_id, organization_id, organizations(id, name, city, status, trial_ends_at)',
     )
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .eq('status', 'active')
     .order('joined_at')
 
