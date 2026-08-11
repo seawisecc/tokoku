@@ -242,6 +242,24 @@ h3,
   .tab { transition: none; }
 }
 
+/* ── Kartu paket aktif (Pengaturan → Langganan) ───────────────────────────
+   Badge status ditaruh di ujung kanan pada baris yang sama dengan nama paket:
+   "paket apa" dan "masih hidup atau tidak" adalah dua hal yang selalu dibaca
+   berpasangan, dan menumpuknya membuat mata harus turun untuk memasangkannya. */
+.sub-top {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 16px; flex-wrap: wrap;
+}
+.sub-plan-label {
+  font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--color-ink-faint);
+}
+.sub-plan-name {
+  font-family: var(--font-display); font-size: 26px; font-weight: 800;
+  letter-spacing: -.02em; margin-top: 5px; line-height: 1.15;
+}
+.sub-plan-price { font-size: 13px; color: var(--color-ink-soft); margin-top: 5px; }
+
 /* ── Unggah logo (Pengaturan → Toko) ─────────────────────────────────────── */
 .logo-row { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
 .logo-preview {
@@ -342,7 +360,7 @@ h3,
     radial-gradient(circle, rgba(14,36,25,.07) 1px, transparent 1.4px),
     var(--grad);
   background-size: auto, auto, 14px 14px, auto;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 .hero-label { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .75; }
 .hero-num { font-size: clamp(28px, 6vw, 40px); font-weight: 800; margin: 6px 0 14px; letter-spacing: -.02em; font-family: var(--font-display); }
@@ -355,7 +373,12 @@ h3,
 .stat-val { font-size: 22px; font-weight: 700; letter-spacing: -.01em; font-family: var(--font-display); }
 .stat-label { font-size: 12px; color: var(--color-ink-soft); margin-top: 2px; }
 
-.section-title { font-size: 14.5px; font-weight: 700; margin: 22px 0 10px; display: flex; align-items: center; justify-content: space-between; }
+/* Irama vertikal halaman.
+   Sebelumnya 22px atas / 10px bawah, dan hasilnya tiap bagian menempel ke
+   kartu di atasnya — judul terbaca seperti bagian dari blok sebelumnya, bukan
+   kepala blok berikutnya. 32/14 memberi jarak yang lebih besar DI ATAS judul
+   daripada di bawahnya, sehingga judul jelas milik isi yang menyusulnya. */
+.section-title { font-size: 14.5px; font-weight: 700; margin: 32px 0 14px; display: flex; align-items: center; justify-content: space-between; }
 .section-title .link { font-size: 12px; font-weight: 600; color: var(--color-ink-soft); display: inline-flex; align-items: center; gap: 4px; }
 
 /* ---------- badge ---------- */
@@ -807,6 +830,9 @@ tbody tr:hover { background: var(--color-paper); }
 /* Ringkasan satu baris di tabel daftar klien. */
 .quota-chip { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; }
 .quota-chip .quota-track { width: 54px; flex: 0 0 auto; }
+/* Keterangan batas struktural — sengaja setenang `field-hint`, bukan sekeras
+   `.quota-warn`. Ia menjelaskan bentuk paket, bukan keadaan yang mendesak. */
+.quota-note { font-size: 11.5px; color: var(--color-ink-faint); margin-top: 5px; }
 
 /* ============================================================
    Halaman auth — panel geser dengan tepi miring.
@@ -1270,9 +1296,13 @@ tbody tr:hover { background: var(--color-paper); }
   /* Kolom kiri sering lebih penting (peringatan, tagihan); beri sedikit lebih. */
   .wide-cols.lead-left { grid-template-columns: 1.15fr 1fr; }
 }
-/* `.section-title` punya margin atas 22px yang benar saat bagian menumpuk,
-   tapi di dalam kolom ia mendorong judul kolom kanan turun tidak sejajar. */
+/* `.section-title` punya margin atas yang benar saat bagian menumpuk, tapi di
+   dalam kolom ia mendorong judul kolom kanan turun tidak sejajar. Dinolkan di
+   sini, jadi jarak ke blok di atasnya dipikul `.wide-cols` sendiri — kalau
+   tidak, dua kolom itu menempel persis di bawah kartu statistik. */
 .wide-cols > div > .section-title:first-child { margin-top: 0; }
+.wide-cols { margin-top: 32px; }
+.content > .wide-cols:first-child { margin-top: 0; }
 
 /* Borang tidak boleh selebar tabel. Input teks sepanjang 1200px membuat mata
    kehilangan pasangan label-isiannya, dan tidak ada satu pun isian di aplikasi

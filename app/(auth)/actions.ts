@@ -2,9 +2,14 @@
 
 import type { Route } from 'next'
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { getSessionContext } from '@/lib/auth'
+import {
+  IMPERSONATION_COOKIE,
+  ORG_COOKIE,
+  OUTLET_COOKIE,
+  getSessionContext,
+} from '@/lib/auth'
 import { homeFor } from '@/lib/navigation'
 import { createClient } from '@/lib/supabase/server'
 
@@ -166,13 +171,56 @@ export async function updatePassword(
   }
 
   await supabase.auth.signOut()
+  await clearContextCookies()
   revalidatePath('/', 'layout')
   redirect('/masuk?pesan=sandi-diperbarui')
 }
 
+/**
+ * Buang seluruh cookie konteks TokoKu.
+ *
+ * `supabase.auth.signOut()` hanya membuang cookie SESI. Tiga cookie di bawah
+ * ini milik kita sendiri dan akan selamat dari logout kalau tidak dihapus
+ * eksplisit — dan yang paling berbahaya `tokoku_impersonasi`: Super Admin yang
+ * keluar dari mode "Lihat sebagai Klien" lalu masuk lagi akan MENDARAT LANGSUNG
+ * di toko klien itu, bukan di dashboardnya. Terbaca seperti logout yang gagal,
+ * dan dia tidak punya petunjuk kenapa.
+ *
+ * Cookie toko & outlet tidak berbahaya (keduanya divalidasi ulang terhadap
+ * keanggotaan nyata), tapi di perangkat bersama ia membuat user berikutnya
+ * mendarat di konteks milik orang sebelumnya — mengherankan tanpa sebab.
+ */
+async function clearContextCookies() {
+  const jar = await cookies()
+  jar.delete(IMPERSONATION_COOKIE)
+  jar.delete(ORG_COOKIE)
+  jar.delete(OUTLET_COOKIE)
+}
+
 export async function signOut() {
   const supabase = await createClient()
+
+  /**
+   * Tutup sesi impersonasinya SEBELUM `signOut()`.
+   *
+   * `impersonation_sessions` adalah jejak audit — barisnya ditutup oleh
+   * `stopImpersonation()`, tapi logout melewati jalur itu sepenuhnya. Tanpa ini
+   * barisnya tertinggal dengan `ended_at` kosong selamanya, jadi riwayat akses
+   * di halaman klien menyatakan Super Admin MASIH berada di dalam toko itu.
+   * Ditutup setelah signOut tidak bisa: RLS-nya butuh sesi yang masih hidup.
+   */
+  const jar = await cookies()
+  const impersonating = jar.get(IMPERSONATION_COOKIE)?.value
+  if (impersonating) {
+    await supabase
+      .from('impersonation_sessions')
+      .update({ ended_at: new Date().toISOString() })
+      .eq('organization_id', impersonating)
+      .is('ended_at', null)
+  }
+
   await supabase.auth.signOut()
+  await clearContextCookies()
   revalidatePath('/', 'layout')
   redirect('/masuk')
 }

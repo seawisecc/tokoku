@@ -4,6 +4,18 @@
  * dengan wireframe.
  */
 const PATHS = {
+  /**
+   * WhatsApp. Satu-satunya ikon di registry ini yang BUKAN dari wireframe —
+   * digambar ulang bergaya sama (stroke 1.7, viewBox 24) supaya tidak menabrak
+   * bobot garis ikon lain. Bukan logo resmi WhatsApp; bentuk gagang telepon di
+   * dalam gelembung pesan sudah cukup dikenali dan tidak memakai aset bermerek.
+   */
+  whatsapp: (
+    <>
+      <path d="M3.5 20.5l1.3-4a8 8 0 1 1 3.2 3.1z" />
+      <path d="M9 9.2c0 3 2.3 5.3 5.3 5.3l.9-1.4-1.9-.9-.8.8a4 4 0 0 1-1.9-1.9l.8-.8-.9-1.9z" />
+    </>
+  ),
   grid: (
     <>
       <rect x="3" y="3" width="7" height="7" rx="1.5" />

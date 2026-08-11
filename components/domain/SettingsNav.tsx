@@ -13,6 +13,9 @@ const TABS: { href: Route; label: string; ownerOnly?: boolean }[] = [
   { href: '/pengaturan/kategori', label: 'Kategori' },
   { href: '/pengaturan/printer', label: 'Struk & Printer' },
   { href: '/pengaturan/sinkronisasi', label: 'Sinkronisasi' },
+  // Sengaja paling kanan: yang dibuka sehari-hari ada di kiri, dan langganan
+  // adalah hal yang dilihat sesekali — bukan tiap hari.
+  { href: '/pengaturan/langganan', label: 'Langganan' },
 ]
 
 export function SettingsNav({ isOwner }: { isOwner: boolean }) {

@@ -70,14 +70,36 @@ export function tightest(q: Quota): QuotaLine | null {
   return scored.reduce((a, b) => (b.used / b.limit! > a.used / a.limit! ? b : a))
 }
 
-export function QuotaBars({ quota }: { quota: Quota }) {
+export function QuotaBars({
+  quota,
+  structuralAsInfo = false,
+}: {
+  quota: Quota
+  /**
+   * Perlakukan batas struktural (limit 1) sebagai KETERANGAN PAKET, bukan alarm.
+   *
+   * Dinyalakan di halaman Langganan sisi toko. Paket Starter memberi 1 outlet
+   * dan setiap toko punya 1 outlet sejak menit pertama, jadi "Outlet 1/1 · Sudah
+   * penuh" berwarna coral akan menyala PERMANEN untuk setiap klien Starter sejak
+   * hari mereka mendaftar — dan warna merah yang tidak pernah bisa dihilangkan
+   * berhenti dibaca sebagai peringatan. Alasannya sama persis dengan
+   * `isStructural()` di dashboard Super Admin.
+   *
+   * Dibiarkan mati (bawaan) di panel detail Super Admin: di sana admin sedang
+   * memeriksa satu klien dan justru perlu melihat angkanya apa adanya.
+   */
+  structuralAsInfo?: boolean
+}) {
   const lines = quotaLines(quota)
 
   return (
     <div className="quota-list">
       {lines.map((l) => {
-        const full = isFull(l)
-        const near = isNear(l)
+        // Batas struktural tetap "penuh" secara fakta — yang berubah cuma
+        // apakah ia diberi warna alarm dan kalimat peringatan.
+        const structural = structuralAsInfo && isStructural(l)
+        const full = isFull(l) && !structural
+        const near = isNear(l) && !structural
         // Batang tetap penuh (bukan >100%) kalau toko turun paket dan sudah
         // terlanjur melewati batas — angkanya yang menjelaskan, bukan batangnya.
         const pct = l.limit === null ? 0 : Math.min(100, Math.round((l.used / l.limit) * 100))
@@ -107,6 +129,12 @@ export function QuotaBars({ quota }: { quota: Quota }) {
               <div className="quota-warn">
                 <Icon name="alert" size={13} />
                 <span>Sudah penuh. {l.hint}</span>
+              </div>
+            )}
+
+            {structural && isFull(l) && (
+              <div className="quota-note">
+                Paket ini memberi {l.limit}. Naik paket untuk menambah.
               </div>
             )}
           </div>

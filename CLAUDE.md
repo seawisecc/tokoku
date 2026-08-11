@@ -44,6 +44,8 @@ sebelum mengerjakan apa pun.
   tercetak di struk; lihat "Logo toko" di bawah
 - **Hapus perangkat kasir** (`/pengaturan/sinkronisasi`) — ditolak kalau masih
   ada antrean; lihat "Perangkat bisa dihapus" di bawah
+- **Langganan sisi toko** (`/pengaturan/langganan`) — paket aktif, sisa trial,
+  bar kuota, riwayat, tombol WhatsApp admin; lihat "Langganan sisi toko" di bawah
 - Pembelian & pemasok (`/pembelian`) — lihat "Pembelian" di bawah
 - Konsinyasi (`/pembelian/konsinyasi`) — titip jual, bagi hasil, retur; lihat
   "Konsinyasi" di bawah
@@ -67,8 +69,10 @@ sebelum mengerjakan apa pun.
 2. `features` jsonb sisa: `multi_outlet`, `api`, `support` belum dipakai —
    barangnya memang belum ada. `purchasing` & `reports` sudah ditegakkan, lihat
    "Pembagian paket" di bawah.
-3. Billing — `subscription_events` sudah rapi dan bisa dilihat, tapi belum ada
-   payment gateway.
+3. Billing — pemilik toko sekarang BISA melihat paket, sisa trial, kuota, dan
+   riwayat langganannya sendiri di `/pengaturan/langganan`, dan menghubungi
+   admin lewat WhatsApp. Yang belum ada cuma payment gateway-nya: perubahan
+   paket masih dikerjakan tangan lewat Super Admin.
 
 Seluruh modul yang disepakati sudah jadi — Konsinyasi yang terakhir, selesai
 10 Agu 2026. Sisa daftar di atas adalah pengembangan lanjutan, bukan ruang
@@ -310,6 +314,75 @@ seketika (dulu `ToggleRow` tak mengabari induknya — sekarang ada `onToggle`) �
 K7 dihapus dan hilang dari tabel · K6 dengan 3 antrean palsu tombolnya mati
 dengan alasan tertulis · produk baru mengambil ambang 7 dari setelan toko ·
 390px lewat iframe bersih tanpa geser horizontal.
+
+## Langganan sisi toko
+
+`/pengaturan/langganan`. Sebelum ini pemilik toko TIDAK PUNYA tempat sama sekali
+untuk melihat langganannya: satu-satunya petunjuk adalah `SubscriptionBanner`,
+dan itu `return null` selama keadaannya normal. Jadi ia baru tahu ada masa trial
+ketika tinggal 7 hari — persis momen paling buruk untuk menawarkan naik paket.
+
+**Tanpa migrasi, dan itu bukan kebetulan.** `v_client_quota` (migrasi 0020) sudah
+menyaring sendiri dengan `o.id in (select public.user_org_ids())`, dan
+`subscription_events` sudah punya policy `sub_read using can_read_org(...)`.
+Angka kuota yang dilihat pemilik toko karena itu PERSIS sama dengan yang dilihat
+Super Admin — sumbernya satu, sesuai aturan yang sama dengan `org_usage`.
+
+**`structuralAsInfo` di QuotaBars.** Paket Starter memberi 1 outlet dan setiap
+toko punya 1 outlet sejak menit pertama, jadi tanpa flag ini halaman langganan
+SETIAP klien Starter menampilkan "Outlet 1/1 · Sudah penuh" berwarna coral
+selamanya, sejak hari mereka mendaftar. Warna merah yang tidak pernah bisa
+dihilangkan berhenti dibaca sebagai peringatan. Dengan flag ini batas struktural
+tampil sebagai keterangan tenang ("Paket ini memberi 1. Naik paket untuk
+menambah."). Flagnya MATI di panel Super Admin — di sana admin sedang memeriksa
+satu klien dan perlu angkanya apa adanya. Alasannya sama dengan `isStructural()`.
+
+**Tombol WhatsApp** (`components/domain/WhatsAppButton.tsx`) memakai nomor dalam
+bentuk internasional tanpa plus (`6281237597759`) — `wa.me` membaca `081…`
+sebagai nomor Amerika berawalan 0 dan berujung di halaman "nomor tidak valid".
+Yang DITAMPILKAN tetap bentuk lokal. Pesannya sudah terisi nama toko, paket, dan
+status: pemilik warung yang mengetik sendiri hampir selalu mengirim "halo" saja,
+lalu admin harus balik bertanya toko mana — dua putaran sebelum ada yang bisa
+dikerjakan.
+
+Ikon `whatsapp` adalah satu-satunya ikon di registry yang BUKAN dari wireframe.
+Digambar ulang bergaya sama (stroke 1.7, viewBox 24), bukan logo resmi — tidak
+ada aset bermerek yang ikut masuk repo.
+
+## Logout harus membuang cookie kita sendiri
+
+`supabase.auth.signOut()` hanya membuang cookie SESI. Tiga cookie milik TokoKu
+(`tokoku_impersonasi`, `tokoku_toko`, `tokoku_outlet`) selamat dari logout kalau
+tidak dihapus eksplisit — dan sampai 11 Agu memang tidak.
+
+Akibatnya nyata dan sempat direproduksi: Super Admin yang sedang "Lihat sebagai
+Klien" lalu menekan Keluar, lalu masuk lagi, **mendarat langsung di toko klien
+itu** alih-alih di dashboardnya. Terbaca seperti logout yang gagal, dan tidak ada
+apa pun di layar yang menjelaskan kenapa.
+
+Ada akibat kedua yang lebih senyap: `impersonation_sessions` adalah jejak audit,
+dan barisnya hanya ditutup oleh `stopImpersonation()`. Logout melewati jalur itu
+sepenuhnya, jadi barisnya tertinggal dengan `ended_at` kosong SELAMANYA —
+riwayat akses di halaman klien menyatakan Super Admin masih berada di dalam toko
+itu. Sekarang `signOut()` menutupnya lebih dulu; harus SEBELUM `signOut()`,
+karena RLS-nya butuh sesi yang masih hidup.
+
+Cookie toko & outlet tidak berbahaya (keduanya divalidasi ulang terhadap
+keanggotaan nyata), tapi di perangkat bersama ia membuat user berikutnya mendarat
+di konteks milik orang sebelumnya. Ikut dibuang lewat `clearContextCookies()`,
+yang juga dipakai jalur reset kata sandi.
+
+## Irama vertikal halaman
+
+`.section-title` dulu bermargin `22px 0 10px`, dan hasilnya tiap judul bagian
+menempel ke kartu di atasnya — judul terbaca seperti ekor blok sebelumnya, bukan
+kepala blok berikutnya. Sekarang `32px 0 14px`: jarak DI ATAS judul lebih besar
+daripada di bawahnya, sehingga judul jelas milik isi yang menyusulnya.
+
+`.wide-cols` memikul jarak atasnya sendiri (`margin-top: 32px`), karena
+`.wide-cols > div > .section-title:first-child` sengaja dinolkan supaya judul
+kedua kolom sejajar. Tanpa itu dua kolom di Beranda menempel persis di bawah
+kartu statistik — 14px, dan itulah yang dilaporkan "mepet".
 
 ## Kuota paket
 
@@ -1122,7 +1195,8 @@ app/
   auth/konfirmasi  route handler pendaratan tautan email (WAJIB route, bukan page)
   (toko)/          beranda, kasir, transaksi/[id], riwayat, laporan/{,shift},
                    produk/{,[id],transfer}, pembelian/{,konsinyasi},
-                   pengaturan/{toko,outlet,tim,kategori,printer,sinkronisasi},
+                   pengaturan/{toko,outlet,tim,kategori,printer,sinkronisasi,
+                               langganan},
                    profil
   (platform)/admin klien/[id], paket, pengaturan platform
   about/  setup/   halaman publik & status koneksi
@@ -1135,7 +1209,7 @@ components/
   overlay/Drawer   panel geser untuk semua form
   data/IconAction  tombol aksi baris, konfirmasi dua langkah
   domain/          AuthPanel, ForgotPasswordForm, NewPasswordForm, QuotaBars,
-                   LogoUploader, DeviceTable, SettingsNav,
+                   LogoUploader, DeviceTable, SettingsNav, WhatsAppButton,
                    ProductTable/Drawer, StockDrawer, TeamManager,
                    CategoryManager, PlanManager, ClientDetail, ShiftCard,
                    PurchaseList/Drawer, ConsignmentList (+ drawer titipan,
