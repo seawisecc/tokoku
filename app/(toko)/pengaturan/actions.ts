@@ -412,7 +412,7 @@ export async function deleteDevice(deviceId: string): Promise<Result> {
       ok: false,
       error:
         `Perangkat ${device.device_name} punya ${open} transaksi yang gagal masuk dan belum ditinjau. ` +
-        'Selesaikan dulu di bagian "Perlu Ditinjau" di bawah — kalau perangkatnya dihapus, ' +
+        'Selesaikan dulu di bagian "Perlu Ditinjau" di bawah. Kalau perangkatnya dihapus, ' +
         'asal-usul transaksi itu ikut hilang.',
     }
   }

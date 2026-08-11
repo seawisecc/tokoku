@@ -35,11 +35,11 @@ export function PaymentSplit({
       <div className="viz-legend">
         <div>
           <span className="swatch" style={{ background: 'var(--series-1)' }} />
-          QRIS — {rupiah(qris.revenue)} · {qris.count} trx
+          QRIS: {rupiah(qris.revenue)} · {qris.count} trx
         </div>
         <div>
           <span className="swatch" style={{ background: 'var(--series-2)' }} />
-          Tunai — {rupiah(cash.revenue)} · {cash.count} trx
+          Tunai: {rupiah(cash.revenue)} · {cash.count} trx
         </div>
       </div>
     </div>

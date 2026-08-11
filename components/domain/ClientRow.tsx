@@ -55,13 +55,13 @@ export function ClientRow({
             <Link href={`/admin/klien/${client.id}`} className="cell-name">
               {client.name}
             </Link>
-            <div className="cell-sub">{client.city ?? '—'}</div>
+            <div className="cell-sub">{client.city ?? '-'}</div>
           </div>
         </div>
       </td>
       <td>
         <span className={cn('badge', PLAN_BADGE[client.plan_code ?? ''] ?? 'badge-ok')}>
-          {client.plan_name ?? '—'}
+          {client.plan_name ?? '-'}
         </span>
       </td>
       {full && <td>{client.outlet_count ?? 0}</td>}
@@ -82,7 +82,7 @@ export function ClientRow({
             </span>
           ) : (
             <span style={{ color: 'var(--color-ink-faint)', fontSize: 12 }}>
-              {quota ? 'Tak terbatas' : '—'}
+              {quota ? 'Tak terbatas' : '-'}
             </span>
           )}
         </td>

@@ -6,7 +6,7 @@ import { requirePermission } from '@/lib/auth'
 import { jam, rupiah } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Beranda — TokoKu' }
+export const metadata: Metadata = { title: 'Beranda | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function BerandaPage() {
@@ -203,7 +203,7 @@ export default async function BerandaPage() {
                   <Icon name="alert" size={16} style={{ marginTop: 1 }} />
                   <div style={{ flex: 1 }}>
                     <b>{rupiah(Number(b.total ?? 0))}</b> ke{' '}
-                    {(b.suppliers as unknown as { name: string } | null)?.name ?? 'pemasok'} —{' '}
+                    {(b.suppliers as unknown as { name: string } | null)?.name ?? 'pemasok'},{' '}
                     {telat
                       ? `telat ${Math.abs(sisa)} hari`
                       : sisa === 0
@@ -233,12 +233,12 @@ export default async function BerandaPage() {
                 <div style={{ flex: 1 }}>
                   {p.severity === 'negative' ? (
                     <>
-                      {p.product_name} tercatat <b>{p.quantity}</b> — stok minus, kemungkinan dari
+                      {p.product_name} tercatat <b>{p.quantity}</b>. Stok minus, kemungkinan dari
                       transaksi offline yang baru tersinkron. Lakukan opname.
                     </>
                   ) : (
                     <>
-                      {p.product_name} tersisa <b>{p.quantity}</b> — pertimbangkan untuk restock.
+                      {p.product_name} tersisa <b>{p.quantity}</b>. Pertimbangkan untuk restock.
                     </>
                   )}
                 </div>

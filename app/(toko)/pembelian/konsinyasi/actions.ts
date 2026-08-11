@@ -42,7 +42,7 @@ export async function recordIntake(input: {
   if (!Number.isInteger(input.consignPrice) || input.consignPrice < 0) {
     return {
       ok: false,
-      error: 'Isi harga titip — yaitu bagian pemasok untuk setiap satuan yang terjual.',
+      error: 'Isi harga titip, yaitu bagian pemasok untuk setiap satuan yang terjual.',
     }
   }
 
@@ -117,7 +117,7 @@ export async function settleSupplier(input: {
   revalidate()
   return {
     ok: true,
-    message: `Setoran ${res.code} tercatat — ${res.quantity} satuan, Rp ${res.total.toLocaleString('id-ID')}.`,
+    message: `Setoran ${res.code} tercatat: ${res.quantity} satuan, Rp ${res.total.toLocaleString('id-ID')}.`,
   }
 }
 

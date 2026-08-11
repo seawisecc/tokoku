@@ -5,7 +5,7 @@ import { jam, rupiah } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { TransactionTable } from '@/components/domain/TransactionTable'
 
-export const metadata: Metadata = { title: 'Transaksi — TokoKu' }
+export const metadata: Metadata = { title: 'Transaksi | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function TransaksiPage() {

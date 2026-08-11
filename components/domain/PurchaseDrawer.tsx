@@ -164,7 +164,7 @@ export function PurchaseDrawer({
             value={supplierId}
             onChange={(e) => setSupplierId(e.target.value)}
           >
-            <option value="">— Tanpa pemasok</option>
+            <option value="">Tanpa pemasok</option>
             {suppliers.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -192,7 +192,7 @@ export function PurchaseDrawer({
           <div className="buy-line" key={i}>
             <div className="field" style={{ marginBottom: 8 }}>
               <select value={l.productId} onChange={(e) => pickProduct(i, e.target.value)}>
-                <option value="">— Pilih produk</option>
+                <option value="">Pilih produk</option>
                 {products.map((op) => (
                   <option key={op.id} value={op.id}>
                     {op.name} ({op.sku})

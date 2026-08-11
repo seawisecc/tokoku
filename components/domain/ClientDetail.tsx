@@ -130,7 +130,7 @@ export function ClientDetail({
             <p className="field-hint" style={{ marginTop: 14 }}>
               Batas ini ditegakkan di database, jadi berlaku juga untuk perangkat kasir yang
               mendaftar sendiri saat sinkronisasi. Menurunkan paket tidak menghapus data yang
-              sudah ada — klien hanya tidak bisa menambah lagi sampai kembali di bawah batas.
+              sudah ada. Klien hanya tidak bisa menambah lagi sampai kembali di bawah batas.
             </p>
           </>
         ) : (
@@ -222,8 +222,8 @@ export function ClientDetail({
           )}
         </div>
         <p className="field-hint" style={{ marginTop: 10 }}>
-          Berlaku sampai akhir hari yang dipilih. Setelah lewat — dan selama status masih
-          <strong> Trial</strong> — toko tidak bisa membuat transaksi baru atau menambah data.
+          Berlaku sampai akhir hari yang dipilih. Setelah lewat, dan selama status masih
+          <strong> Trial</strong>, toko tidak bisa membuat transaksi baru atau menambah data.
           Transaksi yang dibuat sebelum tanggal itu tetap bisa tersinkron dari perangkat offline.
           Kosongkan untuk tanpa batas waktu.
         </p>
@@ -244,11 +244,11 @@ export function ClientDetail({
                     <td>
                       <div className="cell-name">{ACTION_LABEL[e.action] ?? e.action}</div>
                       <div className="cell-sub">
-                        {e.fromPlan ? `${e.fromPlan} → ${e.toPlan ?? '—'}` : (e.toPlan ?? '—')}
+                        {e.fromPlan ? `${e.fromPlan} → ${e.toPlan ?? '-'}` : (e.toPlan ?? '-')}
                       </div>
                     </td>
                     <td style={{ textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                      {e.amount > 0 ? rupiah(e.amount) : '—'}
+                      {e.amount > 0 ? rupiah(e.amount) : '-'}
                     </td>
                     <td style={{ color: 'var(--color-ink-faint)', whiteSpace: 'nowrap' }}>{e.at}</td>
                   </tr>
@@ -263,7 +263,7 @@ export function ClientDetail({
       <div className="card">
         <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--color-ink-soft)', lineHeight: 1.6 }}>
           Masuk ke tampilan toko ini untuk menelusuri masalah yang dilaporkan klien.
-          Mode ini <strong>hanya baca</strong> — database menolak perubahan apa pun dari
+          Mode ini <strong>hanya baca</strong>. Database menolak perubahan apa pun dari
           Super Admin karena Anda bukan anggota toko. Setiap sesi tercatat.
         </p>
         <button className="btn btn-dark" type="button" onClick={() => setAsking(true)}>
@@ -300,7 +300,7 @@ export function ClientDetail({
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Mis. tiket #124 — laporan stok tidak cocok"
+              placeholder="Mis. tiket #124, laporan stok tidak cocok"
             />
             <div className="field-hint">
               Tercatat permanen bersama waktu dan nama Anda. Pemilik toko bisa melihatnya.

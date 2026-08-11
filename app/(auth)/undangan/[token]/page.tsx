@@ -6,7 +6,7 @@ import { Icon } from '@/components/ui/icons'
 import { getSessionContext } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Undangan — TokoKu' }
+export const metadata: Metadata = { title: 'Undangan | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function UndanganPage({ params }: { params: Promise<{ token: string }> }) {

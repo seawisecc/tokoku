@@ -6,7 +6,7 @@ import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Produk & Stok — TokoKu' }
+export const metadata: Metadata = { title: 'Produk & Stok | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function ProdukPage() {

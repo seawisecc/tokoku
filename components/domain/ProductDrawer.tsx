@@ -166,7 +166,7 @@ export function ProductDrawer({
             value={draft.categoryId}
             onChange={(e) => set('categoryId', e.target.value)}
           >
-            <option value="">— Tanpa kategori —</option>
+            <option value="">Tanpa kategori</option>
             {categories.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
@@ -262,7 +262,7 @@ export function ProductDrawer({
           id="barcode"
           value={draft.barcode}
           onChange={(e) => set('barcode', e.target.value)}
-          placeholder="Opsional — untuk pemindai"
+          placeholder="Opsional, untuk pemindai"
           aria-invalid={err?.field === 'barcode'}
         />
         {err?.field === 'barcode' && <div className="field-error">{err.error}</div>}
@@ -297,7 +297,7 @@ export function ProductDrawer({
 
       {isEdit && (
         <p className="field-hint">
-          Stok tidak diubah dari sini — pakai tombol penyesuaian stok di baris produk,
+          Stok tidak diubah dari sini. Pakai tombol penyesuaian stok di baris produk,
           supaya setiap perubahan tercatat di buku besar stok.
         </p>
       )}

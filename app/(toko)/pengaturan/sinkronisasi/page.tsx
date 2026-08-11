@@ -6,7 +6,7 @@ import { requirePermission } from '@/lib/auth'
 import { jam, tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Sinkronisasi — TokoKu' }
+export const metadata: Metadata = { title: 'Sinkronisasi | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 /** "3 jam lalu" — dipakai untuk menilai kesehatan perangkat sekilas. */
@@ -106,7 +106,7 @@ export default async function SinkronisasiPage() {
           <Icon name="alert" size={16} style={{ marginTop: 1 }} />
           <div style={{ flex: 1 }}>
             {perluPerhatian} transaksi gagal diterapkan dan menunggu ditinjau. Transaksinya
-            tidak dibuang — datanya tersimpan utuh di bawah.
+            tidak dibuang. Datanya tersimpan utuh di bawah.
             {outletName && ' Daftar ini mencakup semua cabang, bukan hanya yang sedang dibuka.'}
           </div>
         </div>
@@ -132,7 +132,7 @@ export default async function SinkronisasiPage() {
                   {(rejections ?? []).map((r) => (
                     <tr key={r.id}>
                       <td className="mono" style={{ fontSize: 12 }}>
-                        {r.client_trx_code ?? '—'}
+                        {r.client_trx_code ?? '-'}
                       </td>
                       <td>
                         <div className="cell-name">{r.reason_code}</div>

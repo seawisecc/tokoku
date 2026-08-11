@@ -6,7 +6,7 @@ import { requirePermission } from '@/lib/auth'
 import { cn, rupiah, tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Laporan Shift — TokoKu' }
+export const metadata: Metadata = { title: 'Laporan Shift | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 const PERIODS = [
@@ -22,7 +22,7 @@ const jam = (iso: string | null) =>
         minute: '2-digit',
         timeZone: 'Asia/Makassar',
       })
-    : '—'
+    : '-'
 
 /**
  * Laporan shift.
@@ -175,7 +175,7 @@ export default async function LaporanShiftPage({
                       </td>
                       <td className="sh-gap" style={{ textAlign: 'right' }}>
                         {open ? (
-                          <span style={{ color: 'var(--color-ink-faint)' }}>—</span>
+                          <span style={{ color: 'var(--color-ink-faint)' }}>-</span>
                         ) : gap === 0 ? (
                           <span style={{ color: 'var(--color-ink-faint)' }}>Cocok</span>
                         ) : (

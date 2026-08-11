@@ -125,7 +125,7 @@ export function TransferDrawer({
               ))}
             </select>
             <div className="field-hint">
-              Asalnya <strong>{fromOutlet.name}</strong> — outlet yang sedang dibuka. Untuk
+              Asalnya <strong>{fromOutlet.name}</strong>, outlet yang sedang dibuka. Untuk
               memindahkan dari cabang lain, pindah dulu lewat pemilih di bar atas.
             </div>
           </div>
@@ -152,7 +152,7 @@ export function TransferDrawer({
                     value={l.productId}
                     onChange={(e) => setLine(i, { productId: e.target.value })}
                   >
-                    <option value="">— Pilih produk</option>
+                    <option value="">Pilih produk</option>
                     {products.map((op) => (
                       <option key={op.id} value={op.id}>
                         {op.name} ({op.stock} {op.unit})
@@ -216,7 +216,7 @@ export function TransferDrawer({
           </div>
 
           <p className="field-hint">
-            Stok langsung berpindah — tidak ada status &ldquo;dalam perjalanan&rdquo;. Kedua sisinya
+            Stok langsung berpindah, tidak ada status &ldquo;dalam perjalanan&rdquo;. Kedua sisinya
             tercatat di kartu stok masing-masing produk dan menunjuk nota yang sama.
           </p>
         </>

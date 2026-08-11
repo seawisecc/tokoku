@@ -257,7 +257,7 @@ function PlanDrawer({
         </div>
       </div>
       <div className="field-hint" style={{ marginTop: -6, marginBottom: 14 }}>
-        Kosongkan untuk tanpa batas — disimpan sebagai NULL, bukan 0. Batas ini ditegakkan di
+        Kosongkan untuk tanpa batas, disimpan sebagai NULL, bukan 0. Batas ini ditegakkan di
         database dan langsung berlaku untuk semua klien di paket ini.
       </div>
 

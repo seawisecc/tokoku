@@ -147,7 +147,7 @@ export function TransferManager({
 
       <p className="field-hint" style={{ marginTop: 12 }}>
         Riwayat ini menampilkan <strong>seluruh perpindahan toko</strong>, bukan hanya cabang yang
-        sedang dibuka — sebuah transfer punya dua sisi dan keduanya sama-sama nyata. Barang yang
+        sedang dibuka. Sebuah transfer punya dua sisi dan keduanya sama-sama nyata. Barang yang
         dipindahkan selalu berasal dari cabang yang sedang dibuka; untuk memindahkan dari cabang
         lain, pindah dulu lewat pemilih di bar atas.
       </p>

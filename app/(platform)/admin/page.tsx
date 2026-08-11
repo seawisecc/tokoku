@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ClientRow } from '@/components/domain/ClientRow'
 import { quotaLines, isFull, isNear, isAlerting } from '@/components/domain/QuotaBars'
 
-export const metadata: Metadata = { title: 'Dashboard — Super Admin' }
+export const metadata: Metadata = { title: 'Dashboard | Super Admin' }
 export const dynamic = 'force-dynamic'
 
 export default async function AdminDashboard() {

@@ -62,8 +62,8 @@ export function VoidTransactionButton({ trxId, code }: { trxId: string; code: st
           <div className="empty-note" style={{ marginBottom: 16 }}>
             <Icon name="alert" size={16} style={{ marginTop: 1 }} />
             <div style={{ flex: 1 }}>
-              Stok akan dikembalikan dan transaksi ditandai batal. Barisnya tetap tersimpan —
-              laporan hari itu akan menunjukkan pembatalan ini, bukan menyembunyikannya.
+              Stok akan dikembalikan dan transaksi ditandai batal. Barisnya tetap tersimpan.
+              Laporan hari itu akan menunjukkan pembatalan ini, bukan menyembunyikannya.
             </div>
           </div>
 

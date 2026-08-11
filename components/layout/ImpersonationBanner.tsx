@@ -27,7 +27,7 @@ export function ImpersonationBanner({ storeName }: { storeName: string }) {
     >
       <Icon name="alert" size={15} />
       <div style={{ flex: 1, minWidth: 200 }}>
-        Mode Super Admin — melihat <strong>{storeName}</strong>. Hanya baca; perubahan
+        Mode Super Admin: melihat <strong>{storeName}</strong>. Hanya baca; perubahan
         apa pun akan ditolak database.
       </div>
       <form action={stopImpersonation}>

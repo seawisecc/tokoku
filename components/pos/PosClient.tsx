@@ -283,7 +283,7 @@ export function PosClient(props: PosClientProps) {
         >
           <Icon name="wifiOff" size={16} style={{ marginTop: 1 }} />
           <div style={{ flex: 1 }}>
-            Mode offline — kasir tetap jalan. {pending > 0 ? `${pending} transaksi` : 'Transaksi'}{' '}
+            Mode offline. Kasir tetap jalan. {pending > 0 ? `${pending} transaksi` : 'Transaksi'}{' '}
             akan terkirim otomatis saat internet kembali. Stok yang tampil adalah angka terakhir
             yang tersinkron.
           </div>

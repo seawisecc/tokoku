@@ -4,7 +4,7 @@ import { CategoryManager, type CategoryRow } from '@/components/domain/CategoryM
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Kategori — TokoKu' }
+export const metadata: Metadata = { title: 'Kategori | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function KategoriPage() {

@@ -24,7 +24,7 @@ const jetbrains = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'TokoKu — POS & ERP Retail UMKM',
+  title: 'TokoKu | POS & ERP Retail UMKM',
   description: 'Kasir, stok, dan laporan untuk usaha retail. TokoKu by Seawise Studio.',
   applicationName: 'TokoKu',
 }

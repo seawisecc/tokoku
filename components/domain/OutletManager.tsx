@@ -130,7 +130,7 @@ export function OutletManager({
       {full && (
         <p className="field-hint" style={{ margin: '-6px 0 14px' }}>
           Kuota outlet paket ini sudah terpakai semua ({quota.used}/{quota.limit}). Naikkan paket
-          untuk membuka cabang berikutnya — outlet yang dinonaktifkan tetap memakai jatahnya karena
+          untuk membuka cabang berikutnya. Outlet yang dinonaktifkan tetap memakai jatahnya karena
           riwayat penjualannya masih tersimpan.
         </p>
       )}
@@ -227,7 +227,7 @@ export function OutletManager({
 
       <p className="field-hint" style={{ marginTop: 12 }}>
         Outlet menentukan <strong>stok, kasir, dan laporan</strong> yang sedang Anda lihat. Pindah
-        outlet lewat pemilih di bar atas. Outlet yang dinonaktifkan tidak dihapus — transaksi,
+        outlet lewat pemilih di bar atas. Outlet yang dinonaktifkan tidak dihapus. Transaksi,
         kartu stok, dan shift lamanya tetap bisa dibuka.
       </p>
 

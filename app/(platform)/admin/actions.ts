@@ -211,7 +211,7 @@ export async function setClientTrialEnd(
   revalidatePath(`/admin/klien/${organizationId}`)
   return {
     ok: true,
-    message: value ? 'Masa trial diperbarui.' : 'Batas trial dihapus — akses tidak dibatasi tanggal.',
+    message: value ? 'Masa trial diperbarui.' : 'Batas trial dihapus. Akses tidak dibatasi tanggal.',
   }
 }
 

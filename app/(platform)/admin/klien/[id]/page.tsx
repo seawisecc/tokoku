@@ -11,7 +11,7 @@ import { requirePlatformAdmin } from '@/lib/auth'
 import { tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Detail Klien — Super Admin' }
+export const metadata: Metadata = { title: 'Detail Klien | Super Admin' }
 export const dynamic = 'force-dynamic'
 
 export default async function KlienDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -102,7 +102,7 @@ export default async function KlienDetailPage({ params }: { params: Promise<{ id
       <PageHeader
         eyebrow={<Link href="/admin/klien" style={{ color: 'inherit' }}>← Klien</Link>}
         title={client.name}
-        subtitle={`${client.city ?? '—'} · bergabung ${tanggal(row.joined_at)}`}
+        subtitle={`${client.city ?? '-'} · bergabung ${tanggal(row.joined_at)}`}
       />
 
       <ClientDetail
@@ -127,7 +127,7 @@ export default async function KlienDetailPage({ params }: { params: Promise<{ id
                     <tr key={s.id}>
                       <td>
                         <div className="cell-name">
-                          {(s.profiles as unknown as { full_name: string } | null)?.full_name ?? '—'}
+                          {(s.profiles as unknown as { full_name: string } | null)?.full_name ?? '-'}
                         </div>
                         <div className="cell-sub">{s.reason ?? 'Tanpa alasan'}</div>
                       </td>

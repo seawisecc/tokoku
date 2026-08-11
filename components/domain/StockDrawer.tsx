@@ -78,7 +78,7 @@ export function StockDrawer({
           <span>Selisih</span>
         </div>
         <div className="mini-stat">
-          <b>{valid ? parsed : '—'}</b>
+          <b>{valid ? parsed : '-'}</b>
           <span>Jadi</span>
         </div>
       </div>
@@ -106,7 +106,7 @@ export function StockDrawer({
           placeholder="Mis. barang rusak, salah hitung, retur supplier"
         />
         <div className="field-hint">
-          Tercatat permanen di buku besar stok — tulis sebab yang jelas agar bisa
+          Tercatat permanen di buku besar stok. Tulis sebab yang jelas agar bisa
           ditelusuri nanti.
         </div>
       </div>

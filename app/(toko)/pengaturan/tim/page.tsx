@@ -5,7 +5,7 @@ import { TeamManager, type Invitation, type Member } from '@/components/domain/T
 import { initialsOf, requireSession } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Tim & Akses — TokoKu' }
+export const metadata: Metadata = { title: 'Tim & Akses | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function TimPage() {

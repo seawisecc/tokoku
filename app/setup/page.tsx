@@ -69,9 +69,9 @@ export default async function StatusPenyiapanPage() {
   const env = envChecks()
 
   const headline: Record<DbState['state'], { tone: 'ok' | 'warn' | 'bad'; text: string }> = {
-    'no-env': { tone: 'bad', text: 'Belum terhubung — .env.local belum diisi' },
+    'no-env': { tone: 'bad', text: 'Belum terhubung, .env.local belum diisi' },
     unreachable: { tone: 'bad', text: 'Gagal menghubungi Supabase' },
-    'no-schema': { tone: 'warn', text: 'Terhubung — tapi migrasi belum dijalankan' },
+    'no-schema': { tone: 'warn', text: 'Terhubung, tapi migrasi belum dijalankan' },
     ready: { tone: 'ok', text: 'Terhubung ke Supabase' },
   }
   const status = headline[db.state]
@@ -198,7 +198,7 @@ export default async function StatusPenyiapanPage() {
                     {c.key}
                   </div>
                   <div style={{ fontSize: 11.5, color: 'var(--color-ink-faint)' }}>
-                    {filled ? c.hint : `Belum diisi — ${c.hint}`}
+                    {filled ? c.hint : `Belum diisi: ${c.hint}`}
                   </div>
                 </div>
                 <span
@@ -307,7 +307,7 @@ export default async function StatusPenyiapanPage() {
             color: 'var(--color-ink-faint)',
           }}
         >
-          TokoKu — POS &amp; ERP retail UMKM · <strong>by Seawise Studio</strong>
+          TokoKu: POS &amp; ERP retail UMKM · <strong>by Seawise Studio</strong>
         </footer>
       </div>
     </main>

@@ -4,7 +4,7 @@ import { OutletManager } from '@/components/domain/OutletManager'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Outlet — TokoKu' }
+export const metadata: Metadata = { title: 'Outlet | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 /**
@@ -56,7 +56,7 @@ export default async function PengaturanOutletPage() {
       <PageHeader
         eyebrow="Pengaturan"
         title="Outlet"
-        subtitle="Cabang toko — masing-masing punya stok, kasir, dan struknya sendiri."
+        subtitle="Cabang toko. Masing-masing punya stok, kasir, dan struknya sendiri."
       />
 
       <OutletManager
@@ -73,7 +73,7 @@ export default async function PengaturanOutletPage() {
         quota={{ used: rows.length, limit }}
         products={(products ?? []).map((p) => ({
           id: p.id!,
-          name: p.name ?? '—',
+          name: p.name ?? '-',
           sku: p.sku ?? '',
           unit: p.unit ?? 'pcs',
           stock: Number(p.stock ?? 0),

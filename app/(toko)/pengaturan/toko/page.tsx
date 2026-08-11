@@ -5,7 +5,7 @@ import { StoreSettingsForm } from '@/components/domain/StoreSettingsForm'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Pengaturan Toko — TokoKu' }
+export const metadata: Metadata = { title: 'Pengaturan Toko | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function PengaturanTokoPage() {

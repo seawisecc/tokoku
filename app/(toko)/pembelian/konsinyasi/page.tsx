@@ -7,7 +7,7 @@ import { requirePermission } from '@/lib/auth'
 import { getPlanFeatures } from '@/lib/plan'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Konsinyasi — TokoKu' }
+export const metadata: Metadata = { title: 'Konsinyasi | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 /**
@@ -83,16 +83,16 @@ export default async function KonsinyasiPage() {
           </Link>
         }
         title="Konsinyasi"
-        subtitle="Barang titipan pemasok — toko hanya berhutang atas yang terjual."
+        subtitle="Barang titipan pemasok. Toko hanya berhutang atas yang terjual."
       />
 
       <ConsignmentList
         rows={(rows ?? []).map((r) => ({
           id: r.id!,
           supplierId: r.supplier_id!,
-          supplierName: r.supplier_name ?? '—',
+          supplierName: r.supplier_name ?? '-',
           productId: r.product_id!,
-          productName: r.product_name ?? '—',
+          productName: r.product_name ?? '-',
           sku: r.sku ?? '',
           unit: r.unit ?? 'pcs',
           sellPrice: Number(r.sell_price ?? 0),
@@ -108,7 +108,7 @@ export default async function KonsinyasiPage() {
         }))}
         products={(products ?? []).map((p) => ({
           id: p.id!,
-          name: p.name ?? '—',
+          name: p.name ?? '-',
           sku: p.sku ?? '',
           unit: p.unit ?? 'pcs',
           sellPrice: Number(p.sell_price ?? 0),
@@ -123,7 +123,7 @@ export default async function KonsinyasiPage() {
           quantity: Number(s.total_quantity ?? 0),
           total: Number(s.total ?? 0),
           note: s.note,
-          supplierName: (s.suppliers as unknown as { name: string } | null)?.name ?? '—',
+          supplierName: (s.suppliers as unknown as { name: string } | null)?.name ?? '-',
         }))}
       />
     </>

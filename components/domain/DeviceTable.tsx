@@ -105,7 +105,7 @@ export function DeviceTable({ devices }: { devices: DeviceRow[] }) {
                       {d.pendingCount > 0 ? (
                         <span className="badge badge-low">{d.pendingCount}</span>
                       ) : (
-                        <span style={{ color: 'var(--color-ink-faint)' }}>—</span>
+                        <span style={{ color: 'var(--color-ink-faint)' }}>-</span>
                       )}
                     </td>
                     <td>{d.offlineTrx7d}</td>
@@ -113,7 +113,7 @@ export function DeviceTable({ devices }: { devices: DeviceRow[] }) {
                       {d.openRejections > 0 ? (
                         <span className="badge badge-low">{d.openRejections}</span>
                       ) : (
-                        <span style={{ color: 'var(--color-ink-faint)' }}>—</span>
+                        <span style={{ color: 'var(--color-ink-faint)' }}>-</span>
                       )}
                     </td>
                     <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -159,7 +159,7 @@ export function DeviceTable({ devices }: { devices: DeviceRow[] }) {
 
       <div className="field-hint" style={{ marginTop: 10 }}>
         Menghapus perangkat mengosongkan jatah kuota paket, dan transaksi lamanya tetap
-        tersimpan — nomor transaksinya sudah memuat kode perangkat. Perangkat yang masih
+        tersimpan. Nomor transaksinya sudah memuat kode perangkat. Perangkat yang masih
         menyimpan antrean belum terkirim tidak bisa dihapus.
       </div>
     </>

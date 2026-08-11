@@ -5,7 +5,7 @@ import { TransferManager } from '@/components/domain/TransferManager'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Pindah Stok — TokoKu' }
+export const metadata: Metadata = { title: 'Pindah Stok | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 /**
@@ -68,7 +68,7 @@ export default async function PindahStokPage() {
           </Link>
         }
         title="Pindah Stok"
-        subtitle="Perpindahan barang antar cabang — stok turun di asal dan naik di tujuan seketika."
+        subtitle="Perpindahan barang antar cabang. Stok turun di asal dan naik di tujuan seketika."
       />
 
       <TransferManager
@@ -82,7 +82,7 @@ export default async function PindahStokPage() {
         }))}
         products={(products ?? []).map((p) => ({
           id: p.id!,
-          name: p.name ?? '—',
+          name: p.name ?? '-',
           sku: p.sku ?? '',
           unit: p.unit ?? 'pcs',
           stock: Number(p.stock ?? 0),
@@ -97,11 +97,11 @@ export default async function PindahStokPage() {
             code: t.code,
             transferredOn: t.transferred_on,
             note: t.note,
-            fromName: outletName.get(t.from_outlet_id) ?? '—',
-            toName: outletName.get(t.to_outlet_id) ?? '—',
+            fromName: outletName.get(t.from_outlet_id) ?? '-',
+            toName: outletName.get(t.to_outlet_id) ?? '-',
             totalQty: items.reduce((n, i) => n + Number(i.quantity ?? 0), 0),
             items: items.map((i) => ({
-              name: i.products?.name ?? '—',
+              name: i.products?.name ?? '-',
               unit: i.products?.unit ?? 'pcs',
               quantity: Number(i.quantity ?? 0),
             })),

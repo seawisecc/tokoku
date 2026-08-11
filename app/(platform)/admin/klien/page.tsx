@@ -5,7 +5,7 @@ import { tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { ClientRow } from '@/components/domain/ClientRow'
 
-export const metadata: Metadata = { title: 'Manajemen Klien — Super Admin' }
+export const metadata: Metadata = { title: 'Manajemen Klien | Super Admin' }
 export const dynamic = 'force-dynamic'
 
 export default async function KlienPage() {

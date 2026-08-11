@@ -260,7 +260,7 @@ export async function signUp(_prev: SignUpState, formData: FormData): Promise<Si
     const message = m.includes('already registered')
       ? 'Email ini sudah terdaftar. Silakan masuk lewat tab sebelah.'
       : m.includes('is invalid') || m.includes('invalid format')
-        ? 'Email ini ditolak. Pakai email aktif yang bisa menerima pesan — mis. Gmail.'
+        ? 'Email ini ditolak. Pakai email aktif yang bisa menerima pesan, mis. Gmail.'
         : m.includes('weak password') || m.includes('password should')
           ? 'Kata sandi terlalu lemah. Campur huruf besar, huruf kecil, dan angka.'
           : m.includes('rate limit') || m.includes('too many')

@@ -42,7 +42,7 @@ const productSchema = z
     trackStock: z.coerce.boolean().default(true),
   })
   .refine((v) => v.sellPrice >= v.costPrice, {
-    message: 'Harga jual di bawah harga pokok — setiap penjualan akan rugi',
+    message: 'Harga jual di bawah harga pokok, setiap penjualan akan rugi',
     path: ['sellPrice'],
   })
 

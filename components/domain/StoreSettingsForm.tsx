@@ -72,7 +72,7 @@ export function StoreSettingsForm({ initial }: { initial: StoreValues }) {
         <ToggleRow
           name="allowNegativeStock"
           label="Izinkan stok minus saat penjualan online"
-          hint="Penjualan offline selalu diterima apa pun keadaan stok — barangnya sudah keluar dari rak. Sakelar ini hanya mengatur penjualan saat kasir terhubung internet."
+          hint="Penjualan offline selalu diterima apa pun keadaan stok. Barangnya sudah keluar dari rak. Sakelar ini hanya mengatur penjualan saat kasir terhubung internet."
           defaultChecked={v.allowNegativeStock}
         />
       </SettingsForm>

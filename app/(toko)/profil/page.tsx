@@ -7,7 +7,7 @@ import { initialsOf, requireSession } from '@/lib/auth'
 import { cn } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Profil — TokoKu' }
+export const metadata: Metadata = { title: 'Profil | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 const ROLE_LABEL: Record<string, string> = {

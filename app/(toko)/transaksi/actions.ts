@@ -23,7 +23,7 @@ export async function voidTransaction(trxId: string, reason: string): Promise<Vo
 
   const alasan = reason.trim()
   if (alasan.length < 4) {
-    return { ok: false, error: 'Tulis alasan pembatalan minimal 4 huruf — ini tercatat permanen.' }
+    return { ok: false, error: 'Tulis alasan pembatalan minimal 4 huruf. Ini tercatat permanen.' }
   }
 
   const supabase = await createClient()

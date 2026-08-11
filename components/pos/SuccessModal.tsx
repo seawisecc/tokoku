@@ -102,8 +102,8 @@ export function SuccessModal({
             >
               <Icon name="wifiOff" size={16} style={{ marginTop: 1 }} />
               <div style={{ flex: 1 }}>
-                Tersimpan di perangkat. Akan terkirim otomatis saat internet kembali —
-                struk ini tetap sah.
+                Tersimpan di perangkat. Akan terkirim otomatis saat internet kembali.
+                Struk ini tetap sah.
               </div>
             </div>
           )}

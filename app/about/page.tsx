@@ -3,8 +3,8 @@ import Link from 'next/link'
 import { BrandMark } from '@/components/layout/BrandMark'
 
 export const metadata: Metadata = {
-  title: 'Tentang — TokoKu',
-  description: 'TokoKu — POS & ERP retail untuk UMKM. Dibuat oleh Seawise Studio.',
+  title: 'Tentang | TokoKu',
+  description: 'TokoKu: POS & ERP retail untuk UMKM. Dibuat oleh Seawise Studio.',
 }
 
 export default function AboutPage() {
@@ -17,7 +17,7 @@ export default function AboutPage() {
           Kasir yang tetap jalan waktu internet mati.
         </h1>
         <p style={{ fontSize: 14.5, color: 'var(--color-ink-soft)', lineHeight: 1.7, margin: 0 }}>
-          TokoKu adalah aplikasi kasir dan ERP untuk usaha retail kecil — warung, kios, toko
+          TokoKu adalah aplikasi kasir dan ERP untuk usaha retail kecil: warung, kios, toko
           kelontong, minimarket. Dibuat karena satu kenyataan sederhana: di banyak daerah,
           internet putus beberapa kali sehari, dan kasir tidak boleh ikut berhenti.
         </p>
@@ -60,7 +60,7 @@ export default function AboutPage() {
         </div>
 
         <footer style={{ marginTop: 40, paddingTop: 18, borderTop: '1px solid var(--color-line)', fontSize: 12, color: 'var(--color-ink-faint)' }}>
-          TokoKu — POS &amp; ERP retail UMKM · <strong>by Seawise Studio</strong>
+          TokoKu: POS &amp; ERP retail UMKM · <strong>by Seawise Studio</strong>
         </footer>
       </div>
     </main>

@@ -218,7 +218,7 @@ export function AuthPanel({
               <>
                 <h2 className="overlay-title">Baru di TokoKu?</h2>
                 <p className="overlay-text">
-                  Daftarkan toko Anda dan mulai mencatat penjualan — bahkan saat internet mati.
+                  Daftarkan toko Anda dan mulai mencatat penjualan, bahkan saat internet mati.
                 </p>
                 <button type="button" className="btn-outline-forest" onClick={() => setMode('register')}>
                   Daftarkan Toko

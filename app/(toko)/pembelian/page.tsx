@@ -5,7 +5,7 @@ import { requirePermission } from '@/lib/auth'
 import { getPlanFeatures } from '@/lib/plan'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Pembelian — TokoKu' }
+export const metadata: Metadata = { title: 'Pembelian | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function PembelianPage() {
@@ -56,7 +56,7 @@ export default async function PembelianPage() {
       <PageHeader
         eyebrow={session.org!.name}
         title="Pembelian"
-        subtitle="Catat barang masuk — stok bertambah dan harga pokok ikut diperbarui."
+        subtitle="Catat barang masuk. Stok bertambah dan harga pokok ikut diperbarui."
       />
 
       <PurchaseList

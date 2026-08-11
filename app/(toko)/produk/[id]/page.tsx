@@ -6,7 +6,7 @@ import { requirePermission } from '@/lib/auth'
 import { cn, rupiah, tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Kartu Stok — TokoKu' }
+export const metadata: Metadata = { title: 'Kartu Stok | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 /**
@@ -28,7 +28,7 @@ const MOVE: Record<string, { label: string; hint?: string }> = {
   transfer_out: { label: 'Transfer keluar' },
   consign_in: {
     label: 'Titipan masuk',
-    hint: 'Barang konsinyasi — masih milik pemasok sampai terjual.',
+    hint: 'Barang konsinyasi, masih milik pemasok sampai terjual.',
   },
   consign_return: {
     label: 'Retur titipan',
@@ -164,7 +164,7 @@ export default async function KartuStokPage({ params }: { params: Promise<{ id: 
                       <td className="mv-what">
                         <div className="cell-name">{meta.label}</div>
                         <div className="cell-sub">
-                          {m.note ?? meta.hint ?? (by ? `oleh ${by}` : '—')}
+                          {m.note ?? meta.hint ?? (by ? `oleh ${by}` : '-')}
                         </div>
                       </td>
                       <td className="mv-when">
@@ -192,7 +192,7 @@ export default async function KartuStokPage({ params }: { params: Promise<{ id: 
       )}
 
       <p className="field-hint" style={{ marginTop: 12 }}>
-        Kartu stok bersifat catatan permanen — barisnya tidak bisa diubah maupun dihapus oleh
+        Kartu stok bersifat catatan permanen. Barisnya tidak bisa diubah maupun dihapus oleh
         siapa pun, termasuk pemilik toko. Kalau ada angka yang keliru, perbaiki lewat opname
         supaya koreksinya ikut tercatat.
       </p>

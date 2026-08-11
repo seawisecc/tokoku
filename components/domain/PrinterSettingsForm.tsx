@@ -53,7 +53,7 @@ export function PrinterSettingsForm({
               name="header"
               value={v.header}
               onChange={(e) => set('header', e.target.value)}
-              placeholder="Opsional — mis. slogan toko"
+              placeholder="Opsional, mis. slogan toko"
             />
           </div>
 

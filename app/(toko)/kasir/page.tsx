@@ -4,7 +4,7 @@ import { isLapsed, subscriptionState } from '@/lib/subscription'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Kasir — TokoKu' }
+export const metadata: Metadata = { title: 'Kasir | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 /**

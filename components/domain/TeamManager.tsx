@@ -138,13 +138,13 @@ export function TeamManager({
           </div>
           <div style={{ fontWeight: 500, marginBottom: 8 }}>
             {invited.delivery === 'sent' &&
-              'Minta yang bersangkutan memeriksa kotak masuk — dan folder spam. Tautannya juga bisa dikirim lewat WhatsApp:'}
+              'Minta yang bersangkutan memeriksa kotak masuk, dan folder spam. Tautannya juga bisa dikirim lewat WhatsApp:'}
             {invited.delivery === 'skipped' &&
               'Pengiriman email belum disiapkan di server ini. Salin tautan berikut dan kirim sendiri lewat WhatsApp:'}
             {invited.delivery === 'failed' && (
               <>
                 Undangannya <strong>tetap berlaku</strong>, tapi emailnya gagal terkirim
-                {invited.deliveryError ? ` — ${invited.deliveryError}` : '.'} Kirim tautan ini
+                {invited.deliveryError ? `: ${invited.deliveryError}` : '.'} Kirim tautan ini
                 sendiri lewat WhatsApp:
               </>
             )}

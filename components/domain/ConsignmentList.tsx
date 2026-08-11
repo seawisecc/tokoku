@@ -245,7 +245,7 @@ export function ConsignmentList({
                       {r.qtySold} {r.unit}
                     </td>
                     <td className="cn-due" style={{ textAlign: 'right', fontWeight: 700 }}>
-                      {r.qtyUnsettled > 0 ? rupiah(r.amountDue) : '—'}
+                      {r.qtyUnsettled > 0 ? rupiah(r.amountDue) : '-'}
                     </td>
                     <td className="cn-act">
                       {!r.endedAt && (
@@ -452,7 +452,7 @@ function IntakeDrawer({
       <div className="field">
         <label htmlFor="cnProduct">Produk yang dititipkan</label>
         <select id="cnProduct" value={productId} onChange={(e) => pickProduct(e.target.value)}>
-          <option value="">— Pilih produk</option>
+          <option value="">Pilih produk</option>
           {products.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name} ({p.sku})
@@ -475,7 +475,7 @@ function IntakeDrawer({
           <div className="field-hint" style={{ color: 'var(--color-amber-ink)' }}>
             Toko masih punya {product.stock} {product.unit} produk ini sebelum titipan masuk.
             Penjualannya nanti terhitung sebagai hak pemasok semua, karena kasir hanya mencatat
-            produknya — bukan milik siapa tiap satuannya. Kalau stok lama itu milik toko sendiri,
+            produknya, bukan milik siapa tiap satuannya. Kalau stok lama itu milik toko sendiri,
             lebih aman membuat produk terpisah untuk barang titipan.
           </div>
         )}
@@ -489,7 +489,7 @@ function IntakeDrawer({
           disabled={!!existing}
           onChange={(e) => setSupplierId(e.target.value)}
         >
-          <option value="">— Pilih pemasok</option>
+          <option value="">Pilih pemasok</option>
           {suppliers.map((s) => (
             <option key={s.id} value={s.id}>
               {s.name}
@@ -557,7 +557,7 @@ function IntakeDrawer({
               toko {rupiah(margin)}
             </strong>{' '}
             per {product.unit}
-            {margin < 0 && ' — harga titip lebih tinggi dari harga jual, toko rugi tiap penjualan.'}
+            {margin < 0 && '. Harga titip lebih tinggi dari harga jual, toko rugi tiap penjualan.'}
           </div>
         </div>
       )}
@@ -686,7 +686,7 @@ function ReturnDrawer({
       </div>
 
       <p className="field-hint">
-        Retur mengurangi stok toko dan tidak melibatkan uang — barang yang belum laku kembali ke
+        Retur mengurangi stok toko dan tidak melibatkan uang. Barang yang belum laku kembali ke
         pemasok. Yang sudah terjual tetap jadi hutang dan disetorkan terpisah.
       </p>
     </Drawer>
@@ -749,7 +749,7 @@ function SettleDrawer({
       >
         <div style={{ flex: 1 }}>
           Seluruh titipan {supplier.name} yang sudah terjual dan belum disetorkan dihitung sekaligus
-          — total <strong style={{ color: 'var(--color-ink)' }}>{rupiah(supplier.due)}</strong>.
+          , total <strong style={{ color: 'var(--color-ink)' }}>{rupiah(supplier.due)}</strong>.
         </div>
       </div>
 
@@ -769,7 +769,7 @@ function SettleDrawer({
           id="stNote"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Opsional — mis. cara bayarnya"
+          placeholder="Opsional, mis. cara bayarnya"
         />
       </div>
 

@@ -126,7 +126,7 @@ export function LogoUploader({ logoUrl, storeName }: { logoUrl: string | null; s
             </div>
             <div className="field-hint">
               PNG, JPG, atau WebP. Maksimal 1 MB. Tampil di kolom navigasi dan tercetak di
-              struk — untuk struk, gambar berlatar putih dengan garis tegas paling terbaca,
+              struk. Untuk struk, gambar berlatar putih dengan garis tegas paling terbaca,
               karena printer thermal hanya mengenal hitam dan putih.
             </div>
           </div>

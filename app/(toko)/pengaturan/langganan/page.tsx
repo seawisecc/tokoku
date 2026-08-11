@@ -8,7 +8,7 @@ import { cn, rupiah, tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { subscriptionState } from '@/lib/subscription'
 
-export const metadata: Metadata = { title: 'Langganan — TokoKu' }
+export const metadata: Metadata = { title: 'Langganan | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 /** Kalimat manusia untuk tiap jenis peristiwa langganan. */
@@ -142,7 +142,7 @@ export default async function LanggananPage() {
               ) : (
                 <>
                   Masa coba gratis sudah berakhir <b>{tanggal(trialEnds!)}</b>. Kasir tidak bisa
-                  mencatat penjualan baru dan data baru tidak bisa ditambah — semua data lama
+                  mencatat penjualan baru dan data baru tidak bisa ditambah. Semua data lama
                   tetap aman dan bisa dilihat.
                 </>
               )}
@@ -183,7 +183,7 @@ export default async function LanggananPage() {
       <div className="section-title">Butuh Ubah Paket?</div>
       <div className="card">
         <p style={{ margin: 0, fontSize: 13, color: 'var(--color-ink-soft)', lineHeight: 1.6 }}>
-          Naik paket, perpanjang, atau tanya tagihan — semuanya lewat admin TokoKu. Pesan
+          Naik paket, perpanjang, atau tanya tagihan: semuanya lewat admin TokoKu. Pesan
           WhatsApp-nya sudah terisi nama toko dan paket Anda, jadi tidak perlu menjelaskan dari
           awal.
         </p>
@@ -213,11 +213,11 @@ export default async function LanggananPage() {
                       <td>
                         <div className="cell-name">{AKSI[e.action] ?? e.action}</div>
                         <div className="cell-sub">
-                          {dari && ke ? `${dari} → ${ke}` : (ke ?? '—')}
+                          {dari && ke ? `${dari} → ${ke}` : (ke ?? '-')}
                         </div>
                       </td>
                       <td style={{ textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                        {Number(e.amount ?? 0) > 0 ? rupiah(Number(e.amount)) : '—'}
+                        {Number(e.amount ?? 0) > 0 ? rupiah(Number(e.amount)) : '-'}
                       </td>
                       <td
                         style={{

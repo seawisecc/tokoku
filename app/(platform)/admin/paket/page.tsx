@@ -4,7 +4,7 @@ import { PlanManager, type PlanRow } from '@/components/domain/PlanManager'
 import { requirePlatformAdmin } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Paket — Super Admin' }
+export const metadata: Metadata = { title: 'Paket | Super Admin' }
 export const dynamic = 'force-dynamic'
 
 export default async function PaketPage() {

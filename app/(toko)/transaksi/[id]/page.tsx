@@ -10,7 +10,7 @@ import { requireSession } from '@/lib/auth'
 import { jam, rupiah, tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Detail Transaksi — TokoKu' }
+export const metadata: Metadata = { title: 'Detail Transaksi | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function DetailTransaksiPage({

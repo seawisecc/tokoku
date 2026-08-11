@@ -189,7 +189,7 @@ export function PurchaseList({
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="cell-name">Konsinyasi</div>
             <div className="cell-sub">
-              Barang titipan pemasok — toko hanya berhutang atas yang terjual.
+              Barang titipan pemasok. Toko hanya berhutang atas yang terjual.
             </div>
           </div>
           <Icon name="chevronRight" size={14} />
@@ -198,7 +198,7 @@ export function PurchaseList({
 
       {!canUseSupplier && (
         <p className="field-hint" style={{ marginTop: 12 }}>
-          Paket ini mencatat barang masuk — stok dan harga pokok tetap akurat. Pencatatan pemasok,
+          Paket ini mencatat barang masuk. Stok dan harga pokok tetap akurat. Pencatatan pemasok,
           tempo, dan hutang dagang tersedia mulai paket Growth.
         </p>
       )}

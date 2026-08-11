@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { ForgotPasswordForm } from '@/components/domain/ForgotPasswordForm'
 
-export const metadata: Metadata = { title: 'Lupa Kata Sandi — TokoKu' }
+export const metadata: Metadata = { title: 'Lupa Kata Sandi | TokoKu' }
 
 export default function LupaSandiPage() {
   return (

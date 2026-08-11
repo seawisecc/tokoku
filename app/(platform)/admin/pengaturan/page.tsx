@@ -3,7 +3,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { requirePlatformAdmin } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Pengaturan Platform — TokoKu' }
+export const metadata: Metadata = { title: 'Pengaturan Platform | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function PengaturanPlatformPage() {

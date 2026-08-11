@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { NewPasswordForm } from '@/components/domain/NewPasswordForm'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Kata Sandi Baru — TokoKu' }
+export const metadata: Metadata = { title: 'Kata Sandi Baru | TokoKu' }
 
 /**
  * Halaman ganti kata sandi setelah tautan email diklik.

@@ -4,7 +4,7 @@ import { PrinterSettingsForm, type PrinterValues } from '@/components/domain/Pri
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Struk & Printer — TokoKu' }
+export const metadata: Metadata = { title: 'Struk & Printer | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 export default async function PengaturanPrinterPage() {

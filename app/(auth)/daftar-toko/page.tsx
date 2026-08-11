@@ -5,7 +5,7 @@ import { FinishRegistration } from '@/components/domain/FinishRegistration'
 import { getSessionContext } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Daftarkan Toko — TokoKu' }
+export const metadata: Metadata = { title: 'Daftarkan Toko | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 /**
@@ -46,7 +46,7 @@ export default async function DaftarTokoPage() {
         <p className="auth-sub">
           {existing ? (
             <>
-              Toko baru punya produk, tim, stok, dan langganannya <strong>sendiri</strong> — terpisah
+              Toko baru punya produk, tim, stok, dan langganannya <strong>sendiri</strong>, terpisah
               penuh dari toko Anda yang sekarang. Kalau yang Anda maksud adalah membuka cabang
               dengan katalog yang sama, gunakan Pengaturan → Outlet.
             </>
@@ -65,7 +65,7 @@ export default async function DaftarTokoPage() {
         {existing && (
           <p className="field-hint" style={{ marginTop: 14 }}>
             {owned >= 5
-              ? 'Anda sudah memiliki 5 toko — itu batas per akun. Hubungi admin TokoKu kalau memang perlu lebih.'
+              ? 'Anda sudah memiliki 5 toko. Itu batas per akun. Hubungi admin TokoKu kalau memang perlu lebih.'
               : `Toko yang Anda miliki: ${owned} dari 5.`}{' '}
             <Link href="/beranda" className="link">
               Kembali

@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {children}
 
         <p className="auth-foot">
-          TokoKu — POS &amp; ERP retail UMKM · <strong>by Seawise Studio</strong>
+          TokoKu: POS &amp; ERP retail UMKM · <strong>by Seawise Studio</strong>
         </p>
       </div>
     </div>

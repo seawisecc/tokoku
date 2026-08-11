@@ -4,7 +4,7 @@ import { AuthPanel } from '@/components/domain/AuthPanel'
 import { getSessionContext } from '@/lib/auth'
 import { homeFor } from '@/lib/navigation'
 
-export const metadata: Metadata = { title: 'Masuk — TokoKu' }
+export const metadata: Metadata = { title: 'Masuk | TokoKu' }
 
 export default async function MasukPage({
   searchParams,

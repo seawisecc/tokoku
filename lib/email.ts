@@ -123,7 +123,7 @@ export function invitationEmail(input: {
     'Tautan ini berlaku 7 hari dan hanya bisa dipakai sekali.',
     `Kalau Anda merasa tidak mengenal ${input.storeName}, abaikan saja email ini.`,
     '',
-    `— ${input.appName}`,
+    `- ${input.appName}`,
   ].join('\n')
 
   const html = `
@@ -139,7 +139,7 @@ export function invitationEmail(input: {
       </p>
       <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#5b6b60">
         Setelah bergabung, Anda bisa melayani penjualan di kasir sesuai akses yang diberikan
-        pemilik toko — termasuk saat internet sedang mati.
+        pemilik toko, termasuk saat internet sedang mati.
       </p>
       <a href="${esc(input.link)}"
          style="display:inline-block;padding:12px 22px;background:#0e2419;color:#a1ffce;text-decoration:none;border-radius:12px;font-weight:700;font-size:14px">
@@ -152,8 +152,8 @@ export function invitationEmail(input: {
       <hr style="border:none;border-top:1px solid #e4eae2;margin:22px 0" />
       <p style="margin:0;font-size:12.5px;color:#8b9a90;line-height:1.6">
         Tautan ini berlaku 7 hari dan hanya bisa dipakai sekali.
-        Kalau Anda merasa tidak mengenal ${esc(input.storeName)}, abaikan saja email ini —
-        tanpa dibuka, undangannya tidak berlaku.
+        Kalau Anda merasa tidak mengenal ${esc(input.storeName)}, abaikan saja email ini.
+        Tanpa dibuka, undangannya tidak berlaku.
       </p>
     </div>
   </div>

@@ -11,7 +11,7 @@ import { rupiah } from '@/lib/format'
 import { getPlanFeatures } from '@/lib/plan'
 import { createClient } from '@/lib/supabase/server'
 
-export const metadata: Metadata = { title: 'Laporan — TokoKu' }
+export const metadata: Metadata = { title: 'Laporan | TokoKu' }
 export const dynamic = 'force-dynamic'
 
 const TZ = 'Asia/Makassar'
@@ -379,7 +379,7 @@ export default async function LaporanPage({
         </div>
       ) : (
         <PlanLock>
-          Urutan barang yang paling banyak menghasilkan uang — supaya yang laku tidak pernah
+          Urutan barang yang paling banyak menghasilkan uang, supaya yang laku tidak pernah
           kehabisan stok dan yang mengendap tidak dibelanjakan lagi.
         </PlanLock>
       )}
@@ -441,7 +441,7 @@ export default async function LaporanPage({
 
       {!fullReports && (
         <p className="field-hint" style={{ marginTop: 12 }}>
-          Paket ini menampilkan omset, jumlah transaksi, dan rincian hariannya — semua penjualan
+          Paket ini menampilkan omset, jumlah transaksi, dan rincian hariannya. Semua penjualan
           tetap tercatat lengkap, termasuk yang dibuat saat kasir offline. Laba kotor, produk
           terlaris, komposisi metode bayar, dan rentang 90 hari tersedia mulai paket Growth.
         </p>
