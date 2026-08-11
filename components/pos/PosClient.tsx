@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ensureShift } from '@/app/(toko)/kasir/actions'
 import { Icon } from '@/components/ui/icons'
 import {
@@ -31,6 +31,7 @@ import { PaymentModal } from './PaymentModal'
 import { ProductGrid } from './ProductGrid'
 import { SuccessModal, type StoreInfo } from './SuccessModal'
 import { SyncStatusChip } from './SyncStatusChip'
+import { BarcodeScanner } from './BarcodeScanner'
 
 export type PosClientProps = {
   /** true kalau langganan toko sedang tertutup — transaksi baru akan ditolak server. */
@@ -54,6 +55,9 @@ export function PosClient(props: PosClientProps) {
   )
   const [category, setCategory] = useState('Semua')
   const [query, setQuery] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  const [scanNotice, setScanNotice] = useState<string | null>(null)
+  const [scannerOpen, setScannerOpen] = useState(false)
   const [online, setOnline] = useState(true)
   const [pending, setPending] = useState(0)
   const [lastSync, setLastSync] = useState<string | null>(null)
@@ -161,9 +165,63 @@ export function PosClient(props: PosClientProps) {
     return products.filter((p) => {
       if (category !== 'Semua' && p.category_name !== category) return false
       if (!q) return true
-      return p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.sku.toLowerCase().includes(q) ||
+        (p.barcode ?? '').toLowerCase().includes(q)
+      )
     })
   }, [products, category, query])
+
+  // ---------- pindaian barcode ----------
+  const tambah = useCallback(
+    (p: CatalogEntry) =>
+      cart.add({ productId: p.id, name: p.name, sku: p.sku, price: p.sell_price, stock: p.stock }),
+    [cart],
+  )
+
+  /**
+   * Terima hasil pindaian, dari kamera maupun alat pemindai USB/Bluetooth.
+   *
+   * Cocokkan BARCODE dulu, baru SKU. Alat pemindai berlaku seperti keyboard:
+   * ia mengetik seluruh angka lalu menekan Enter, jadi tanpa penanganan ini
+   * kasir harus menekan kartu produknya sendiri padahal barangnya sudah
+   * dipindai. Sudah cocok, langsung masuk keranjang dan kotak cari dikosongkan
+   * supaya barang berikutnya bisa segera dipindai.
+   */
+  const terimaPindaian = useCallback(
+    (kode: string): boolean => {
+      const k = kode.trim().toLowerCase()
+      if (!k) return false
+      const p =
+        products.find((x) => (x.barcode ?? '').toLowerCase() === k) ??
+        products.find((x) => x.sku.toLowerCase() === k)
+      if (!p) return false
+      tambah(p)
+      setQuery('')
+      setScanNotice(`${p.name} masuk keranjang.`)
+      return true
+    },
+    [products, tambah],
+  )
+
+  /**
+   * Fokus otomatis ke kotak cari HANYA di perangkat berpenunjuk halus (mouse).
+   *
+   * Di kasir meja, alat pemindai tidak berguna kalau fokusnya tidak di kotak
+   * cari. Di ponsel fokus otomatis justru membuka papan ketik dan menutupi
+   * setengah grid produk sebelum kasir sempat menyentuh apa pun.
+   */
+  useEffect(() => {
+    if (window.matchMedia('(pointer: fine)').matches) searchRef.current?.focus()
+  }, [])
+
+  // Pesan "masuk keranjang" hilang sendiri; kasir tidak perlu menutupnya.
+  useEffect(() => {
+    if (!scanNotice) return
+    const t = setTimeout(() => setScanNotice(null), 2200)
+    return () => clearTimeout(t)
+  }, [scanNotice])
 
   // ---------- pembayaran ----------
   async function handlePay(method: 'cash' | 'qris', paid: number) {
@@ -292,15 +350,63 @@ export function PosClient(props: PosClientProps) {
 
       <div className={cn('pos-layout', cartCount > 0 && 'with-cart-bar')}>
         <div>
-          <div className="tf-input" style={{ marginBottom: 12 }}>
-            <Icon name="search" size={15} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari produk, SKU, atau scan barcode…"
-              aria-label="Cari produk"
-            />
+          <div className="scan-row">
+            <div className="tf-input" style={{ flex: 1, minWidth: 0 }}>
+              <Icon name="search" size={15} />
+              <input
+                ref={searchRef}
+                value={query}
+                onChange={(e) => {
+                  const v = e.target.value
+                  // Pemindai yang tidak mengirim Enter tetap tertangkap: begitu
+                  // ketikannya persis sama dengan sebuah barcode, produknya masuk.
+                  if (v.length >= 6 && terimaPindaian(v)) return
+                  setQuery(v)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter') return
+                  e.preventDefault()
+                  if (terimaPindaian(query)) return
+                  // Bukan barcode, tapi kalau hasil carinya tinggal satu, itu
+                  // yang dimaksud kasir.
+                  if (visible.length === 1) {
+                    tambah(visible[0])
+                    setQuery('')
+                    setScanNotice(`${visible[0].name} masuk keranjang.`)
+                  }
+                }}
+                placeholder="Cari produk, SKU, atau scan barcode…"
+                aria-label="Cari produk, SKU, atau barcode"
+              />
+            </div>
+            <button
+              type="button"
+              className="btn btn-ghost scan-btn"
+              onClick={() => setScannerOpen(true)}
+              aria-label="Pindai barcode dengan kamera"
+              title="Pindai barcode dengan kamera"
+            >
+              <Icon name="scan" size={17} />
+            </button>
           </div>
+
+          {scanNotice && (
+            <div className="scan-notice" role="status">
+              <Icon name="check" size={14} />
+              {scanNotice}
+            </div>
+          )}
+
+          {scannerOpen && (
+            <BarcodeScanner
+              onClose={() => setScannerOpen(false)}
+              onScan={(kode) => {
+                const ketemu = terimaPindaian(kode)
+                if (!ketemu) setScanNotice(`Barcode ${kode} tidak cocok dengan produk mana pun.`)
+                return ketemu
+              }}
+            />
+          )}
 
           <CategoryPills
             categories={['Semua', ...categories.map((c) => c.name)]}
@@ -312,15 +418,7 @@ export function PosClient(props: PosClientProps) {
             products={visible}
             allowNegativeStock={props.allowNegativeStock}
             inCart={Object.fromEntries(cart.lines.map((l) => [l.productId, l.qty]))}
-            onPick={(p) =>
-              cart.add({
-                productId: p.id,
-                name: p.name,
-                sku: p.sku,
-                price: p.sell_price,
-                stock: p.stock,
-              })
-            }
+            onPick={tambah}
           />
         </div>
 
