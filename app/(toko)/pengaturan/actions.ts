@@ -19,6 +19,18 @@ function firstIssue(e: z.ZodError): { ok: false; error: string; field?: string }
  * Super Admin yang sedang melihat toko klien berperan `owner`, jadi cek peran
  * saja tidak cukup — mode itu harus ditolak eksplisit di sini.
  */
+/**
+ * Kalimat untuk UPDATE yang ditolak RLS.
+ *
+ * Gerbang aplikasi memakai IZIN MODUL (`settings`), sementara policy database
+ * memakai PERAN (owner/admin). Keduanya tidak sama: kasir yang diberi izin
+ * Pengaturan lolos gerbang aplikasi lalu ditolak database — dan UPDATE yang
+ * ditolak RLS menjawab "berhasil" dengan nol baris, bukan error. Tanpa
+ * memeriksa jumlah barisnya, layar mengatakan "tersimpan" dan tidak ada yang
+ * berubah.
+ */
+const NOT_MANAGER = 'Hanya pemilik atau admin toko yang boleh mengubah pengaturan ini.'
+
 async function requireOwner() {
   const session = await requireSession()
   if (session.impersonating) {
@@ -60,7 +72,7 @@ export async function saveStore(formData: FormData): Promise<Result> {
   const v = parsed.data
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: changed, error } = await supabase
     .from('organizations')
     .update({
       name: v.name,
@@ -72,8 +84,10 @@ export async function saveStore(formData: FormData): Promise<Result> {
       allow_negative_stock: v.allowNegativeStock,
     })
     .eq('id', session.org!.id)
+    .select('id')
 
   if (error) return { ok: false, error: error.message }
+  if (!changed || changed.length === 0) return { ok: false, error: NOT_MANAGER }
 
   revalidatePath('/', 'layout')
   return { ok: true, message: 'Informasi toko tersimpan.' }
@@ -103,7 +117,7 @@ export async function savePrinter(outletId: string, formData: FormData): Promise
   const v = parsed.data
 
   const supabase = await createClient()
-  const { error } = await supabase
+  const { data: changed, error } = await supabase
     .from('outlets')
     .update({
       receipt_settings: {
@@ -116,8 +130,10 @@ export async function savePrinter(outletId: string, formData: FormData): Promise
     })
     .eq('id', outletId)
     .eq('organization_id', session.org!.id)
+    .select('id')
 
   if (error) return { ok: false, error: error.message }
+  if (!changed || changed.length === 0) return { ok: false, error: NOT_MANAGER }
 
   revalidatePath('/pengaturan/printer')
   revalidatePath('/kasir')
@@ -468,29 +484,53 @@ export async function uploadStoreLogo(formData: FormData): Promise<Result> {
   const supabase = await createClient()
   const path = `${session.org!.id}/logo`
 
+  /**
+   * URUTANNYA PENTING: database dulu, storage belakangan.
+   *
+   * Versi pertama fungsi ini mengunggah lebih dulu lalu menulis `logo_url`.
+   * Karena pathnya tetap (`<org>/logo`) dan `upsert: true`, unggahan itu
+   * MENIMPA logo lama — dan baru sesudahnya ketahuan bahwa UPDATE-nya ditolak
+   * RLS. Hasilnya logo toko benar-benar berganti di storage walaupun database
+   * menolak, dan pemiliknya tidak pernah menyetujui apa pun.
+   *
+   * Dibalik seperti ini, penolakan terjadi sebelum ada satu byte pun ditulis.
+   */
+  const { data: sebelum } = await supabase
+    .from('organizations')
+    .select('logo_url')
+    .eq('id', session.org!.id)
+    .maybeSingle()
+
+  const { data: pub } = supabase.storage.from(LOGO_BUCKET).getPublicUrl(path)
+  const url = `${pub.publicUrl}?v=${Date.now()}`
+
+  const { data: changed, error } = await supabase
+    .from('organizations')
+    .update({ logo_url: url })
+    .eq('id', session.org!.id)
+    .select('id')
+
+  if (error) return { ok: false, error: error.message }
+  if (!changed || changed.length === 0) {
+    return { ok: false, error: 'Hanya pemilik atau admin toko yang boleh mengganti logo.' }
+  }
+
   const { error: uploadError } = await supabase.storage
     .from(LOGO_BUCKET)
     .upload(path, file, { upsert: true, contentType: file.type })
 
   if (uploadError) {
-    // Penolakan storage berbunyi seperti pesan pengembang ("new row violates
-    // row-level security policy"). Pemilik warung tidak bisa berbuat apa-apa
-    // dengan kalimat itu.
+    // Tautannya sudah tersimpan tapi berkasnya gagal naik — kembalikan ke logo
+    // lama, kalau tidak halaman menampilkan gambar rusak tanpa sebab.
+    await supabase
+      .from('organizations')
+      .update({ logo_url: sebelum?.logo_url ?? null })
+      .eq('id', session.org!.id)
     if (/row-level security|Unauthorized/i.test(uploadError.message)) {
       return { ok: false, error: 'Hanya pemilik atau admin toko yang boleh mengganti logo.' }
     }
     return { ok: false, error: `Logo gagal diunggah: ${uploadError.message}` }
   }
-
-  const { data: pub } = supabase.storage.from(LOGO_BUCKET).getPublicUrl(path)
-  const url = `${pub.publicUrl}?v=${Date.now()}`
-
-  const { error } = await supabase
-    .from('organizations')
-    .update({ logo_url: url })
-    .eq('id', session.org!.id)
-
-  if (error) return { ok: false, error: error.message }
 
   revalidatePath('/', 'layout')
   return { ok: true, message: 'Logo toko tersimpan.' }
@@ -509,6 +549,20 @@ export async function removeStoreLogo(): Promise<Result> {
   if (blocked) return { ok: false, error: blocked }
 
   const supabase = await createClient()
+
+  // Sama seperti unggah: database dulu. Berkasnya dibuang hanya setelah
+  // terbukti pemanggilnya memang berhak.
+  const { data: changed, error } = await supabase
+    .from('organizations')
+    .update({ logo_url: null })
+    .eq('id', session.org!.id)
+    .select('id')
+
+  if (error) return { ok: false, error: error.message }
+  if (!changed || changed.length === 0) {
+    return { ok: false, error: 'Hanya pemilik atau admin toko yang boleh menghapus logo.' }
+  }
+
   const { error: removeError } = await supabase.storage
     .from(LOGO_BUCKET)
     .remove([`${session.org!.id}/logo`])
@@ -516,13 +570,6 @@ export async function removeStoreLogo(): Promise<Result> {
   if (removeError && !/not found/i.test(removeError.message)) {
     return { ok: false, error: `Logo gagal dihapus: ${removeError.message}` }
   }
-
-  const { error } = await supabase
-    .from('organizations')
-    .update({ logo_url: null })
-    .eq('id', session.org!.id)
-
-  if (error) return { ok: false, error: error.message }
 
   revalidatePath('/', 'layout')
   return { ok: true, message: 'Logo toko dihapus.' }

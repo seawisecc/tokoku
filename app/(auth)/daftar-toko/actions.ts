@@ -46,7 +46,11 @@ export async function finishRegistration(
     return { error: 'Toko gagal dibuat. Coba lagi sebentar lagi.' }
   }
 
-  const orgId = (data as { organization_id?: string } | null)?.organization_id
+  const hasil = data as {
+    organization_id?: string
+    trial_active?: boolean
+  } | null
+  const orgId = hasil?.organization_id
   if (orgId) {
     const jar = await cookies()
     jar.set(ORG_COOKIE, orgId, {
@@ -59,5 +63,17 @@ export async function finishRegistration(
   }
 
   revalidatePath('/', 'layout')
-  redirect('/beranda')
+
+  /**
+   * Toko yang lahir SUDAH lewat masa coba diantar ke halaman Langganan, bukan
+   * ke Beranda.
+   *
+   * Masa coba gratis milik akun, bukan milik toko (migrasi 0034), jadi toko
+   * kedua yang dibuat setelah trialnya habis langsung terkunci. Diantar ke
+   * Beranda, yang dilihat pemilik cuma spanduk merah "masa coba sudah
+   * berakhir" di atas toko yang baru saja ia buat — benar, tapi terbaca seperti
+   * toko yang rusak sejak lahir. Di Langganan sebabnya dijelaskan lengkap dan
+   * tombol hubungi admin ada di layar yang sama.
+   */
+  redirect(hasil?.trial_active === false ? '/pengaturan/langganan' : '/beranda')
 }
