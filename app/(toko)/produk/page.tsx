@@ -13,7 +13,7 @@ export default async function ProdukPage() {
   const session = await requirePermission('products')
   const supabase = await createClient()
 
-  const [{ data: products }, { data: categories }] = await Promise.all([
+  const [{ data: products }, { data: categories }, { data: org }] = await Promise.all([
     supabase
       .from('v_product_stock')
       .select(
@@ -28,6 +28,11 @@ export default async function ProdukPage() {
       .eq('organization_id', session.org!.id)
       .is('deleted_at', null)
       .order('sort_order'),
+    supabase
+      .from('organizations')
+      .select('low_stock_threshold')
+      .eq('id', session.org!.id)
+      .maybeSingle(),
   ])
 
   const rows: ProductRow[] = (products ?? []).map((p) => ({
@@ -60,7 +65,12 @@ export default async function ProdukPage() {
             : `${rows.length} produk`
         }
       />
-      <ProductTable products={rows} categories={categories ?? []} canEdit />
+      <ProductTable
+        products={rows}
+        categories={categories ?? []}
+        canEdit
+        defaultMinStock={org?.low_stock_threshold ?? 10}
+      />
 
       {/* Hanya muncul kalau tokonya memang punya cabang. Satu outlet, tidak ada
           yang bisa dipindahkan ke mana pun. */}

@@ -16,10 +16,13 @@ export type PrinterValues = {
 export function PrinterSettingsForm({
   outletId,
   storeName,
+  logoUrl,
   initial,
 }: {
   outletId: string
   storeName: string
+  /** Logo toko, supaya pratinjau menunjukkan struk yang sebenarnya akan tercetak. */
+  logoUrl: string | null
   initial: PrinterValues
 }) {
   const [v, setV] = useState(initial)
@@ -65,7 +68,17 @@ export function PrinterSettingsForm({
             />
           </div>
 
-          <ToggleRow name="showLogo" label="Tampilkan logo" defaultChecked={v.showLogo} />
+          <ToggleRow
+            name="showLogo"
+            label="Tampilkan logo"
+            hint={
+              logoUrl
+                ? 'Logo toko dicetak di kepala struk, di atas nama toko.'
+                : 'Belum ada logo. Unggah dulu di Pengaturan → Toko.'
+            }
+            defaultChecked={v.showLogo}
+            onToggle={(b) => set('showLogo', b)}
+          />
           <ToggleRow
             name="autoPrint"
             label="Cetak otomatis setelah bayar"
@@ -82,6 +95,7 @@ export function PrinterSettingsForm({
             data={{
               code: 'TRX-20260807-K1-0042',
               storeName,
+              logoUrl: v.showLogo ? logoUrl : null,
               storeAddress: null,
               storePhone: null,
               outletName: null,

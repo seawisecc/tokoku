@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { LogoUploader } from '@/components/domain/LogoUploader'
 import { StoreSettingsForm } from '@/components/domain/StoreSettingsForm'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
@@ -13,13 +14,14 @@ export default async function PengaturanTokoPage() {
 
   const { data: org } = await supabase
     .from('organizations')
-    .select('name, city, address, phone, email, low_stock_threshold, allow_negative_stock')
+    .select('name, city, address, phone, email, low_stock_threshold, allow_negative_stock, logo_url')
     .eq('id', session.org!.id)
     .single()
 
   return (
     <>
-      <PageHeader eyebrow="Pengaturan" title="Informasi Toko" subtitle="Nama, alamat, dan kebijakan stok." />
+      <PageHeader eyebrow="Pengaturan" title="Informasi Toko" subtitle="Nama, alamat, logo, dan kebijakan stok." />
+      <LogoUploader logoUrl={org?.logo_url ?? null} storeName={org?.name ?? 'toko'} />
       <StoreSettingsForm
         initial={{
           name: org?.name ?? '',

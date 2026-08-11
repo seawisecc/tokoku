@@ -3,6 +3,12 @@ import { rupiah } from '@/lib/format'
 export type ReceiptData = {
   code: string
   storeName: string
+  /**
+   * Logo toko. Sudah disaring sakelar "Tampilkan logo" oleh pemanggilnya —
+   * di sini null berarti "jangan cetak", tanpa perlu tahu sebabnya mati atau
+   * memang belum pernah diunggah.
+   */
+  logoUrl?: string | null
   storeAddress?: string | null
   storePhone?: string | null
   outletName?: string | null
@@ -62,6 +68,17 @@ export function Receipt({ data }: { data: ReceiptData }) {
           <div className="r-center r-dim">Struk ini bukan bukti pembayaran</div>
           <div className="r-rule" />
         </>
+      )}
+      {/* Logo di ATAS nama toko, mengikuti kebiasaan struk warung. Dibatasi
+          tingginya supaya logo persegi panjang tidak mendorong seluruh isi
+          struk turun — kertas thermal dibayar per sentimeter. */}
+      {data.logoUrl && (
+        <div className="r-center r-logo">
+          {/* eslint-disable-next-line @next/next/no-img-element -- dokumen cetak,
+              bukan halaman; next/image menyisipkan wrapper yang mengacaukan
+              lebar 48mm yang dikunci. */}
+          <img src={data.logoUrl} alt="" />
+        </div>
       )}
       <div className="r-center r-bold">{data.storeName}</div>
       {/* Outlet utama sering bernama sama dengan tokonya; jangan cetak dua kali. */}

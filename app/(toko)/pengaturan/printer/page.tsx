@@ -17,7 +17,7 @@ export default async function PengaturanPrinterPage() {
       .select('id, name, receipt_settings')
       .eq('id', session.outletId!)
       .single(),
-    supabase.from('organizations').select('name').eq('id', session.org!.id).single(),
+    supabase.from('organizations').select('name, logo_url').eq('id', session.org!.id).single(),
   ])
 
   const rs = (outlet?.receipt_settings ?? {}) as Partial<{
@@ -46,6 +46,7 @@ export default async function PengaturanPrinterPage() {
       <PrinterSettingsForm
         outletId={outlet!.id}
         storeName={org?.name ?? 'Toko'}
+        logoUrl={org?.logo_url ?? null}
         initial={initial}
       />
     </>

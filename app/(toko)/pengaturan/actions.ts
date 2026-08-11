@@ -334,3 +334,196 @@ export async function revokeInvitation(invitationId: string): Promise<Result> {
   revalidatePath('/pengaturan/tim')
   return { ok: true }
 }
+
+// ---------------------------------------------------------------- perangkat
+
+/**
+ * Hapus perangkat kasir terdaftar.
+ *
+ * Kenapa ini perlu ada: `max_devices` adalah kuota berbayar yang ditegakkan di
+ * database, dan perangkat MENDAFTARKAN DIRINYA SENDIRI tiap kali layar Kasir
+ * dibuka di outlet yang belum pernah dipakai. Tanpa tombol ini kuotanya cuma
+ * bisa naik — toko yang penuh perangkat tidak bisa mendaftarkan kasir baru
+ * sama sekali, walaupun HP yang lama sudah lama dijual atau rusak.
+ *
+ * Transaksi lamanya TIDAK ikut hilang: semua FK ke `devices` memakai
+ * `on delete set null`, jadi barisnya tetap ada lengkap dengan nomornya. Kode
+ * perangkat sudah tercetak di dalam nomor transaksi (TRX-…-K1-0042), jadi
+ * asal-usulnya tetap terbaca walaupun tautannya putus.
+ */
+export async function deleteDevice(deviceId: string): Promise<Result> {
+  const { session, blocked } = await requireWrite('settings')
+  if (blocked) return { ok: false, error: blocked }
+
+  const supabase = await createClient()
+
+  // `v_sync_health` sekaligus membawa antrean dan penolakan yang belum
+  // ditinjau — angka yang sama persis dengan yang dilihat pemilik di tabel,
+  // jadi tidak mungkin layarnya bilang "aman" sementara gerbangnya menolak.
+  const { data: device } = await supabase
+    .from('v_sync_health')
+    .select('device_id, device_name, code, pending_count, open_rejections')
+    .eq('organization_id', session.org!.id)
+    .eq('device_id', deviceId)
+    .maybeSingle()
+
+  if (!device) {
+    return { ok: false, error: 'Perangkat tidak ditemukan di toko ini.' }
+  }
+
+  /**
+   * Antrean yang belum terkirim adalah PENJUALAN YANG SUDAH TERJADI dan uangnya
+   * sudah diterima kasir. Perangkatnya dihapus, antrean di HP itu jadi yatim:
+   * server menolaknya karena device_id-nya sudah tidak ada, dan penjualannya
+   * hilang dari pembukuan tanpa ada yang menyadarinya.
+   *
+   * Karena itu ditolak, bukan diperingatkan. Pemiliknya cuma perlu menunggu
+   * perangkat itu online sekali lagi.
+   */
+  const pending = Number(device.pending_count ?? 0)
+  if (pending > 0) {
+    return {
+      ok: false,
+      error:
+        `Perangkat ${device.device_name} masih menyimpan ${pending} transaksi yang belum terkirim. ` +
+        'Buka layar Kasir di perangkat itu sampai tersinkron, baru bisa dihapus.',
+    }
+  }
+
+  const open = Number(device.open_rejections ?? 0)
+  if (open > 0) {
+    return {
+      ok: false,
+      error:
+        `Perangkat ${device.device_name} punya ${open} transaksi yang gagal masuk dan belum ditinjau. ` +
+        'Selesaikan dulu di bagian "Perlu Ditinjau" di bawah — kalau perangkatnya dihapus, ' +
+        'asal-usul transaksi itu ikut hilang.',
+    }
+  }
+
+  /**
+   * `.select()` bukan hiasan: DELETE yang ditolak RLS mengembalikan "berhasil"
+   * dengan nol baris terpengaruh, bukan error. Tanpa memeriksa hasilnya, kasir
+   * yang izin `settings`-nya menyala tapi perannya bukan pemilik/admin akan
+   * melihat "Perangkat dihapus." lalu barisnya tetap ada setelah refresh.
+   */
+  const { data: removed, error } = await supabase
+    .from('devices')
+    .delete()
+    .eq('id', deviceId)
+    .eq('organization_id', session.org!.id)
+    .select('id')
+
+  if (error) return { ok: false, error: error.message }
+  if (!removed || removed.length === 0) {
+    return {
+      ok: false,
+      error: 'Hanya pemilik atau admin toko yang boleh menghapus perangkat kasir.',
+    }
+  }
+
+  revalidatePath('/pengaturan/sinkronisasi')
+  return {
+    ok: true,
+    message: `Perangkat ${device.device_name} (${device.code}) dihapus. Transaksi lamanya tetap tersimpan.`,
+  }
+}
+
+// ---------------------------------------------------------------- logo toko
+
+const LOGO_BUCKET = 'logo-toko'
+const LOGO_MAX_BYTES = 1024 * 1024
+const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp']
+
+/**
+ * Unggah logo toko.
+ *
+ * Berkasnya disimpan di path TETAP `<organization_id>/logo` lalu ditimpa tiap
+ * kali diganti. Alternatifnya menamai berkas dengan stempel waktu, dan itu
+ * meninggalkan satu berkas yatim di storage setiap kali pemilik toko mencoba
+ * logo baru — tidak ada yang membersihkannya, dan tidak ada yang menyadarinya
+ * sampai tagihan storage naik tanpa sebab.
+ *
+ * Karena pathnya tetap, URL-nya juga tetap — jadi browser akan menampilkan logo
+ * LAMA dari cache setelah diganti. Itu sebabnya `?v=` ditempel di belakangnya:
+ * yang tersimpan di `logo_url` berubah tiap unggahan walaupun berkasnya di
+ * tempat yang sama.
+ */
+export async function uploadStoreLogo(formData: FormData): Promise<Result> {
+  const { session, blocked } = await requireWrite('settings')
+  if (blocked) return { ok: false, error: blocked }
+
+  const file = formData.get('logo')
+  if (!(file instanceof File) || file.size === 0) {
+    return { ok: false, error: 'Pilih dulu berkas logonya.' }
+  }
+  if (!LOGO_TYPES.includes(file.type)) {
+    return { ok: false, error: 'Logo harus berupa gambar PNG, JPG, atau WebP.' }
+  }
+  if (file.size > LOGO_MAX_BYTES) {
+    const mb = (file.size / 1024 / 1024).toFixed(1)
+    return { ok: false, error: `Ukuran logo maksimal 1 MB, punya Anda ${mb} MB. Perkecil dulu.` }
+  }
+
+  const supabase = await createClient()
+  const path = `${session.org!.id}/logo`
+
+  const { error: uploadError } = await supabase.storage
+    .from(LOGO_BUCKET)
+    .upload(path, file, { upsert: true, contentType: file.type })
+
+  if (uploadError) {
+    // Penolakan storage berbunyi seperti pesan pengembang ("new row violates
+    // row-level security policy"). Pemilik warung tidak bisa berbuat apa-apa
+    // dengan kalimat itu.
+    if (/row-level security|Unauthorized/i.test(uploadError.message)) {
+      return { ok: false, error: 'Hanya pemilik atau admin toko yang boleh mengganti logo.' }
+    }
+    return { ok: false, error: `Logo gagal diunggah: ${uploadError.message}` }
+  }
+
+  const { data: pub } = supabase.storage.from(LOGO_BUCKET).getPublicUrl(path)
+  const url = `${pub.publicUrl}?v=${Date.now()}`
+
+  const { error } = await supabase
+    .from('organizations')
+    .update({ logo_url: url })
+    .eq('id', session.org!.id)
+
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/', 'layout')
+  return { ok: true, message: 'Logo toko tersimpan.' }
+}
+
+/**
+ * Hapus logo.
+ *
+ * Berkas di storage ikut dibuang, bukan cuma tautannya dikosongkan: bucketnya
+ * publik, jadi logo yang "sudah dihapus" tetap bisa dibuka siapa pun yang
+ * pernah menyalin URL-nya. Untuk logo warung itu bukan bencana, tapi "dihapus"
+ * harus berarti dihapus.
+ */
+export async function removeStoreLogo(): Promise<Result> {
+  const { session, blocked } = await requireWrite('settings')
+  if (blocked) return { ok: false, error: blocked }
+
+  const supabase = await createClient()
+  const { error: removeError } = await supabase.storage
+    .from(LOGO_BUCKET)
+    .remove([`${session.org!.id}/logo`])
+
+  if (removeError && !/not found/i.test(removeError.message)) {
+    return { ok: false, error: `Logo gagal dihapus: ${removeError.message}` }
+  }
+
+  const { error } = await supabase
+    .from('organizations')
+    .update({ logo_url: null })
+    .eq('id', session.org!.id)
+
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/', 'layout')
+  return { ok: true, message: 'Logo toko dihapus.' }
+}

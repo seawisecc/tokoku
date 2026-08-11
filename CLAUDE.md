@@ -40,6 +40,10 @@ sebelum mengerjakan apa pun.
   selisih kas
 - Kartu stok (`/produk/[id]`) — riwayat masuk-keluar per produk dengan saldo
   berjalan
+- **Logo toko** — unggah di Pengaturan → Toko, tampil di sidebar/topbar dan
+  tercetak di struk; lihat "Logo toko" di bawah
+- **Hapus perangkat kasir** (`/pengaturan/sinkronisasi`) — ditolak kalau masih
+  ada antrean; lihat "Perangkat bisa dihapus" di bawah
 - Pembelian & pemasok (`/pembelian`) — lihat "Pembelian" di bawah
 - Konsinyasi (`/pembelian/konsinyasi`) — titip jual, bagi hasil, retur; lihat
   "Konsinyasi" di bawah
@@ -198,6 +202,114 @@ Belum dikerjakan dan mungkin tidak perlu: tabel produk & sinkronisasi masih
 tabel geser di ponsel. Bayangan tepi cuma petunjuk. Kalau nanti terasa kurang,
 langkah berikutnya menumpuk barisnya seperti `.trx-table` — polanya sudah ada,
 tinggal diterapkan per tabel.
+
+## Logo toko
+
+Kolom `organizations.logo_url` sudah ada sejak migrasi 0003 dan sakelar
+"Tampilkan logo" sudah tersimpan ke `receipt_settings` sejak saat itu juga —
+yang tidak pernah ada cuma tempat menaruh berkasnya. Jadi selama berbulan-bulan
+ada dua hal setengah jadi yang saling menunggu: kolomnya selalu null dan
+sakelarnya tidak pernah mengubah apa pun yang tercetak. Migrasi 0033 menambah
+penyimpanannya saja.
+
+**Bucket `logo-toko` PUBLIK, dan itu disengaja.** Logo memang dicetak di struk
+yang dibawa pulang pembeli — tidak ada yang rahasia. Signed URL akan menambah
+satu panggilan jaringan di tiap render struk, tepat pada layar yang paling tidak
+boleh menunggu.
+
+**Batas ukuran & tipe ditegakkan BUCKET** (1 MB · PNG/JPG/WebP), bukan aplikasi:
+unggahan tidak harus lewat borang kita. Server action memeriksanya lagi supaya
+pesannya bisa dibaca pemilik warung, dan `LogoUploader` memeriksanya sekali lagi
+di perangkat supaya berkas 4 MB tidak dikirim dulu lewat jaringan warung baru
+ditolak.
+
+**Path TETAP `<organization_id>/logo`, ditimpa tiap ganti.** Menamai berkas
+dengan stempel waktu meninggalkan satu berkas yatim di storage setiap kali
+pemilik toko mencoba logo baru — tidak ada yang membersihkannya. Konsekuensinya
+URL-nya juga tetap, jadi browser akan menampilkan logo LAMA dari cache; itu
+sebabnya `?v=<timestamp>` ditempel di `logo_url`.
+
+Folder pertama pada path itulah penanda pemiliknya, dan policy storage
+membandingkannya sebagai **teks** — path bisa diketik tangan, dan
+`'bukan-uuid'::uuid` melempar error yang membatalkan seluruh statement alih-alih
+menolaknya rapi. Hak tulisnya lewat `user_managed_org_ids()`: fungsi TANPA
+parameter yang menyaring sendiri dari `auth.uid()`, mengikuti aturan di
+"Jebakan yang sudah pernah menggigit" soal PostgREST.
+
+Menghapus logo ikut membuang berkasnya, bukan cuma mengosongkan tautan —
+bucketnya publik, jadi "dihapus" harus berarti dihapus.
+
+## Perangkat bisa dihapus
+
+`max_devices` adalah kuota berbayar, dan perangkat MENDAFTARKAN DIRINYA SENDIRI
+tiap kali layar Kasir dibuka di outlet yang belum pernah dipakai. Sampai 11 Agu
+tidak ada tombol hapus di mana pun — jadi angkanya cuma bisa naik, dan toko yang
+kuotanya penuh tidak bisa mendaftarkan kasir baru sama sekali walaupun HP lama
+sudah dijual atau rusak. Policy `devices_delete` sendiri sudah ada sejak
+migrasi 0008; yang hilang cuma tombolnya.
+
+**Ditolak kalau masih ada antrean**, bukan diperingatkan. `pending_count > 0`
+berarti ada penjualan yang sudah terjadi dan uangnya sudah diterima kasir;
+perangkatnya dihapus, antrean di HP itu jadi yatim dan penjualannya hilang dari
+pembukuan tanpa ada yang menyadarinya. `open_rejections > 0` juga ditolak —
+menghapus perangkatnya menghilangkan asal-usul transaksi yang justru sedang
+diperiksa.
+
+Tombolnya dimatikan di UI JUGA, bukan hanya ditolak server: penolakan yang baru
+muncul setelah konfirmasi dua langkah terbaca seperti tombol rusak. Alasannya
+sama dengan tombol Bayar yang dikunci sebelum keranjang disusun.
+
+Transaksi lamanya aman — semua FK ke `devices` memakai `on delete set null`, dan
+kode perangkat sudah tercetak di dalam nomor transaksi (TRX-…-K1-0042), jadi
+asal-usulnya tetap terbaca walaupun tautannya putus.
+
+**`.select()` pada DELETE-nya bukan hiasan:** DELETE yang ditolak RLS
+mengembalikan "berhasil" dengan nol baris, bukan error. `devices_delete`
+mensyaratkan owner/admin sementara gerbang aplikasinya cuma izin `settings`,
+jadi kasir ber-izin settings akan melihat "dihapus" lalu barisnya tetap ada.
+
+## Ambang stok: per produk, dan setelan toko akhirnya dipakai
+
+Pertanyaan yang sering muncul: apakah stok minimal berlaku umum? **Tidak — sudah
+per produk sejak awal.** `products.min_stock` yang dipakai `v_stock_alert` dan
+`is_low_stock`, dan bisa diubah di drawer produk ("Ambang Stok Menipis").
+
+Yang justru bermasalah setelan umumnya. `organizations.low_stock_threshold` di
+Pengaturan → Toko berlabel "(bawaan)" dan keterangannya menjanjikan "Dipakai
+untuk produk baru" — tapi sampai 11 Agu **tidak dibaca oleh apa pun**:
+`emptyProduct()` mematok `10` di kode. Pemilik toko mengubah angkanya dan tidak
+terjadi apa-apa.
+
+Sekarang angkanya mengalir: `/produk` membacanya → `ProductTable defaultMinStock`
+→ `emptyProduct(sku, defaultMinStock)`. Produk yang SUDAH ada tidak disentuh —
+mengubah setelan toko tidak boleh diam-diam menimpa ambang yang sudah disetel
+hati-hati per produk.
+
+## Navigasi: menu yang href-nya menunjuk anaknya
+
+`NavItem.section` ada untuk satu kasus: menu Pengaturan ber-`href`
+`/pengaturan/toko` karena `/pengaturan` sendiri bukan halaman. Tanpa `section`,
+berpindah ke tab Kategori membuat `isActivePath('/pengaturan/kategori',
+'/pengaturan/toko')` bernilai false dan menunya PADAM di sidebar maupun bottom
+nav — orang kehilangan jejak sedang berada di bagian mana.
+
+`isNavItemActive()` dipakai sidebar DAN bottom nav; jangan dipisah, kalau tidak
+menu yang sama menyala di satu tempat dan padam di tempat lain pada halaman yang
+sama persis.
+
+Tab pengaturannya sendiri memakai `.tabs`/`.tab`, bukan deretan `.btn.btn-sm`:
+`flex: 1 1 0` menyamakan lebarnya saat muat, `min-width: max-content`
+mengembalikan lebar asli saat sempit sehingga tidak ada label terpotong — di
+situ barisnya jadi bisa digeser, dan tab aktif di-scroll ke dalam layar
+(INSTAN — `behavior: 'smooth'` sudah pernah diabaikan diam-diam di project ini).
+
+**Sudah diuji langsung** (11 Agu, `npm start` + browser): sidebar menyala di
+seluruh tab pengaturan · unggah logo tersimpan dan langsung tampil di sidebar
+serta pratinjau struk · sakelar "Tampilkan logo" akhirnya mengubah pratinjau
+seketika (dulu `ToggleRow` tak mengabari induknya — sekarang ada `onToggle`) ·
+K7 dihapus dan hilang dari tabel · K6 dengan 3 antrean palsu tombolnya mati
+dengan alasan tertulis · produk baru mengambil ambang 7 dari setelan toko ·
+390px lewat iframe bersih tanpa geser horizontal.
 
 ## Kuota paket
 
@@ -1023,6 +1135,7 @@ components/
   overlay/Drawer   panel geser untuk semua form
   data/IconAction  tombol aksi baris, konfirmasi dua langkah
   domain/          AuthPanel, ForgotPasswordForm, NewPasswordForm, QuotaBars,
+                   LogoUploader, DeviceTable, SettingsNav,
                    ProductTable/Drawer, StockDrawer, TeamManager,
                    CategoryManager, PlanManager, ClientDetail, ShiftCard,
                    PurchaseList/Drawer, ConsignmentList (+ drawer titipan,
@@ -1040,7 +1153,7 @@ lib/
 scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  32 file, Postgres 17
+supabase/migrations/  33 file, Postgres 17
 ```
 
 ## RPC yang penting
@@ -1091,7 +1204,8 @@ riwayat akses Super Admin dan jejak perubahan langganan tidak terputus.
 | `seawise.cc@gmail.com` | **Super Admin** — sandi `admin123`, BUKAN `TokoKu123!`. Masuk lewat `/masuk`, diarahkan ke `/admin` |
 
 Perangkat POS Toko Dewi: K1–K5 di outlet MAIN dan K2 di Cabang Renon. Sisa
-pengujian, aman dihapus lewat `/pengaturan/sinkronisasi` kalau mengganggu —
+pengujian, dan sekarang benar-benar bisa dihapus lewat
+`/pengaturan/sinkronisasi` kalau mengganggu —
 kecuali yang punya transaksi (K1, K2, K3, K4 di MAIN; K1 di Renon).
 
 ## Gaya

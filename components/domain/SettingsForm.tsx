@@ -69,11 +69,19 @@ export function ToggleRow({
   label,
   hint,
   defaultChecked,
+  onToggle,
 }: {
   name: string
   label: string
   hint?: string
   defaultChecked: boolean
+  /**
+   * Dipanggil tiap sakelar berubah, untuk pemanggil yang perlu ikut bereaksi
+   * SEBELUM disimpan — mis. pratinjau struk yang harus langsung menunjukkan
+   * hasilnya. Sakelarnya tetap memegang keadaannya sendiri; ini cuma salinan
+   * keluar, jadi pemanggil lain tidak perlu berubah apa-apa.
+   */
+  onToggle?: (checked: boolean) => void
 }) {
   const [on, setOn] = useState(defaultChecked)
   return (
@@ -95,7 +103,10 @@ export function ToggleRow({
         type="checkbox"
         name={name}
         checked={on}
-        onChange={(e) => setOn(e.target.checked)}
+        onChange={(e) => {
+          setOn(e.target.checked)
+          onToggle?.(e.target.checked)
+        }}
         style={{ marginTop: 3 }}
       />
     </label>

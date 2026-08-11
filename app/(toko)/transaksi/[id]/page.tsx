@@ -25,7 +25,7 @@ export default async function DetailTransaksiPage({
   const { data: trx } = await supabase
     .from('transactions')
     .select(
-      'id, code, total, subtotal, discount_total, tax_total, paid_amount, change_amount, payment_method, status, origin, client_created_at, void_reason, profiles:cashier_id(full_name), outlets:outlet_id(name, receipt_settings), organizations:organization_id(name, address, phone)',
+      'id, code, total, subtotal, discount_total, tax_total, paid_amount, change_amount, payment_method, status, origin, client_created_at, void_reason, profiles:cashier_id(full_name), outlets:outlet_id(name, receipt_settings), organizations:organization_id(name, address, phone, logo_url)',
     )
     .eq('id', id)
     .maybeSingle()
@@ -39,8 +39,16 @@ export default async function DetailTransaksiPage({
     .eq('transaction_id', id)
     .order('line_no')
 
-  const org = trx.organizations as unknown as { name: string; address: string | null; phone: string | null } | null
-  const outlet = trx.outlets as unknown as { name: string; receipt_settings: { footer?: string } | null } | null
+  const org = trx.organizations as unknown as {
+    name: string
+    address: string | null
+    phone: string | null
+    logo_url: string | null
+  } | null
+  const outlet = trx.outlets as unknown as {
+    name: string
+    receipt_settings: { footer?: string; show_logo?: boolean } | null
+  } | null
   const cashier = (trx.profiles as unknown as { full_name: string } | null)?.full_name ?? 'Kasir'
 
   return (
@@ -117,6 +125,8 @@ export default async function DetailTransaksiPage({
             data={{
               code: trx.code,
               storeName: org?.name ?? 'Toko',
+              logoUrl:
+                outlet?.receipt_settings?.show_logo === false ? null : (org?.logo_url ?? null),
               storeAddress: org?.address ?? null,
               storePhone: org?.phone ?? null,
               outletName: outlet?.name ?? null,

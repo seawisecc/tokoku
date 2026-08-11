@@ -3,21 +3,30 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icon } from '@/components/ui/icons'
+import { BrandLogo } from './BrandMark'
 import type { NavItem } from '@/lib/navigation'
 import { cn } from '@/lib/format'
-import { isActivePath } from './isActivePath'
+import { isNavItemActive } from './isActivePath'
 
 /**
  * Kolom navigasi. Memuat brand di puncaknya supaya panel gelap membentang
  * dari tepi atas layar — lihat catatan di AppShell.
  */
-export function Sidebar({ items, context }: { items: NavItem[]; context: string }) {
+export function Sidebar({
+  items,
+  context,
+  logoUrl,
+}: {
+  items: NavItem[]
+  context: string
+  logoUrl?: string | null
+}) {
   const pathname = usePathname()
 
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <div className="brand-mark">T</div>
+        <BrandLogo logoUrl={logoUrl} />
         <div className="sidebar-brand-text">
           TokoKu
           <small>{context}</small>
@@ -29,8 +38,8 @@ export function Sidebar({ items, context }: { items: NavItem[]; context: string 
           <Link
             key={item.id}
             href={item.href}
-            className={cn('nav-item', isActivePath(pathname, item.href) && 'active')}
-            aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
+            className={cn('nav-item', isNavItemActive(pathname, item) && 'active')}
+            aria-current={isNavItemActive(pathname, item) ? 'page' : undefined}
           >
             <Icon name={item.icon} />
             <span className="nav-label">{item.label}</span>

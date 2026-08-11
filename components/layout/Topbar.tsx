@@ -19,6 +19,7 @@ export function Topbar({
   stores,
   activeStoreId,
   storeName,
+  logoUrl,
 }: {
   context: string
   initials: string
@@ -27,6 +28,7 @@ export function Topbar({
   stores: StoreOption[]
   activeStoreId: string | null
   storeName: string | null
+  logoUrl?: string | null
 }) {
   // Penanda untuk CSS: di layar sempit, brand + pemilih outlet + tiga tombol
   // tidak muat bersamaan. Toko satu outlet (mayoritas warung) tidak terpengaruh
@@ -36,7 +38,7 @@ export function Topbar({
   return (
     <header className={multi ? 'topbar has-outlet-switch' : 'topbar'}>
       <div className="topbar-brand">
-        <BrandMark context={context} />
+        <BrandMark context={context} logoUrl={logoUrl} />
       </div>
       <div className="topbar-right">
         <OutletSwitcher

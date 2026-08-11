@@ -1,8 +1,9 @@
 import type { Metadata } from 'next'
+import { DeviceTable, type DeviceRow } from '@/components/domain/DeviceTable'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
-import { cn, jam, tanggal } from '@/lib/format'
+import { jam, tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = { title: 'Sinkronisasi — TokoKu' }
@@ -17,8 +18,6 @@ function sejak(iso: string | null): { label: string; tone: 'ok' | 'warn' | 'bad'
   if (jamLalu < 24) return { label: `${jamLalu} jam lalu`, tone: jamLalu > 6 ? 'warn' : 'ok' }
   return { label: `${Math.floor(jamLalu / 24)} hari lalu`, tone: 'bad' }
 }
-
-const TONE_BADGE = { ok: 'badge-active', warn: 'badge-trial', bad: 'badge-low' } as const
 
 export default async function SinkronisasiPage() {
   const session = await requirePermission('settings')
@@ -35,7 +34,9 @@ export default async function SinkronisasiPage() {
   const [{ data: devices }, { data: rejections }, { data: batches }] = await Promise.all([
     supabase
       .from('v_sync_health')
-      .select('device_id, device_name, code, last_sync_at, last_seen_at, open_rejections, offline_trx_7d, app_version')
+      .select(
+        'device_id, device_name, code, last_sync_at, last_seen_at, pending_count, open_rejections, offline_trx_7d, app_version',
+      )
       .eq('organization_id', orgId)
       .eq('outlet_id', session.outletId!)
       .order('code'),
@@ -73,6 +74,21 @@ export default async function SinkronisasiPage() {
       ? (session.outlets.find((o) => o.id === session.outletId)?.name ?? null)
       : null
 
+  const deviceRows: DeviceRow[] = (devices ?? []).map((d) => {
+    const s = sejak(d.last_sync_at)
+    return {
+      id: d.device_id!,
+      name: d.device_name!,
+      code: d.code!,
+      appVersion: d.app_version,
+      syncLabel: s.label,
+      syncTone: s.tone,
+      pendingCount: Number(d.pending_count ?? 0),
+      openRejections: Number(d.open_rejections ?? 0),
+      offlineTrx7d: Number(d.offline_trx_7d ?? 0),
+    }
+  })
+
   return (
     <>
       <PageHeader
@@ -97,54 +113,7 @@ export default async function SinkronisasiPage() {
       )}
 
       <div className="section-title">Perangkat Kasir</div>
-      <div className="table-card">
-        {(devices ?? []).length === 0 ? (
-          <div className="placeholder-card" style={{ border: 'none' }}>
-            Belum ada perangkat terdaftar. Perangkat mendaftar otomatis saat layar Kasir
-            pertama kali dibuka.
-          </div>
-        ) : (
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Perangkat</th>
-                  <th>Sinkron terakhir</th>
-                  <th>Transaksi offline (7 hari)</th>
-                  <th>Perlu ditinjau</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(devices ?? []).map((d) => {
-                  const s = sejak(d.last_sync_at)
-                  return (
-                    <tr key={d.device_id}>
-                      <td>
-                        <div className="cell-name">{d.device_name}</div>
-                        <div className="cell-sub mono">
-                          {d.code}
-                          {d.app_version ? ` · ${d.app_version}` : ''}
-                        </div>
-                      </td>
-                      <td>
-                        <span className={cn('badge', TONE_BADGE[s.tone])}>{s.label}</span>
-                      </td>
-                      <td>{d.offline_trx_7d ?? 0}</td>
-                      <td>
-                        {Number(d.open_rejections ?? 0) > 0 ? (
-                          <span className="badge badge-low">{d.open_rejections}</span>
-                        ) : (
-                          <span style={{ color: 'var(--color-ink-faint)' }}>—</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      <DeviceTable devices={deviceRows} />
 
       {perluPerhatian > 0 && (
         <>

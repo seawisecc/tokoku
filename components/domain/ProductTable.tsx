@@ -32,10 +32,13 @@ export function ProductTable({
   products,
   categories,
   canEdit,
+  defaultMinStock = 10,
 }: {
   products: ProductRow[]
   categories: { id: string; name: string }[]
   canEdit: boolean
+  /** Ambang bawaan toko, dipakai saat menambah produk baru. */
+  defaultMinStock?: number
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
@@ -112,7 +115,7 @@ export function ProductTable({
             <button
               type="button"
               className="btn btn-primary"
-              onClick={() => setEditing(emptyProduct(suggestSku()))}
+              onClick={() => setEditing(emptyProduct(suggestSku(), defaultMinStock))}
             >
               <Icon name="plus" size={15} /> Tambah Produk
             </button>

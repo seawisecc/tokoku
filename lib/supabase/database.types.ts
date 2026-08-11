@@ -3122,6 +3122,7 @@ export type Database = {
         Returns: Json
       }
       user_can: { Args: { p_org: string; p_perm: string }; Returns: boolean }
+      user_managed_org_ids: { Args: never; Returns: string[] }
       user_org_ids: { Args: never; Returns: string[] }
       user_role_in: {
         Args: { p_org: string }

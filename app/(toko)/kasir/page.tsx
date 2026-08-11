@@ -50,7 +50,7 @@ export default async function KasirPage() {
       .order('sort_order'),
     supabase
       .from('organizations')
-      .select('name, address, phone, allow_negative_stock')
+      .select('name, address, phone, allow_negative_stock, logo_url')
       .eq('id', orgId)
       .single(),
     supabase
@@ -59,6 +59,13 @@ export default async function KasirPage() {
       .eq('id', session.outletId)
       .single(),
   ])
+
+  // Satu kali dibaca, dipakai dua kali di bawah — `receipt_settings` adalah
+  // jsonb bebas bentuk, jadi lebih baik di-cast sekali daripada di tiap tempat.
+  const receiptSettings = (outlet?.receipt_settings ?? {}) as {
+    footer?: string
+    show_logo?: boolean
+  }
 
   return (
     <PosClient
@@ -71,10 +78,13 @@ export default async function KasirPage() {
       store={{
         name: org?.name ?? 'Toko',
         outletName: outlet?.name ?? null,
+        // Sakelarnya bawaan MENYALA — toko yang sudah repot mengunggah logo
+        // hampir pasti ingin logonya tercetak. Yang tidak punya logo tetap
+        // tidak mencetak apa pun karena logo_url-nya null.
+        logoUrl: receiptSettings.show_logo === false ? null : (org?.logo_url ?? null),
         address: org?.address ?? null,
         phone: org?.phone ?? null,
-        receiptFooter:
-          ((outlet?.receipt_settings as { footer?: string } | null)?.footer) ?? null,
+        receiptFooter: receiptSettings.footer ?? null,
       }}
       initialProducts={(products ?? []) as never}
       initialCategories={categories ?? []}

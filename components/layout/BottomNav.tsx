@@ -7,7 +7,7 @@ import { Icon } from '@/components/ui/icons'
 import type { NavItem } from '@/lib/navigation'
 import { splitBottomNav } from '@/lib/navigation'
 import { cn } from '@/lib/format'
-import { isActivePath } from './isActivePath'
+import { isNavItemActive } from './isActivePath'
 
 export function BottomNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname()
@@ -20,13 +20,13 @@ export function BottomNav({ items }: { items: NavItem[] }) {
     setSheet(false)
   }, [pathname])
 
-  const overflowActive = overflow.some((item) => isActivePath(pathname, item.href))
+  const overflowActive = overflow.some((item) => isNavItemActive(pathname, item))
 
   return (
     <>
       <nav className="bottomnav" aria-label="Navigasi bawah">
         {slots.map((item) => (
-          <BottomNavLink key={item.id} item={item} active={isActivePath(pathname, item.href)} />
+          <BottomNavLink key={item.id} item={item} active={isNavItemActive(pathname, item)} />
         ))}
 
         {overflow.length > 0 && (
@@ -64,8 +64,8 @@ export function BottomNav({ items }: { items: NavItem[] }) {
                 <Link
                   key={item.id}
                   href={item.href}
-                  className={cn('nav-sheet-item', isActivePath(pathname, item.href) && 'active')}
-                  aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
+                  className={cn('nav-sheet-item', isNavItemActive(pathname, item) && 'active')}
+                  aria-current={isNavItemActive(pathname, item) ? 'page' : undefined}
                   onClick={() => setSheet(false)}
                 >
                   <Icon name={item.icon} size={18} />

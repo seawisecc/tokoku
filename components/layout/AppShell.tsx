@@ -33,7 +33,7 @@ export function AppShell({
 
   return (
     <div className="app">
-      <Sidebar items={items} context={context} />
+      <Sidebar items={items} context={context} logoUrl={session.org?.logoUrl} />
       <div className="main-col">
         {session.impersonating && session.org && (
           <ImpersonationBanner storeName={session.org.name} />
@@ -46,6 +46,7 @@ export function AppShell({
           stores={session.organizations.map((o) => ({ id: o.id, name: o.name, city: o.city }))}
           activeStoreId={session.org?.id ?? null}
           storeName={session.org?.name ?? null}
+          logoUrl={session.org?.logoUrl}
         />
         <SubscriptionBanner state={subscription} />
         <main className="content">{children}</main>

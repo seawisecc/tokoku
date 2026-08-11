@@ -22,6 +22,8 @@ export type SessionContext = {
     status: string
     /** ISO, atau null kalau tanpa batas waktu. */
     trialEndsAt: string | null
+    /** URL publik logo toko, atau null kalau belum pernah diunggah. */
+    logoUrl: string | null
   } | null
   /**
    * Outlet yang sedang DIKERJAKAN, bukan outlet asal anggota.
@@ -143,7 +145,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     if (targetOrg) {
       const { data: org } = await supabase
         .from('organizations')
-        .select('id, name, city, status, trial_ends_at')
+        .select('id, name, city, status, trial_ends_at, logo_url')
         .eq('id', targetOrg)
         .maybeSingle()
 
@@ -167,7 +169,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
           // organization_members, dan Super Admin bukan anggota. Jadi mode ini
           // efektif hanya-baca — dan bannernya menyatakan itu terang-terangan.
           permissions: OWNER_PERMISSIONS,
-          org: { ...org, trialEndsAt: org.trial_ends_at },
+          org: { ...org, trialEndsAt: org.trial_ends_at, logoUrl: org.logo_url },
           outletId: pickOutlet(rows, jarOutlet, null),
           outlets: rows.map((o) => ({
             id: o.id,
@@ -205,7 +207,7 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
   const { data: memberships } = await supabase
     .from('organization_members')
     .select(
-      'id, role, permissions, default_outlet_id, organization_id, organizations(id, name, city, status, trial_ends_at)',
+      'id, role, permissions, default_outlet_id, organization_id, organizations(id, name, city, status, trial_ends_at, logo_url)',
     )
     .eq('user_id', userId)
     .eq('status', 'active')
@@ -246,9 +248,10 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     city: string | null
     status: string
     trial_ends_at: string | null
+    logo_url: string | null
   } | null
   const org: SessionContext['org'] = orgRow
-    ? { ...orgRow, trialEndsAt: orgRow.trial_ends_at }
+    ? { ...orgRow, trialEndsAt: orgRow.trial_ends_at, logoUrl: orgRow.logo_url }
     : null
   const rawPerms = (member.permissions ?? {}) as Record<string, boolean>
 

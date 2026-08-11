@@ -119,6 +119,17 @@ h3,
   font-family: var(--font-display); font-weight: 800; color: var(--color-forest);
   font-size: 16px; box-shadow: var(--shadow-sm); flex: 0 0 auto;
 }
+/* Logo toko menggantikan kotak gradien ber-huruf "T".
+   Latarnya dibuat putih, bukan gradien: logo PNG transparan milik warung
+   hampir selalu bertinta gelap, dan di atas gradien lime→mint ia tenggelam. */
+.brand-mark.has-logo {
+  background: #FFFFFF;
+  padding: 3px;
+}
+.brand-mark.has-logo img {
+  width: 100%; height: 100%; object-fit: contain; display: block;
+}
+
 .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: -.01em; }
 .brand-name small {
   display: block; font-family: var(--font-sans); font-weight: 500;
@@ -187,6 +198,60 @@ h3,
 .page-title { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
 .page-sub { color: var(--color-ink-soft); font-size: 13px; margin-top: 4px; }
 .page-head { margin-bottom: 18px; }
+
+/* ── Tab bagian (dipakai Pengaturan) ───────────────────────────────────────
+   Dulu deretan `.btn.btn-sm` biasa dengan gap seadanya, jadi lebar tiap tab
+   ikut panjang tulisannya: "Toko" sempit sekali di sebelah "Struk & Printer".
+   Enam tab dengan enam lebar berbeda terbaca seperti tombol yang kebetulan
+   berjejer, bukan satu alat pemilih.
+
+   `flex: 1 1 0` menyamakan lebarnya saat muat, `min-width: max-content`
+   mengembalikan lebar aslinya saat layar sempit sehingga tidak ada label yang
+   terpotong — di situ barisnya berubah jadi bisa digeser. */
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 4px;
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar { display: none; }
+
+.tab {
+  flex: 1 1 0;
+  min-width: max-content;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--color-ink-soft);
+  transition: background .15s ease, color .15s ease;
+}
+.tab:hover { background: var(--color-paper); color: var(--color-ink); }
+.tab.active { background: var(--color-forest); color: #fff; }
+.tab.active:hover { color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tab { transition: none; }
+}
+
+/* ── Unggah logo (Pengaturan → Toko) ─────────────────────────────────────── */
+.logo-row { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
+.logo-preview {
+  width: 76px; height: 76px; flex: 0 0 auto;
+  border: 1px solid var(--color-line); border-radius: var(--radius-md);
+  background: #FFFFFF; padding: 6px;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.logo-preview img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.logo-empty { color: var(--color-ink-faint); display: flex; }
 
 /* ── Kerangka pemuatan ─────────────────────────────────────────────────────
    Halaman toko semuanya dirender server dan tidak bisa di-cache — isinya stok
@@ -610,6 +675,16 @@ tbody tr:hover { background: var(--color-paper); }
 .receipt .r-total { font-size: 11px; margin: 3px 0; }
 .receipt .r-brand { margin-top: 6px; font-size: 8px; }
 
+/* Logo toko di kepala struk.
+   Tingginya dibatasi, bukan lebarnya: logo yang tinggi menggeser seluruh isi
+   struk ke bawah dan kertas thermal dibayar per sentimeter. `object-fit`
+   membuat logo lebar maupun persegi sama-sama muat tanpa terpotong. */
+.receipt .r-logo { margin-bottom: 4px; }
+.receipt .r-logo img {
+  max-width: 100%; max-height: 16mm; width: auto; height: auto;
+  display: inline-block; object-fit: contain;
+}
+
 /* Pratinjau struk di layar diberi bingkai kertas; saat dicetak bingkainya hilang. */
 .receipt-preview {
   background: #fff; border: 1px solid var(--color-line);
@@ -623,6 +698,10 @@ tbody tr:hover { background: var(--color-paper); }
   .receipt, .receipt * { visibility: visible; }
   .receipt { position: absolute; left: 0; top: 0; width: 58mm; padding: 3mm 5mm; }
   .receipt-preview { border: none; box-shadow: none; border-radius: 0; }
+  /* Browser membuang gambar latar dan sering meredam gambar saat mencetak demi
+     menghemat tinta. Untuk logo itu justru merusak: yang keluar kotak abu-abu
+     samar, bukan logo toko. */
+  .receipt .r-logo img { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
 }
 
 /* ---------- drawer ---------- */

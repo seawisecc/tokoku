@@ -9,6 +9,8 @@ import { Receipt, type ReceiptData } from './Receipt'
 export type StoreInfo = {
   name: string
   outletName: string | null
+  /** null kalau belum ada logo ATAU sakelar "Tampilkan logo" dimatikan. */
+  logoUrl: string | null
   address: string | null
   phone: string | null
   receiptFooter: string | null
@@ -31,6 +33,7 @@ export function SuccessModal({
   const receipt: ReceiptData = {
     code: trx.code,
     storeName: store.name,
+    logoUrl: store.logoUrl,
     storeAddress: store.address,
     storePhone: store.phone,
     outletName: store.outletName,

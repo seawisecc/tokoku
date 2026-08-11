@@ -22,6 +22,17 @@ export type NavItem = {
   href: Route
   icon: IconName
   fab?: boolean
+  /**
+   * Awalan path yang ikut menyalakan menu ini, kalau `href` saja tidak cukup.
+   *
+   * Dibutuhkan menu yang `href`-nya menunjuk salah satu ANAK, bukan pangkalnya.
+   * Pengaturan mengarah ke `/pengaturan/toko` karena `/pengaturan` sendiri
+   * bukan halaman — akibatnya, begitu orang berpindah ke tab Kategori,
+   * `/pengaturan/kategori` bukan anak dari `/pengaturan/toko` dan menunya
+   * padam di sidebar maupun bottom nav. Orang jadi kehilangan jejak sedang
+   * berada di bagian mana aplikasi.
+   */
+  section?: string
   /** Menu muncul hanya kalau user punya salah satu izin ini. */
   requires?: Permission[]
   /** Menu disembunyikan kalau user punya izin ini — untuk menu yang sudah
@@ -63,6 +74,7 @@ const TOKO_ITEMS: NavItem[] = [
     label: 'Pengaturan',
     href: '/pengaturan/toko',
     icon: 'sliders',
+    section: '/pengaturan',
     requires: ['settings'],
   },
   { id: 'profil', label: 'Profil', href: '/profil', icon: 'user' },

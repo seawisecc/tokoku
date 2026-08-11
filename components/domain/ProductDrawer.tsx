@@ -19,7 +19,16 @@ export type ProductFormValue = {
   trackStock: boolean
 }
 
-export const emptyProduct = (suggestedSku: string): ProductFormValue => ({
+/**
+ * `defaultMinStock` datang dari `organizations.low_stock_threshold` — setelan
+ * "Ambang Stok Menipis (bawaan)" di Pengaturan → Toko.
+ *
+ * Sebelum ini angkanya dipatok 10 di sini, sehingga setelan tokonya tersimpan
+ * rapi ke database lalu tidak pernah dibaca oleh apa pun: pemilik toko
+ * mengubahnya dan tidak ada yang berubah, padahal keterangan di bawah isiannya
+ * sudah menjanjikan "Dipakai untuk produk baru".
+ */
+export const emptyProduct = (suggestedSku: string, defaultMinStock = 10): ProductFormValue => ({
   id: null,
   name: '',
   sku: suggestedSku,
@@ -28,7 +37,7 @@ export const emptyProduct = (suggestedSku: string): ProductFormValue => ({
   unit: 'pcs',
   costPrice: 0,
   sellPrice: 0,
-  minStock: 10,
+  minStock: defaultMinStock,
   trackStock: true,
 })
 
