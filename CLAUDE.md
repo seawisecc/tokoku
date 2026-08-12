@@ -10,12 +10,19 @@ tampilan, buka file itu dulu.
 
 ## Kondisi terkini — mulai baca dari sini
 
-Terakhir dikerjakan **10 Agustus 2026**. Semua yang di bawah ini sudah dibangun,
-diuji lewat browser, dan migrasinya sudah diterapkan ke Supabase.
+Terakhir dikerjakan **12 Agustus 2026**. Semua yang di bawah ini sudah dibangun
+dan migrasinya sudah diterapkan ke Supabase.
 
-**Sudah di-deploy ke Vercel** lewat GitHub (`seawisecc/tokoku`, commit pertama
-10 Agu). Ada satu laporan terbuka soal deploy itu — baca bagian bertanda ⚠
-sebelum mengerjakan apa pun.
+**Sudah di-deploy ke Vercel** lewat GitHub (`seawisecc/tokoku`), dan pushing ke
+`main` memicu deploy produksi otomatis. Function berjalan di **sin1 (Singapura)**
+satu region dengan Supabase — jangan pernah memindahkannya tanpa memindahkan
+databasenya juga; lihat "Deploy tidak responsif" di bawah.
+
+**Dua hal yang belum tuntas, baca sebelum mengerjakan apa pun:**
+1. **Scan barcode sudah live tapi belum diverifikasi siapa pun.** Lihat bagian
+   bertanda ⚠ di bawah.
+2. **Sandi Super Admin masih `admin123` di produksi.** Akun itu bisa membaca data
+   seluruh toko klien. Harus diganti pemilik project sendiri.
 
 **Sudah jalan:**
 - Auth split-panel dengan animasi clip-path · pendaftaran toko mandiri ·
@@ -46,6 +53,12 @@ sebelum mengerjakan apa pun.
   ada antrean; lihat "Perangkat bisa dihapus" di bawah
 - **Langganan sisi toko** (`/pengaturan/langganan`) — paket aktif, sisa trial,
   bar kuota, riwayat, tombol WhatsApp admin; lihat "Langganan sisi toko" di bawah
+- **CRM & poin loyalty** (`/pelanggan`) — daftar pelanggan, segmentasi, poin
+  otomatis; lihat "CRM, poin loyalty, dan nota WhatsApp" di bawah
+- **Nota via WhatsApp** — tombol di detail transaksi, membuka WhatsApp kasir
+  sendiri dengan notanya sudah tertulis
+- **Scan barcode** (kamera + alat pemindai) — SUDAH DI-DEPLOY TAPI BELUM
+  DIVERIFIKASI SIAPA PUN; lihat bagian bertanda ⚠ di bawah
 - Pembelian & pemasok (`/pembelian`) — lihat "Pembelian" di bawah
 - Konsinyasi (`/pembelian/konsinyasi`) — titip jual, bagi hasil, retur; lihat
   "Konsinyasi" di bawah
@@ -73,6 +86,15 @@ sebelum mengerjakan apa pun.
    riwayat langganannya sendiri di `/pengaturan/langganan`, dan menghubungi
    admin lewat WhatsApp. Yang belum ada cuma payment gateway-nya: perubahan
    paket masih dikerjakan tangan lewat Super Admin.
+4. **Penukaran poin di Kasir.** Aturan dan databasenya sudah jalan penuh dan
+   teruji (`_apply_customer_effects` menerima `points_redeemed`), tapi belum ada
+   antarmukanya: kasir belum bisa memilih pelanggan lalu menukar poin saat
+   membayar. Menyentuh alur pembayaran DAN sinkronisasi offline sekaligus, jadi
+   jangan diselipkan tanpa pengujian yang layak. Untuk sekarang poin bertambah
+   otomatis tapi tidak bisa ditukar dari kasir.
+5. **Sandi Super Admin `admin123` masih berlaku di produksi.** Satu akun itu
+   bisa membaca data SELURUH toko klien. Harus diganti pemilik project sendiri;
+   bukan sesuatu yang boleh dikerjakan agen.
 
 Seluruh modul yang disepakati sudah jadi — Konsinyasi yang terakhir, selesai
 10 Agu 2026. Sisa daftar di atas adalah pengembangan lanjutan, bukan ruang
@@ -383,6 +405,147 @@ daripada di bawahnya, sehingga judul jelas milik isi yang menyusulnya.
 `.wide-cols > div > .section-title:first-child` sengaja dinolkan supaya judul
 kedua kolom sejajar. Tanpa itu dua kolom di Beranda menempel persis di bawah
 kartu statistik — 14px, dan itulah yang dilaporkan "mepet".
+
+## ⚠ Scan barcode — belum diverifikasi siapa pun
+
+Sudah di-deploy ke produksi 12 Agu atas permintaan pemilik project, yang akan
+mengujinya langsung dengan HP. **Belum pernah berhasil dijalankan sekali pun**
+oleh agen yang membuatnya: cache POS di mesin uji rusak setelah storage dihapus
+berulang, grid produknya kosong, jadi tidak ada yang bisa dipindai.
+
+Jangan menganggapnya terbukti bekerja. Yang belum diuji: pindaian kamera
+sungguhan, alat pemindai USB/Bluetooth, dan perilakunya di Safari iOS.
+
+**Cacat lama yang ikut ditemukan:** kotak cari POS selama ini TIDAK mencari
+barcode sama sekali, hanya `name` dan `sku`, padahal placeholder-nya sudah
+menjanjikan "scan barcode". Jadi alat pemindai pun tidak pernah menemukan apa
+pun. Sekarang barcode ikut disaring.
+
+**Saat mengetik, hanya BARCODE yang dicocokkan, bukan SKU.** SKU pendek dan
+mudah diketik penuh ("MNM-0005"); ikut dicocokkan pada tiap ketikan, kasir yang
+mengetik SKU untuk MENCARI barang malah menambahkannya ke keranjang. Barcode
+aman: panjang, angka semua, praktis tidak mungkin selesai diketik kecuali memang
+sedang dipindai. SKU tetap dicocokkan saat Enter ditekan.
+
+`BarcodeScanner` memakai ponyfill `barcode-detector` karena `BarcodeDetector`
+bawaan browser tidak ada di Safari iOS, dan kasir di sini memakai iPhone maupun
+Android. Diimpor DINAMIS supaya WASM-nya tidak ikut terunduh kasir yang tidak
+pernah membuka pemindai. Ada jeda 1,5 detik per kode: kamera membaca 30 frame
+per detik dan tanpa jeda satu kali arahkan menambah puluhan barang yang sama.
+
+## CRM, poin loyalty, dan nota WhatsApp
+
+**Fondasinya sudah ada sejak migrasi 0005 dan tidak pernah dipakai:** tabel
+`customers` lengkap dengan `total_spent`/`visit_count`/`last_visit_at`, kolom
+`transactions.customer_id`, policy RLS-nya, bahkan `create_transaction` sudah
+menerima `customer_id` dan memperbarui statistiknya. Migrasi 0037 hanya
+menambahkan poin dan menutup dua celah.
+
+**Poin: `_apply_customer_effects` adalah SATU tempat aturannya.** Dipanggil dari
+`_apply_transaction`, jadi berlaku sama untuk transaksi online maupun yang baru
+tersinkron dari perangkat offline.
+
+**Penukaran DIJEPIT ke saldo yang ada, tidak ditolak.** Transaksi offline bisa
+sampai server berhari-hari kemudian dan poinnya mungkin sudah terpakai di kasir
+lain. Menolaknya berarti membuang penjualan yang uangnya sudah diterima, dan
+potongannya pun sudah terlanjur diberikan ke pembeli di depan kasir. Jadi yang
+dikurangi cuma sebanyak yang ada; selisihnya ditanggung toko. Alasannya sama
+persis dengan `product_stocks.quantity` yang boleh negatif.
+
+**`points_earned` disimpan PER TRANSAKSI**, bukan dihitung ulang saat dibutuhkan.
+Aturan poin bisa berubah; pembatalan transaksi lama harus mengembalikan angka
+yang persis, bukan angka menurut aturan hari ini.
+
+**Pembatalan dikerjakan TRIGGER, bukan di dalam `void_transaction`.** Pembatalan
+bisa datang dari RPC itu maupun dari Super Admin lewat SQL, dan keduanya harus
+berakibat sama. Sebelum ini pembatalan tidak menyentuh pelanggan sama sekali,
+jadi penjualan yang sudah dibatalkan tetap terhitung sebagai belanja dan poinnya
+mengendap di saldo pembeli.
+
+**Pelanggan TIDAK disaring per outlet**, beda dengan hampir semua halaman lain.
+Orang yang sama berbelanja di cabang mana pun dan poinnya satu. Disaring per
+cabang, kasir di Renon tidak menemukan pelanggan yang tadi pagi didaftarkan di
+cabang utama lalu membuatnya lagi, dan saldo poinnya terpecah dua.
+
+**Nomor HP dinormalkan ke bentuk `62…`** (`lib/phone.ts`). Tanpa itu `0812…`,
+`+62812…`, dan `62812…` jadi tiga pelanggan berbeda dengan poin terpecah tiga.
+Yang DITAMPILKAN tetap bentuk lokal lewat `hpLokal()`.
+
+**Segmentasi sengaja tiga saja** (belum pernah belanja / sering datang / lama tak
+datang), dengan batas bulat. Pemilik warung tidak menghitung recency-frequency;
+segmen yang lebih halus tidak mengubah tindakan apa pun yang bisa ia ambil.
+
+**Nota WhatsApp dikirim sebagai TEKS, bukan gambar struk.** Teks bisa dicari di
+riwayat chat pembeli berbulan-bulan kemudian; tangkapan layar tenggelam di
+galeri. Yang dibuka adalah WhatsApp milik kasir sendiri dengan pesan terisi, jadi
+tidak ada biaya, tidak perlu penyedia, dan tidak ada nomor pembeli yang keluar
+dari perangkat. Nota transaksi BATAL tidak bisa dikirim — alasannya sama dengan
+penanda batal di struk cetak.
+
+**Sudah diuji langsung ke database** (12 Agu): poin 50 − 20 tukar + 15 dapat =
+45, pembatalan mengembalikan poin/belanja/kunjungan ke keadaan semula, dan
+permintaan tukar 9999 poin dijepit ke saldo 50 tanpa menolak transaksinya.
+Di browser: pelanggan ditambah dengan nomor `0812-3456-7890` yang ternormalkan
+ke `6281234567890` dan tampil kembali sebagai `081…`, dan tautan WhatsApp
+terbentuk lengkap dengan rincian item, total, serta metode bayarnya.
+
+## Kolom komersial organizations dikunci
+
+**Temuan paling serius dari audit pra go-live 11 Agu.** Policy `org_update`
+(migrasi 0008) mengizinkan pemilik toko meng-UPDATE `organizations` tanpa
+batasan KOLOM sama sekali — RLS Postgres bekerja per BARIS, bukan per kolom,
+jadi "boleh mengubah barisnya" berarti boleh mengubah semua isinya.
+
+Seluruh penegakan langganan karena itu bisa dilewati dengan satu panggilan REST
+memakai sesi pemilik toko sendiri. Sudah dibuktikan pada Warung Rina:
+
+    PATCH /rest/v1/organizations?id=eq.<org>
+    { "status": "active", "plan_id": "<enterprise>", "trial_ends_at": "2099-01-01" }
+    → HTTP 200, 1 baris terpengaruh
+
+Paket Enterprise gratis, trial 73 tahun, dan kuota ikut naik karena `org_quota()`
+membaca `plan_id` sementara `org_lapsed_at()` membaca `status` dan
+`trial_ends_at` dari baris yang barusan ditulis sendiri oleh kliennya. Anon key
+ada di setiap bundel browser, jadi tidak ada yang perlu dibobol.
+
+**Ditambal TRIGGER, bukan column grant.** `grant update (kolom, …)` sebenarnya
+cara paling langsung dan diperiksa sebelum RLS — tapi Super Admin memakai role
+Postgres yang SAMA (`authenticated`) dengan klien biasa; ia dibedakan oleh
+`is_platform_admin()` di dalam policy, bukan oleh role database. Column grant
+akan mengunci Super Admin juga dan mematikan panel ganti paket di `/admin/klien`.
+Trigger bisa menanyakan siapa pemanggilnya.
+
+Yang dikunci: `plan_id`, `status`, `trial_ends_at`, dan `deleted_at`. Yang
+terakhir bukan sekadar kehati-hatian: penghapusan tenant memang dibatasi Super
+Admin lewat `org_admin_delete`, tapi seluruh aplikasi memakai SOFT delete, dan
+mengisi `deleted_at` lewat UPDATE melenyapkan toko dari setiap halaman tanpa
+melewati policy itu sama sekali.
+
+Karena kolom komersialnya aman, `org_update` dilonggarkan dari owner-only ke
+`can_manage()` (owner + admin). Itu sekaligus memperbaiki Admin Toko yang selama
+ini menekan Simpan di Pengaturan → Toko dan melihat "Informasi toko tersimpan."
+padahal nol baris berubah.
+
+## Masa coba gratis milik AKUN, bukan toko
+
+Sejak multi-toko dibuka, satu akun boleh memiliki 5 toko dan tiap toko diberi
+masa coba 14 hari yang baru: 5 toko = 70 hari gratis, tanpa gerbang apa pun di
+depannya karena pendaftaran toko tidak berbayar.
+
+Migrasi 0034: toko kedua dan seterusnya memakai `trial_ends_at` yang SAMA dengan
+toko pertama yang dimiliki akun itu. Buat toko ke-2 di hari ke-3 trial, ia ikut
+berakhir di hari ke-14. Buat setelah trial habis, ia lahir sudah lewat masa coba
+dan diantar ke `/pengaturan/langganan` — bukan ke beranda dengan spanduk merah,
+yang terbaca seperti toko yang rusak sejak lahir.
+
+Berbagi tanggal, bukan menolak trial sama sekali: orang yang benar-benar punya
+dua usaha sering mendaftarkan keduanya di hari yang sama, dan menolak mentah-
+mentah membuat toko keduanya lahir mati padahal ia masih di tengah masa coba
+yang sah.
+
+Migrasi 0035, ditemukan saat menguji 0034: `register_store` menghitung jatah 5
+toko dan memeriksa nama kembar tanpa melihat `deleted_at`. Toko yang dihapus
+Super Admin karena itu tetap memakan slot DAN mengunci namanya selamanya.
 
 ## Kuota paket
 
@@ -994,6 +1157,7 @@ salah, aplikasinya terbaca rusak — bukan terbaca murah.
 |---|---|---|
 | `purchasing` | catat barang masuk (stok & HPP tetap benar) | pemasok, tempo, hutang, **konsinyasi** |
 | `reports` | omset, transaksi, rata-rata, grafik harian, rincian per tanggal, 7 & 30 hari | + laba kotor & margin, produk terlaris, metode bayar, 90 hari |
+| `crm` | catat pelanggan, daftar pelanggan, **nota via WhatsApp** | + poin loyalty, total belanja & kunjungan per pelanggan, segmentasi |
 
 Dua keputusan yang disengaja di halaman Laporan:
 - **Laporan Shift TIDAK dikunci.** Selisih kas itu pengamanan uang, bukan
@@ -1055,6 +1219,11 @@ node scripts/recovery-link.mjs <email>          # tautan reset sandi, TANPA kiri
 
 Next.js 16 (App Router) · TypeScript · Tailwind v4 + CSS variables · Supabase (Postgres + RLS)
 · Dexie/IndexedDB untuk POS offline · Zustand untuk keranjang · zod untuk validasi · Vercel.
+
+`@supabase/ssr` **0.12.4** (dinaikkan dari 0.7.0 pada 12 Agu; `supabase-js` dan
+`auth-js` sudah 2.112.2 sejak lama, jadi lapisan SSR-nya tertinggal jauh). Tidak
+ada perubahan API pada yang dipakai project ini. `barcode-detector` dipakai
+sebagai ponyfill kamera dan diimpor dinamis.
 
 Next **16**, bukan 15: Next 15 punya 3 kerentanan *high* lewat postcss & sharp.
 Konsekuensinya `middleware.ts` diganti konvensi `proxy.ts`.
@@ -1172,6 +1341,23 @@ maupun `scroll-behavior: smooth` di CSS sama-sama tidak menggulir sama sekali �
 tanpa error — sehingga tombolnya terasa mati. Gulir instan selalu bekerja. Di jalur
 uang, pakai yang instan.
 
+**`document.querySelector('form button[type="submit"]')` menekan tombol
+KELUAR.** Tombol logout di topbar adalah `<form action={signOut}>` dan berada
+lebih dulu di DOM daripada form mana pun di isi halaman. Selector itu memakan
+satu sesi penuh: gejalanya "menekan Simpan membuat user logout dan sesinya
+hancur", direproduksi berkali-kali di lokal MAUPUN produksi, sempat dilaporkan
+sebagai bug penghalang go-live, dan dikejar sampai membongkar `_removeSession`
+di dalam bundel auth-js — yang justru membuktikan pemanggilnya `_signOut`, alias
+memang logout yang berhasil. Saat menguji sebuah form, ambil tombolnya dari
+DALAM form itu: `el.closest('form').querySelector('button[type="submit"]')`.
+
+**Menghapus IndexedDB mentah-mentah merusak cache POS.** `indexedDB.deleteDatabase`
+lalu `indexedDB.open` biasa membuat database v1 kosong yang berebut dengan skema
+Dexie, dan grid kasir jadi kosong tanpa error apa pun. Selain itu tiap kali cache
+dibuang, POS mendaftarkan PERANGKAT BARU — kuota `max_devices` Toko Dewi sempat
+penuh 8/8 hanya karena pengujian. Kalau perlu mereset, pakai jalur aplikasinya
+(`ensureTenant`) atau hapus lewat DevTools, dan periksa kuota perangkat sesudahnya.
+
 **Setelah mengubah skema, jalankan `npm run db:types`.** Tanpa itu RPC baru akan ditolak
 typecheck.
 
@@ -1195,6 +1381,7 @@ app/
   auth/konfirmasi  route handler pendaratan tautan email (WAJIB route, bukan page)
   (toko)/          beranda, kasir, transaksi/[id], riwayat, laporan/{,shift},
                    produk/{,[id],transfer}, pembelian/{,konsinyasi},
+                   pelanggan,
                    pengaturan/{toko,outlet,tim,kategori,printer,sinkronisasi,
                                langganan},
                    profil
@@ -1204,12 +1391,14 @@ components/
   layout/          AppShell, Sidebar (memuat brand), Topbar, BottomNav,
                    OutletSwitcher (toko + outlet), ImpersonationBanner
   ui/icons.tsx     registry ikon dari wireframe
-  pos/             PosClient + turunannya, CartBar (bar bayar mobile), Receipt (58mm)
+  pos/             PosClient + turunannya, CartBar (bar bayar mobile), Receipt (58mm),
+                   BarcodeScanner (kamera, ponyfill barcode-detector)
   charts/          DailyRevenueChart, RankedBars, PaymentSplit
   overlay/Drawer   panel geser untuk semua form
   data/IconAction  tombol aksi baris, konfirmasi dua langkah
   domain/          AuthPanel, ForgotPasswordForm, NewPasswordForm, QuotaBars,
                    LogoUploader, DeviceTable, SettingsNav, WhatsAppButton,
+                   CustomerManager, SendReceiptButton,
                    ProductTable/Drawer, StockDrawer, TeamManager,
                    CategoryManager, PlanManager, ClientDetail, ShiftCard,
                    PurchaseList/Drawer, ConsignmentList (+ drawer titipan,
@@ -1221,13 +1410,14 @@ lib/
   navigation.ts    SATU daftar menu, disaring izin modul
   offline/         db (Dexie v3, stempel tenant + outlet, deviceKey per outlet),
                    outbox, catalog, device, sequence, connection
+  phone.ts         normalkan nomor HP ke 62… + hpLokal() untuk menampilkannya
   plan.ts          SATU pembaca plans.features — kolom kosong = kemampuan penuh
   subscription.ts  keadaan langganan sisi toko — harus sama dengan org_lapsed_at()
   supabase/        client (RLS) · server (RLS) · admin (LEWAT RLS, server-only)
 scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  33 file, Postgres 17
+supabase/migrations/  37 file, Postgres 17
 ```
 
 ## RPC yang penting
@@ -1239,6 +1429,9 @@ supabase/migrations/  33 file, Postgres 17
 `create_purchase` · `record_consignment_intake` / `record_consignment_return` /
 `settle_consignment` / `end_consignment` · `create_outlet` / `set_primary_outlet` /
 `transfer_stock`.
+
+`_apply_customer_effects` (dicabut dari `authenticated`, hanya dipanggil dari
+dalam `_apply_transaction`) memegang seluruh aturan poin loyalty.
 
 ## Navigasi & izin
 
@@ -1277,7 +1470,11 @@ riwayat akses Super Admin dan jejak perubahan langganan tidak terputus.
 | `siti.warungbarokah@gmail.com` | Pemilik Warung Barokah |
 | `seawise.cc@gmail.com` | **Super Admin** — sandi `admin123`, BUKAN `TokoKu123!`. Masuk lewat `/masuk`, diarahkan ke `/admin` |
 
-Perangkat POS Toko Dewi: K1–K5 di outlet MAIN dan K2 di Cabang Renon. Sisa
+Tiga produk sudah diberi barcode EAN-13 asli untuk menguji pemindai: **Aqua
+600ml `8886008101053`**, Teh Pucuk `8992745700015`, Chitato `8992775311011`.
+Produk lain masih tanpa barcode.
+
+Perangkat POS Toko Dewi: K1–K6 di outlet MAIN dan K1–K2 di Cabang Renon. Sisa
 pengujian, dan sekarang benar-benar bisa dihapus lewat
 `/pengaturan/sinkronisasi` kalau mengganggu —
 kecuali yang punya transaksi (K1, K2, K3, K4 di MAIN; K1 di Renon).
@@ -1286,3 +1483,18 @@ kecuali yang punya transaksi (K1, K2, K3, K4 di MAIN; K1 di Renon).
 
 Bahasa Indonesia untuk seluruh teks antarmuka dan komentar kode. Pesan error ditulis
 untuk pemilik warung, bukan untuk programmer — sebutkan apa yang harus dilakukan.
+
+**JANGAN memakai em dash (—) di teks yang dilihat pengguna.** Permintaan eksplisit
+pemilik project: tulisan ber-em-dash terbaca seperti dihasilkan AI. Aturannya:
+
+- judul tab memakai `|` — `Produk & Stok | TokoKu`
+- penanda sel kosong memakai `-`, bukan `—`
+- di dalam kalimat: **titik** kalau potongan sesudahnya berdiri sebagai kalimat
+  ("Catat barang masuk. Stok bertambah…"), **koma** kalau menyambung ("Opsional,
+  untuk pemindai"), **titik dua** kalau memperkenalkan rincian ("usaha retail
+  kecil: warung, kios…")
+
+Komentar kode, komentar migrasi SQL, dan CLAUDE.md **boleh** memakai em dash dan
+sengaja tidak disentuh saat pembersihan 12 Agu: tidak pernah dilihat pemilik
+warung, dan menulis ulang ~330 komentar berisiko merusak penjelasan yang justru
+berguna.
