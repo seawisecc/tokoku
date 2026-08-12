@@ -190,12 +190,22 @@ export function PosClient(props: PosClientProps) {
    * supaya barang berikutnya bisa segera dipindai.
    */
   const terimaPindaian = useCallback(
-    (kode: string): boolean => {
+    (kode: string, bolehSku = false): boolean => {
       const k = kode.trim().toLowerCase()
       if (!k) return false
+      /**
+       * SKU hanya dicocokkan kalau DIMINTA, dan itu tidak pernah terjadi saat
+       * kasir sedang mengetik.
+       *
+       * SKU di sini pendek dan mudah diketik penuh ("MNM-0005"). Kalau ikut
+       * dicocokkan pada tiap ketikan, kasir yang mengetik SKU untuk MENCARI
+       * barangnya malah menambahkannya ke keranjang tanpa diminta. Barcode
+       * aman: panjang, angka semua, dan praktis tidak mungkin selesai diketik
+       * kecuali memang sedang dipindai.
+       */
       const p =
         products.find((x) => (x.barcode ?? '').toLowerCase() === k) ??
-        products.find((x) => x.sku.toLowerCase() === k)
+        (bolehSku ? products.find((x) => x.sku.toLowerCase() === k) : undefined)
       if (!p) return false
       tambah(p)
       setQuery('')
@@ -360,13 +370,16 @@ export function PosClient(props: PosClientProps) {
                   const v = e.target.value
                   // Pemindai yang tidak mengirim Enter tetap tertangkap: begitu
                   // ketikannya persis sama dengan sebuah barcode, produknya masuk.
-                  if (v.length >= 6 && terimaPindaian(v)) return
+                  // Tanpa SKU: lihat catatan di `terimaPindaian`.
+                  if (v.length >= 8 && terimaPindaian(v)) return
                   setQuery(v)
                 }}
                 onKeyDown={(e) => {
                   if (e.key !== 'Enter') return
                   e.preventDefault()
-                  if (terimaPindaian(query)) return
+                  // Enter berarti kasir memang sudah selesai mengetik, jadi
+                  // SKU boleh ikut dicocokkan di sini.
+                  if (terimaPindaian(query, true)) return
                   // Bukan barcode, tapi kalau hasil carinya tinggal satu, itu
                   // yang dimaksud kasir.
                   if (visible.length === 1) {
