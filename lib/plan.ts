@@ -21,6 +21,15 @@ export type PlanFeatures = {
   reports: 'basic' | 'full'
   /** basic = catat barang masuk saja · full = pemasok, tempo, hutang, konsinyasi. */
   purchasing: 'basic' | 'full'
+  /**
+   * basic = catat pelanggan di kasir, daftar pelanggan, kirim nota via WhatsApp
+   * full  = + poin loyalty, riwayat belanja per pelanggan, segmentasi
+   *
+   * Dibelah, bukan dikunci seluruhnya di paket atas, mengikuti prinsip yang
+   * sama dengan `purchasing`: melayani pembeli adalah hal yang membuat toko
+   * berjalan benar, sementara poin dan segmentasi adalah lapisan analisanya.
+   */
+  crm: 'basic' | 'full'
   multiOutlet: boolean
   api: boolean
 }
@@ -28,6 +37,7 @@ export type PlanFeatures = {
 export const FULL_PLAN: PlanFeatures = {
   reports: 'full',
   purchasing: 'full',
+  crm: 'full',
   multiOutlet: true,
   api: true,
 }
@@ -58,6 +68,7 @@ export const getPlanFeatures = cache(async (orgId: string): Promise<PlanFeatures
   return {
     reports: tier(raw.reports),
     purchasing: tier(raw.purchasing),
+    crm: tier(raw.crm),
     multiOutlet: raw.multi_outlet !== false,
     api: raw.api !== false,
   }

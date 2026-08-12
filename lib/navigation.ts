@@ -62,6 +62,13 @@ const TOKO_ITEMS: NavItem[] = [
   { id: 'kasir', label: 'Kasir', href: '/kasir', icon: 'cart', fab: true, requires: ['pos'] },
   { id: 'produk', label: 'Produk', href: '/produk', icon: 'box', requires: ['products'] },
   {
+    id: 'pelanggan',
+    label: 'Pelanggan',
+    href: '/pelanggan',
+    icon: 'users',
+    requires: ['reports'],
+  },
+  {
     id: 'pembelian',
     label: 'Pembelian',
     href: '/pembelian',
