@@ -10,10 +10,17 @@ export function PaymentModal({
   total,
   onClose,
   onConfirm,
+  customerSlot,
 }: {
   total: number
   onClose: () => void
   onConfirm: (method: 'cash' | 'qris', paid: number) => Promise<void>
+  /**
+   * Pemilih pelanggan. Ditaruh di layar bayar, bukan di keranjang: di sinilah
+   * kasir bertanya "nomornya berapa?" sambil menunggu uang, dan di sini pula
+   * layarnya sama di desktop maupun ponsel.
+   */
+  customerSlot?: React.ReactNode
 }) {
   const [method, setMethod] = useState<'cash' | 'qris'>('qris')
   const [paid, setPaid] = useState(total)
@@ -59,6 +66,8 @@ export function PaymentModal({
           <div className="cell-sub" style={{ marginBottom: 6 }}>
             Total tagihan {rupiah(total)}
           </div>
+
+          {customerSlot && <div style={{ margin: '10px 0 12px' }}>{customerSlot}</div>}
 
           <div className="pay-methods">
             <button

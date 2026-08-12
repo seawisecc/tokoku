@@ -29,14 +29,12 @@ export function BrandMark({ context, logoUrl }: { context: string; logoUrl?: str
  * yang mengumumkan keduanya justru membacakan nama toko dua kali.
  */
 export function BrandLogo({ logoUrl }: { logoUrl?: string | null }) {
-  if (!logoUrl) return <div className="brand-mark">T</div>
-
   return (
     <div className="brand-mark has-logo">
       {/* eslint-disable-next-line @next/next/no-img-element -- berkas storage
-          Supabase; next/image butuh konfigurasi domain dan tidak memberi
-          keuntungan untuk satu gambar kecil yang jarang berubah. */}
-      <img src={logoUrl} alt="" />
+          Supabase maupun aset lokal; next/image butuh konfigurasi domain dan
+          tidak memberi keuntungan untuk satu gambar kecil yang jarang berubah. */}
+      <img src={logoUrl || '/brand/tokoku.png'} alt="" />
     </div>
   )
 }

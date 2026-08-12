@@ -1,4 +1,4 @@
-import { registerDevice } from '@/app/(toko)/kasir/actions'
+import { deviceStillExists, registerDevice } from '@/app/(toko)/kasir/actions'
 import { deviceKey, getMeta, setMeta } from './db'
 
 export type DeviceInfo = { id: string; code: string }
@@ -24,12 +24,39 @@ export type DeviceInfo = { id: string; code: string }
 let inflight: Promise<DeviceInfo | { error: string }> | null = null
 let inflightOutlet: string | null = null
 
-export function getOrRegisterDevice(outletId: string): Promise<DeviceInfo | { error: string }> {
+export function getOrRegisterDevice(
+  outletId: string,
+  online = true,
+): Promise<DeviceInfo | { error: string }> {
   if (!inflight || inflightOutlet !== outletId) {
     inflightOutlet = outletId
     inflight = (async () => {
       const cached = await getMeta<DeviceInfo>(deviceKey(outletId))
-      if (cached) return cached
+      if (cached) {
+        /**
+         * Dipercaya mentah-mentah saat OFFLINE, diperiksa saat online.
+         *
+         * Perangkat bisa dihapus pemilik toko lewat Pengaturan → Sinkronisasi.
+         * Id yang mengendap di sini lalu menunjuk baris yang sudah tidak ada,
+         * dan kasirnya tersangkut di "Menyiapkan perangkat…" tanpa pesan apa
+         * pun. Kalau ternyata sudah hilang, catatannya dibuang dan perangkat
+         * ini mendaftar ulang — kasir cuma melihat kode barunya, bukan layar
+         * yang mati.
+         *
+         * Saat offline pemeriksaan tidak mungkin dilakukan, dan menahan kasir
+         * karena itu jauh lebih buruk daripada memakai id yang mungkin basi:
+         * transaksinya toh baru dikirim setelah jaringan kembali.
+         */
+        if (!online) return cached
+        try {
+          if (await deviceStillExists(cached.id)) return cached
+          await setMeta(deviceKey(outletId), null)
+        } catch {
+          // Gagal memeriksa (jaringan putus di tengah) bukan bukti perangkatnya
+          // hilang. Pakai yang ada.
+          return cached
+        }
+      }
 
       const result = await registerDevice()
       if ('error' in result) {

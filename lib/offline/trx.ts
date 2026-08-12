@@ -37,6 +37,7 @@ export function toSyncPayload(trx: OutboxTransaction) {
     outlet_id: trx.outlet_id,
     device_id: trx.device_id,
     shift_id: trx.shift_id,
+    customer_id: trx.customer_id,
     client_created_at: trx.client_created_at,
     payment_method: trx.payment_method,
     paid_amount: trx.paid_amount,

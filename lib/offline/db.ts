@@ -68,6 +68,13 @@ export type OutboxTransaction = {
   device_id: string
   shift_id: string | null
   cashier_name: string
+  /**
+   * Pelanggan yang menempel di penjualan ini. Null = pembeli tidak terdaftar,
+   * dan itu keadaan yang paling lazim di warung. Namanya ikut disimpan supaya
+   * struk offline tetap bisa menyebutnya tanpa menunggu jaringan.
+   */
+  customer_id: string | null
+  customer_name: string | null
   client_created_at: string
   payment_method: 'cash' | 'qris'
   paid_amount: number

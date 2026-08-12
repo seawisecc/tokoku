@@ -1,6 +1,6 @@
 'use server'
 
-import { requireWrite } from '@/lib/auth'
+import { requireSession, requireWrite } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
 /**
@@ -11,6 +11,28 @@ import { createClient } from '@/lib/supabase/server'
  * bentrok dengan mesin lain. Karena itu kodenya harus dialokasikan server,
  * sekali, saat perangkat masih online.
  */
+/**
+ * Perangkat yang tersimpan di cache masih ada di server?
+ *
+ * Sejak pemilik toko bisa MENGHAPUS perangkat lewat Pengaturan → Sinkronisasi,
+ * id yang mengendap di cache perangkat kasir bisa menunjuk baris yang sudah
+ * tidak ada. Tanpa pemeriksaan ini kasirnya tersangkut di "Menyiapkan
+ * perangkat…" selamanya: transaksi barunya menabrak foreign key dan tidak ada
+ * satu pun pesan yang menjelaskan kenapa.
+ */
+export async function deviceStillExists(deviceId: string): Promise<boolean> {
+  const session = await requireSession()
+  if (!session.org) return false
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('devices')
+    .select('id')
+    .eq('id', deviceId)
+    .eq('organization_id', session.org.id)
+    .maybeSingle()
+  return !!data
+}
+
 export async function registerDevice(): Promise<{ id: string; code: string } | { error: string }> {
   const { session, blocked } = await requireWrite('pos')
   if (blocked) return { error: blocked }

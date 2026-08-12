@@ -2,7 +2,7 @@
  * Layout auth: latar forest gelap agar panel gradient lime→mint menonjol.
  * Brand dan footer dirender di sini supaya semua halaman auth konsisten.
  */
-import { BrandMark } from '@/components/layout/BrandMark'
+import { BrandLogo, BrandMark } from '@/components/layout/BrandMark'
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -10,7 +10,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div style={{ width: '100%', maxWidth: 880 }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
           <div className="brand" style={{ color: '#fff' }}>
-            <div className="brand-mark">T</div>
+            <BrandLogo />
             <div className="brand-name">
               TokoKu
               <small style={{ color: 'rgba(255,255,255,.5)' }}>by Seawise Studio</small>

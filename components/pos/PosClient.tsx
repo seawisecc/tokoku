@@ -30,6 +30,7 @@ import { CategoryPills } from './CategoryPills'
 import { PaymentModal } from './PaymentModal'
 import { ProductGrid } from './ProductGrid'
 import { SuccessModal, type StoreInfo } from './SuccessModal'
+import { CustomerPicker, type PickedCustomer } from './CustomerPicker'
 import { SyncStatusChip } from './SyncStatusChip'
 import { BarcodeScanner } from './BarcodeScanner'
 
@@ -58,6 +59,7 @@ export function PosClient(props: PosClientProps) {
   const searchRef = useRef<HTMLInputElement>(null)
   const [scanNotice, setScanNotice] = useState<string | null>(null)
   const [scannerOpen, setScannerOpen] = useState(false)
+  const [customer, setCustomer] = useState<PickedCustomer | null>(null)
   const [online, setOnline] = useState(true)
   const [pending, setPending] = useState(0)
   const [lastSync, setLastSync] = useState<string | null>(null)
@@ -113,7 +115,7 @@ export function PosClient(props: PosClientProps) {
       })
       await refreshLocal()
 
-      const d = await getOrRegisterDevice(props.outletId)
+      const d = await getOrRegisterDevice(props.outletId, navigator.onLine)
       if (cancelled) return
       if ('error' in d) {
         setNotice(d.error)
@@ -267,6 +269,8 @@ export function PosClient(props: PosClientProps) {
       device_id: device.id,
       shift_id: shiftId,
       cashier_name: props.cashierName,
+      customer_id: customer?.id ?? null,
+      customer_name: customer?.name ?? null,
       client_created_at: now.toISOString(),
       payment_method: method,
       paid_amount: method === 'cash' ? paid : total,
@@ -465,7 +469,19 @@ export function PosClient(props: PosClientProps) {
       />
 
       {modal === 'pay' && (
-        <PaymentModal total={total} onClose={() => setModal(null)} onConfirm={handlePay} />
+        <PaymentModal
+          total={total}
+          onClose={() => setModal(null)}
+          onConfirm={handlePay}
+          customerSlot={
+            <CustomerPicker
+              organizationId={props.organizationId}
+              online={online}
+              value={customer}
+              onChange={setCustomer}
+            />
+          }
+        />
       )}
 
       {modal === 'success' && lastReceipt && (
