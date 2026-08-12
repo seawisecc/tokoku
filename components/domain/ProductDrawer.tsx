@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { saveProduct, type ActionResult } from '@/app/(toko)/produk/actions'
 import { Drawer } from '@/components/overlay/Drawer'
+import { BarcodeScanner } from '@/components/pos/BarcodeScanner'
 import { Icon } from '@/components/ui/icons'
 import { rupiah } from '@/lib/format'
 
@@ -88,6 +89,7 @@ export function ProductDrawer({
     trackStock: value?.trackStock ?? true,
   }))
   const [result, setResult] = useState<ActionResult | null>(null)
+  const [scannerOpen, setScannerOpen] = useState(false)
   const [pending, startTransition] = useTransition()
 
   if (!value) return null
@@ -258,15 +260,46 @@ export function ProductDrawer({
 
       <div className="field">
         <label htmlFor="barcode">Barcode</label>
-        <input
-          id="barcode"
-          value={draft.barcode}
-          onChange={(e) => set('barcode', e.target.value)}
-          placeholder="Opsional, untuk pemindai"
-          aria-invalid={err?.field === 'barcode'}
-        />
+        {/* Diketik ATAU dipindai. Mengetik 13 angka dari kemasan sambil melihat
+            bolak-balik adalah cara paling gampang salah satu digit, dan barcode
+            yang salah satu digit tidak akan pernah ketemu saat dipindai di
+            kasir — gagal yang baru ketahuan berminggu-minggu kemudian. */}
+        <div className="scan-row" style={{ marginBottom: 0 }}>
+          <div className="tf-input" style={{ flex: 1, minWidth: 0 }}>
+            <input
+              id="barcode"
+              value={draft.barcode}
+              onChange={(e) => set('barcode', e.target.value)}
+              placeholder="Ketik atau pindai"
+              aria-invalid={err?.field === 'barcode'}
+              inputMode="numeric"
+            />
+          </div>
+          <button
+            type="button"
+            className="btn btn-ghost scan-btn"
+            onClick={() => setScannerOpen(true)}
+            aria-label="Pindai barcode dengan kamera"
+            title="Pindai barcode dengan kamera"
+          >
+            <Icon name="scan" size={17} />
+          </button>
+        </div>
+        <div className="field-hint">
+          Dipakai kasir untuk memanggil produk ini dengan sekali pindai.
+        </div>
         {err?.field === 'barcode' && <div className="field-error">{err.error}</div>}
       </div>
+
+      {scannerOpen && (
+        <BarcodeScanner
+          onClose={() => setScannerOpen(false)}
+          onScan={(kode) => {
+            set('barcode', kode)
+            return true
+          }}
+        />
+      )}
 
       <label
         style={{

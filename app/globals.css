@@ -242,6 +242,17 @@ h3,
   .tab { transition: none; }
 }
 
+/* Pemisah "atau" di panel kirim nota. Garis di kiri-kanan, bukan sekadar teks:
+   tanpa garisnya, jalur teks terbaca sebagai lanjutan dari jalur gambar. */
+.kirim-pisah {
+  display: flex; align-items: center; gap: 10px;
+  margin: 16px 0 12px; font-size: 11.5px; font-weight: 600;
+  color: var(--color-ink-faint); text-transform: lowercase;
+}
+.kirim-pisah::before, .kirim-pisah::after {
+  content: ''; flex: 1 1 0; height: 1px; background: var(--color-line);
+}
+
 /* ── Pemindai barcode ──────────────────────────────────────────────────────
    Tombol kamera duduk sebaris dengan kotak cari, bukan di bawahnya: di layar
    kasir setiap baris vertikal yang dipakai kontrol adalah satu baris produk

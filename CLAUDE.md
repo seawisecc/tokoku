@@ -406,15 +406,20 @@ daripada di bawahnya, sehingga judul jelas milik isi yang menyusulnya.
 kedua kolom sejajar. Tanpa itu dua kolom di Beranda menempel persis di bawah
 kartu statistik — 14px, dan itulah yang dilaporkan "mepet".
 
-## ⚠ Scan barcode — belum diverifikasi siapa pun
+## Scan barcode
 
-Sudah di-deploy ke produksi 12 Agu atas permintaan pemilik project, yang akan
-mengujinya langsung dengan HP. **Belum pernah berhasil dijalankan sekali pun**
-oleh agen yang membuatnya: cache POS di mesin uji rusak setelah storage dihapus
-berulang, grid produknya kosong, jadi tidak ada yang bisa dipindai.
+**Sudah dites pemilik project dengan HP sungguhan (12 Agu) dan bekerja.** Agen
+yang membuatnya tidak pernah berhasil menjalankannya sendiri — cache POS di
+mesin uji rusak setelah storage dihapus berulang — jadi bukti bekerjanya datang
+dari perangkat nyata, bukan dari pengujian otomatis.
 
-Jangan menganggapnya terbukti bekerja. Yang belum diuji: pindaian kamera
-sungguhan, alat pemindai USB/Bluetooth, dan perilakunya di Safari iOS.
+Ada di DUA tempat, dan keduanya perlu:
+- **Kasir**, tombol kamera di sebelah kotak cari: memanggil produk ke keranjang.
+- **Drawer produk**, di sebelah isian Barcode: mengisi barcodenya saat mendaftar
+  barang. Mengetik 13 angka dari kemasan sambil melihat bolak-balik adalah cara
+  paling gampang salah satu digit, dan barcode yang meleset satu digit tidak
+  akan pernah ketemu saat dipindai di kasir — gagal yang baru ketahuan
+  berminggu-minggu kemudian.
 
 **Cacat lama yang ikut ditemukan:** kotak cari POS selama ini TIDAK mencari
 barcode sama sekali, hanya `name` dan `sku`, padahal placeholder-nya sudah
@@ -475,12 +480,38 @@ Yang DITAMPILKAN tetap bentuk lokal lewat `hpLokal()`.
 datang), dengan batas bulat. Pemilik warung tidak menghitung recency-frequency;
 segmen yang lebih halus tidak mengubah tindakan apa pun yang bisa ia ambil.
 
-**Nota WhatsApp dikirim sebagai TEKS, bukan gambar struk.** Teks bisa dicari di
-riwayat chat pembeli berbulan-bulan kemudian; tangkapan layar tenggelam di
-galeri. Yang dibuka adalah WhatsApp milik kasir sendiri dengan pesan terisi, jadi
-tidak ada biaya, tidak perlu penyedia, dan tidak ada nomor pembeli yang keluar
-dari perangkat. Nota transaksi BATAL tidak bisa dikirim — alasannya sama dengan
-penanda batal di struk cetak.
+**Nota dikirim lewat DUA jalur, dan keduanya ada karena saling menutup
+kelemahan.**
+
+*Gambar (utama).* Struk digambar ulang ke canvas jadi PNG lalu dibagikan lewat
+share sheet perangkat. Itu **satu-satunya cara melampirkan berkas ke WhatsApp
+dari web**: tautan `wa.me` hanya bisa mengisi teks, tidak bisa melampirkan apa
+pun — batasan WhatsApp, bukan aplikasi kita. Tidak perlu nomor sama sekali;
+kasir memilih kontaknya di dalam WhatsApp. Dipilih PNG dan bukan PDF karena
+gambar tampil LANGSUNG di dalam chat, sementara PDF muncul sebagai lampiran yang
+harus ditekan dulu.
+
+*Teks (cadangan).* Perlu nomor, tapi jalan di perangkat mana pun termasuk
+desktop, dan isinya bisa dicari pembeli di riwayat chat berbulan-bulan kemudian.
+
+`lib/receipt-image.ts` menggambar sendiri ke canvas, bukan memotret DOM dengan
+html2canvas: yang dibutuhkan cuma teks monospace di atas latar putih, dan satu
+dependensi 200 KB untuk itu tidak sepadan di aplikasi yang dipakai lewat
+jaringan warung. Lebarnya 384 piksel karena itu jumlah titik satu baris printer
+thermal 58mm. **Tingginya ditaksir berlebih lalu DIPOTONG** sesuai isi
+sebenarnya — menghitung tepat di depan berarti aturan tinggi ditulis dua kali,
+dan begitu ada baris baru ditambahkan tanpa memperbarui hitungannya, struknya
+terpotong diam-diam.
+
+`bagikanGambar()` mengembalikan `'shared' | 'downloaded' | 'cancelled'` supaya
+pemanggil bisa mengatakan apa yang sebenarnya terjadi. Menutup share sheet
+melempar `AbortError`; itu bukan kegagalan dan tidak boleh dilaporkan sebagai
+error ke kasir.
+
+Tombolnya ada di detail transaksi DAN di layar sukses kasir. Yang kedua justru
+yang paling berguna: pembelinya masih berdiri di depan dan nomornya bisa
+ditanyakan langsung. Nota transaksi BATAL tidak bisa dikirim — alasannya sama
+dengan penanda batal di struk cetak.
 
 **Sudah diuji langsung ke database** (12 Agu): poin 50 − 20 tukar + 15 dapat =
 45, pembatalan mengembalikan poin/belanja/kunjungan ke keadaan semula, dan

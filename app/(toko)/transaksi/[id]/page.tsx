@@ -121,19 +121,30 @@ export default async function DetailTransaksiPage({
                 Alasannya sama dengan penanda batal di struk cetak. */}
             {trx.status === 'paid' && (
               <SendReceiptButton
-                storeName={org?.name ?? 'Toko'}
-                code={trx.code}
-                at={trx.client_created_at}
-                total={trx.total}
-                paymentMethod={trx.payment_method}
                 customerName={pembeli?.name ?? null}
                 customerPhone={pembeli?.phone ?? null}
-                footer={outlet?.receipt_settings?.footer ?? null}
-                items={(items ?? []).map((it) => ({
-                  name: it.product_name,
-                  qty: it.quantity,
-                  lineTotal: it.line_total,
-                }))}
+                data={{
+                  storeName: org?.name ?? 'Toko',
+                  storeAddress: org?.address ?? null,
+                  storePhone: org?.phone ?? null,
+                  outletName: outlet?.name ?? null,
+                  code: trx.code,
+                  at: trx.client_created_at,
+                  cashierName: cashier,
+                  items: (items ?? []).map((it) => ({
+                    name: it.product_name,
+                    qty: it.quantity,
+                    unitPrice: it.unit_price,
+                    lineTotal: it.line_total,
+                  })),
+                  subtotal: trx.subtotal,
+                  discount: trx.discount_total,
+                  total: trx.total,
+                  paid: trx.paid_amount,
+                  change: trx.change_amount,
+                  paymentMethod: trx.payment_method,
+                  footer: outlet?.receipt_settings?.footer ?? null,
+                }}
               />
             )}
             {trx.status === 'paid' && session.permissions.reports && (

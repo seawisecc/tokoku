@@ -5,6 +5,7 @@ import { Icon } from '@/components/ui/icons'
 import { rupiah } from '@/lib/format'
 import type { OutboxTransaction } from '@/lib/offline/db'
 import { Receipt, type ReceiptData } from './Receipt'
+import { SendReceiptButton } from '@/components/domain/SendReceiptButton'
 
 export type StoreInfo = {
   name: string
@@ -113,6 +114,31 @@ export function SuccessModal({
               <Receipt data={receipt} />
             </div>
           )}
+
+          {/* Di sinilah nota paling berguna dikirim: pembelinya masih berdiri
+              di depan kasir dan nomornya bisa ditanyakan langsung. Di halaman
+              detail transaksi tombolnya tetap ada, untuk yang baru diminta
+              belakangan. */}
+          <div style={{ marginBottom: 10 }}>
+            <SendReceiptButton
+              data={{
+                storeName: store.name,
+                storeAddress: store.address,
+                storePhone: store.phone,
+                outletName: store.outletName,
+                code: trx.code,
+                at: trx.client_created_at,
+                cashierName: trx.cashier_name,
+                items: receipt.items,
+                subtotal: receipt.subtotal,
+                total: trx.total,
+                paid: trx.paid_amount,
+                change,
+                paymentMethod: trx.payment_method,
+                footer: store.receiptFooter,
+              }}
+            />
+          </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button
