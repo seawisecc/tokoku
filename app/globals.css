@@ -805,13 +805,76 @@ tbody tr:hover { background: var(--color-paper); }
   border-radius: 10px; box-shadow: var(--shadow-sm); overflow: hidden;
 }
 
+/* ---------- cetak struk ----------
+   Struk pernah keluar DUA KALI dari printer, dan penyebabnya dua hal yang
+   menumpuk:
+
+   1. `visibility: hidden` menyembunyikan isi halaman tapi TIDAK membuang
+      tingginya. Halaman kasir tingginya ribuan piksel, jadi cetakannya tetap
+      terpecah jadi beberapa halaman meski yang terlihat cuma struk.
+   2. Struk kasir ada di dalam `.modal`, dan modal itu `position: fixed`.
+      Elemen fixed DIULANG di SETIAP halaman cetak — itu perilaku browser, bukan
+      bug aplikasi. Dua halaman berarti struk digambar dua kali.
+
+   Sudah diukur: mencetak dari modal kasir menghasilkan 2 halaman dengan struk
+   tergambar 2x. Halaman detail transaksi (tanpa leluhur fixed) selalu 1x, jadi
+   dulu bug ini hanya menggigit di jalur yang paling sering dipakai.
+
+   Obatnya BUKAN menyembunyikan lebih banyak, melainkan MEMBUANG isi lain dari
+   tata letak supaya dokumennya menyusut jadi setinggi struk saja. */
 @media print {
-  @page { size: 58mm auto; margin: 0; }
+  /* Ukuran kertas diserahkan ke driver printer.
+     Dulu tertulis `size: 58mm auto` — bentuk itu TIDAK SAH menurut CSS: panjang
+     tidak boleh dicampur dengan `auto`. Browser membuang seluruh deklarasinya,
+     jadi kertasnya diam-diam jatuh ke Letter/A4 dan lebar 58mm tidak pernah
+     benar-benar berlaku. Diukur: MediaBox keluar 612x792pt.
+     Mematoknya ke ukuran tetap yang sah juga salah — kertas thermal itu gulungan
+     menerus, dan tinggi halaman yang dipatok membuat printer memuntahkan sisa
+     kertas kosong sampai penuh satu halaman pada TIAP struk. */
+  @page { margin: 0; }
   body { background: #fff; }
+
+  /* Lapis dasar: jalan di browser mana pun. Kalau `:has()` tidak didukung,
+     hanya bagian ini yang berlaku dan hasilnya persis seperti sebelum
+     perbaikan — bukan lebih buruk. */
   body * { visibility: hidden; }
   .receipt, .receipt * { visibility: visible; }
   .receipt { position: absolute; left: 0; top: 0; width: 58mm; padding: 3mm 5mm; }
   .receipt-preview { border: none; box-shadow: none; border-radius: 0; }
+
+  /* Lapis kedua: yang benar-benar memperbaiki. Sengaja seluruhnya digantung
+     pada `:has()` supaya browser tanpa dukungan menjatuhkannya utuh dan turun
+     ke lapis dasar di atas, alih-alih mencetak seluruh halaman. */
+  html:has(.receipt), body:has(.receipt) {
+    height: auto !important; min-height: 0 !important;
+  }
+
+  /* Semua yang bukan struk dan bukan leluhurnya dibuang dari tata letak. */
+  body:has(.receipt) *:not(:has(.receipt)):not(.receipt):not(.receipt *) {
+    display: none !important;
+  }
+
+  /* Leluhur struk dinetralkan: yang menentukan adalah `position` dan tinggi.
+     Selama salah satu leluhur masih `fixed`, strukya tetap terulang. */
+  body:has(.receipt) :has(.receipt) {
+    display: block !important;
+    position: static !important; inset: auto !important;
+    width: auto !important; max-width: none !important;
+    height: auto !important; max-height: none !important; min-height: 0 !important;
+    margin: 0 !important; padding: 0 !important;
+    overflow: visible !important;
+    background: none !important; border: none !important;
+    box-shadow: none !important; border-radius: 0 !important;
+    transform: none !important; z-index: auto !important;
+  }
+
+  /* Struknya sendiri ikut kembali ke aliran normal; `position: absolute` di
+     lapis dasar justru yang membuatnya menempel di pojok tiap halaman. */
+  body:has(.receipt) .receipt {
+    position: static !important;
+    width: 58mm !important; margin: 0 !important; padding: 3mm 5mm !important;
+  }
+
   /* Browser membuang gambar latar dan sering meredam gambar saat mencetak demi
      menghemat tinta. Untuk logo itu justru merusak: yang keluar kotak abu-abu
      samar, bukan logo toko. */
