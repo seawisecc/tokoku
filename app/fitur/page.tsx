@@ -367,6 +367,85 @@ export default async function FiturPage() {
         </div>
       </section>
 
+      {/* ── Tangkapan layar ──────────────────────────────────────────────────
+          Halaman ini sebelumnya seluruhnya teks, dan itu lubang terbesarnya:
+          orang membeli aplikasi kasir dengan mata. Gambarnya diambil dari
+          aplikasi yang benar-benar berjalan, bukan mockup, supaya yang dilihat
+          calon klien memang yang akan ia dapat.
+
+          `loading="lazy"` dan `width`/`height` eksplisit: ketiganya di bawah
+          lipatan layar, dan tanpa ukuran tetap halamannya melompat saat gambar
+          selesai diunduh, tepat ketika orang sedang membaca. */}
+      <section className="mk-section" id="tampilan">
+        <h2 className="mk-h2">Seperti ini tampilannya</h2>
+        <p className="mk-sub">
+          Diambil langsung dari aplikasinya, bukan gambar rancangan.
+        </p>
+
+        <figure className="mk-shot">
+          <img
+            src="/tangkapan/kasir.jpg"
+            alt="Layar kasir TokoKu: grid produk di kiri, keranjang belanja dan tombol bayar di kanan"
+            width={1600}
+            height={1000}
+            loading="lazy"
+          />
+          <figcaption>
+            <strong>Kasir.</strong> Cari produk, pindai barcode, atau tekan
+            kartunya. Keranjang dan total selalu terlihat, dan layar ini tetap bekerja
+            waktu internet putus.
+          </figcaption>
+        </figure>
+
+        <div className="mk-shot-duo">
+          <figure className="mk-shot">
+            <img
+              src="/tangkapan/laporan.jpg"
+              alt="Halaman laporan TokoKu: omset tujuh hari, jumlah transaksi, laba kotor, dan grafik omset harian"
+              width={1600}
+              height={1000}
+              loading="lazy"
+            />
+            <figcaption>
+              <strong>Laporan.</strong> Omset, laba kotor, dan grafik harian. Bisa
+              disaring per cabang atau digabung semuanya.
+            </figcaption>
+          </figure>
+
+          <figure className="mk-shot">
+            <img
+              src="/tangkapan/produk.jpg"
+              alt="Halaman produk dan stok TokoKu: daftar produk dengan harga pokok, harga jual, dan sisa stok"
+              width={1600}
+              height={1000}
+              loading="lazy"
+            />
+            <figcaption>
+              <strong>Produk & stok.</strong> Harga pokok, harga jual, dan sisa stok
+              dalam satu baris. Stok menipis ditandai sendiri.
+            </figcaption>
+          </figure>
+        </div>
+
+        <div className="mk-shot-hp">
+          <img
+            src="/tangkapan/kasir-hp.jpg"
+            alt="Layar kasir TokoKu di layar ponsel, dengan bar bayar menempel di bawah"
+            width={360}
+            height={780}
+            loading="lazy"
+          />
+          <div>
+            <h3>Muat di HP yang sudah Anda punya</h3>
+            <p>
+              Bukan versi ringkas, melainkan aplikasi yang sama: pindai barcode pakai
+              kamera, cetak struk, dan tutup shift, semuanya dari layar ponsel. Tidak
+              ada yang perlu dipasang dari toko aplikasi.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* ── Pernyataan besar ─────────────────────────────────────────────── */}
       <section className="mk-statement">
         <h2>

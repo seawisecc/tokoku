@@ -40,8 +40,22 @@ export default function Image() {
           padding: 64,
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse */}
-        <img src={logoSrc} width={132} height={132} style={{ borderRadius: 30 }} alt="" />
+        {/* Alas putih, dan itu bukan hiasan: logonya bergradien lime -> mint,
+            persis keluarga warna latar kartu ini. Ditaruh langsung di atasnya ia
+            nyaris melebur dan yang tersisa cuma huruf T samar. Alas putih juga
+            cara logo ini muncul di dalam aplikasi, jadi kartunya konsisten. */}
+        <div
+          style={{
+            display: 'flex',
+            background: '#FFFFFF',
+            padding: 16,
+            borderRadius: 38,
+            boxShadow: '0 8px 30px rgba(14, 36, 25, 0.16)',
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element -- ImageResponse */}
+          <img src={logoSrc} width={124} height={124} style={{ borderRadius: 28 }} alt="" />
+        </div>
 
         <div
           style={{

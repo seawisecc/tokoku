@@ -1615,6 +1615,46 @@ tbody tr:hover { background: var(--color-paper); }
 }
 .mk-final p { color: var(--color-ink-soft); margin: 0 0 26px; font-size: 15px; }
 
+/* ---------- tangkapan layar aplikasi ---------- */
+.mk-shot { margin: 0 0 18px; }
+.mk-shot img {
+  display: block; width: 100%; height: auto;
+  border: 1px solid var(--color-line); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md); background: var(--color-paper);
+}
+.mk-shot figcaption {
+  margin-top: 12px; font-size: 13.5px; line-height: 1.6;
+  color: var(--color-ink-soft); max-width: 62ch;
+}
+.mk-shot figcaption strong { color: var(--color-ink); font-weight: 700; }
+
+/* Dua tangkapan berdampingan hanya kalau layarnya benar-benar lebar. Di bawah
+   itu keduanya menyusut sampai tulisan di dalam layarnya tidak terbaca sama
+   sekali, dan tangkapan layar yang tidak terbaca sama saja dengan tidak ada. */
+.mk-shot-duo { display: grid; gap: 18px; }
+@media (min-width: 1000px) {
+  .mk-shot-duo { grid-template-columns: 1fr 1fr; gap: 26px; }
+}
+
+.mk-shot-hp {
+  display: grid; gap: 20px; align-items: center; margin-top: 34px;
+  padding: 26px; border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg); background: var(--color-paper);
+}
+.mk-shot-hp img {
+  display: block; width: 100%; max-width: 240px; height: auto; margin-inline: auto;
+  border: 1px solid var(--color-line); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+.mk-shot-hp h3 {
+  font-family: var(--font-display); font-weight: 800; font-size: 20px;
+  margin: 0 0 8px; letter-spacing: -.01em;
+}
+.mk-shot-hp p { margin: 0; font-size: 14px; line-height: 1.65; color: var(--color-ink-soft); }
+@media (min-width: 760px) {
+  .mk-shot-hp { grid-template-columns: 240px 1fr; gap: 34px; padding: 32px; }
+}
+
 /* Yang dasar disebut sekali sebagai satu baris, bukan diulang di tiap kartu.
    Diulang, ketiga kartu jadi terbaca mirip dan pembedanya tenggelam. */
 .mk-included {
