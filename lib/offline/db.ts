@@ -75,6 +75,13 @@ export type OutboxTransaction = {
    */
   customer_id: string | null
   customer_name: string | null
+  /**
+   * Nomor pelanggan ikut disimpan, bukan diambil ulang dari server saat
+   * dibutuhkan. Struk dikirim tepat setelah bayar — sering justru saat sinyal
+   * sedang buruk — dan nomor yang harus dijemput dulu berarti kasir mengetik
+   * ulang angka yang sebenarnya sudah ada di database.
+   */
+  customer_phone: string | null
   client_created_at: string
   payment_method: 'cash' | 'qris'
   paid_amount: number

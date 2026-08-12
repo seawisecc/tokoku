@@ -23,10 +23,33 @@ const jetbrains = JetBrains_Mono({
   display: 'swap',
 })
 
+const DESKRIPSI =
+  'Kasir yang tetap jalan saat internet mati. Stok, pembelian, pelanggan, dan laporan untuk usaha retail. TokoKu by Seawise Studio.'
+
 export const metadata: Metadata = {
+  /**
+   * `metadataBase` WAJIB ada supaya `og:image` ditulis sebagai URL absolut.
+   * WhatsApp mengambil gambarnya dari servernya sendiri, bukan dari browser
+   * pembaca, jadi path relatif tidak akan pernah bisa dijangkau dan kartunya
+   * muncul tanpa gambar.
+   */
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://tokoku.seawise.id'),
   title: 'TokoKu | POS & ERP Retail UMKM',
-  description: 'Kasir, stok, dan laporan untuk usaha retail. TokoKu by Seawise Studio.',
+  description: DESKRIPSI,
   applicationName: 'TokoKu',
+  openGraph: {
+    type: 'website',
+    siteName: 'TokoKu',
+    locale: 'id_ID',
+    title: 'TokoKu: kasir yang tetap jalan saat internet mati',
+    description: DESKRIPSI,
+    url: '/',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TokoKu: kasir yang tetap jalan saat internet mati',
+    description: DESKRIPSI,
+  },
 }
 
 export const viewport: Viewport = {

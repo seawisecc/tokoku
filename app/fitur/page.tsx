@@ -4,10 +4,18 @@ import { Icon, type IconName } from '@/components/ui/icons'
 import { rupiah } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 
+const DESKRIPSI =
+  'Kasir offline, pindai barcode, stok bercabang, pembelian, konsinyasi, pelanggan & poin. Mulai Rp 99.000/bulan, gratis 14 hari.'
+
 export const metadata: Metadata = {
   title: 'Fitur & Harga | TokoKu',
-  description:
-    'Kasir yang tetap jalan saat internet mati, stok yang selalu cocok, dan laporan yang bisa dipercaya. TokoKu by Seawise Studio.',
+  description: DESKRIPSI,
+  openGraph: {
+    title: 'TokoKu: fitur lengkap & harga',
+    description: DESKRIPSI,
+    url: '/fitur',
+  },
+  twitter: { card: 'summary_large_image', title: 'TokoKu: fitur lengkap & harga', description: DESKRIPSI },
 }
 
 /**

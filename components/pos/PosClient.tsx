@@ -271,6 +271,7 @@ export function PosClient(props: PosClientProps) {
       cashier_name: props.cashierName,
       customer_id: customer?.id ?? null,
       customer_name: customer?.name ?? null,
+      customer_phone: customer?.phone ?? null,
       client_created_at: now.toISOString(),
       payment_method: method,
       paid_amount: method === 'cash' ? paid : total,

@@ -121,6 +121,10 @@ export function SuccessModal({
               belakangan. */}
           <div style={{ marginBottom: 10 }}>
             <SendReceiptButton
+              // Terisi otomatis dari pelanggan yang tadi dipilih di layar bayar.
+              // Kasir tidak perlu menanyakan nomor yang sudah ada di database.
+              customerName={trx.customer_name}
+              customerPhone={trx.customer_phone}
               data={{
                 storeName: store.name,
                 storeAddress: store.address,
