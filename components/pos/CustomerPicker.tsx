@@ -96,7 +96,7 @@ export function CustomerPicker({
     }
     const hp = hpBaru.trim() ? normalkanHp(hpBaru) : null
     if (hpBaru.trim() && !hp) {
-      setError('Nomor HP tidak dikenali. Contoh: 081234567890.')
+      setError('Nomor itu belum lengkap. Tulis lengkap dengan kode awalnya, misalnya 0812 3456 7890.')
       return
     }
     setSimpan(true)
@@ -235,7 +235,7 @@ export function CustomerPicker({
               id="custHp"
               value={hpBaru}
               onChange={(e) => setHpBaru(e.target.value)}
-              placeholder="081234567890"
+              placeholder="Ketik nomornya di sini"
               inputMode="tel"
             />
             <div className="field-hint">Opsional, tapi ini yang dipakai mengirim nota.</div>

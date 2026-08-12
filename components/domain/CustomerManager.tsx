@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteCustomer, saveCustomer } from '@/app/(toko)/pelanggan/actions'
 import { IconAction } from '@/components/data/IconAction'
+import { SortTh, useTableSort } from '@/components/data/SortableTable'
 import { Drawer } from '@/components/overlay/Drawer'
 import { Icon } from '@/components/ui/icons'
 import { cn, rupiah, tanggal } from '@/lib/format'
@@ -34,11 +35,11 @@ const kosong = (): Draft => ({ name: '', phone: '', email: '', address: '', note
  * "siapa yang sudah lama tidak kelihatan". Segmen yang lebih halus dari ini
  * tidak mengubah tindakan apa pun yang bisa dia ambil.
  */
-function segmen(c: CustomerRow): { label: string; kelas: string } | null {
-  if (!c.lastVisitAt) return { label: 'Belum pernah belanja', kelas: 'badge-ok' }
+function segmen(c: CustomerRow): { kunci: string; label: string; kelas: string } | null {
+  if (!c.lastVisitAt) return { kunci: 'baru', label: 'Belum pernah belanja', kelas: 'badge-ok' }
   const hari = Math.floor((Date.now() - new Date(c.lastVisitAt).getTime()) / 864e5)
-  if (hari > 60) return { label: `Lama tak datang · ${hari} hari`, kelas: 'badge-low' }
-  if (c.visitCount >= 5) return { label: 'Sering datang', kelas: 'badge-active' }
+  if (hari > 60) return { kunci: 'lama', label: `Lama tak datang · ${hari} hari`, kelas: 'badge-low' }
+  if (c.visitCount >= 5) return { kunci: 'sering', label: 'Sering datang', kelas: 'badge-active' }
   return null
 }
 
@@ -55,21 +56,30 @@ export function CustomerManager({
 }) {
   const router = useRouter()
   const [query, setQuery] = useState('')
+  const [segmenFilter, setSegmenFilter] = useState<'semua' | 'baru' | 'sering' | 'lama'>('semua')
   const [editing, setEditing] = useState<{ id: string | null; draft: Draft } | null>(null)
   const [notice, setNotice] = useState<{ tone: 'ok' | 'bad'; text: string } | null>(null)
   const [err, setErr] = useState<{ error: string; field?: string } | null>(null)
   const [pending, startTransition] = useTransition()
 
-  const visible = useMemo(() => {
+  const tersaring = useMemo(() => {
     const q = query.trim().toLowerCase()
-    if (!q) return customers
-    return customers.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        (c.phone ?? '').includes(q.replace(/^0/, '62')) ||
-        (c.phone ?? '').includes(q),
-    )
-  }, [customers, query])
+    const dasar = !q
+      ? customers
+      : customers.filter(
+          (c) =>
+            c.name.toLowerCase().includes(q) ||
+            (c.phone ?? '').includes(q.replace(/^0/, '62')) ||
+            (c.phone ?? '').includes(q),
+        )
+    if (segmenFilter === 'semua') return dasar
+    return dasar.filter((c) => {
+      const seg = segmen(c)?.kunci ?? 'biasa'
+      return seg === segmenFilter
+    })
+  }, [customers, query, segmenFilter])
+
+  const { sorted: visible, ...urut } = useTableSort(tersaring, { key: 'lastVisitAt', dir: 'desc' })
 
   function simpan() {
     if (!editing) return
@@ -125,6 +135,28 @@ export function CustomerManager({
         </button>
       </div>
 
+      {full && (
+        <div className="filter-row">
+          {(
+            [
+              ['semua', 'Semua'],
+              ['sering', 'Sering datang'],
+              ['lama', 'Lama tak datang'],
+              ['baru', 'Belum pernah belanja'],
+            ] as const
+          ).map(([k, l]) => (
+            <button
+              key={k}
+              type="button"
+              className={cn('btn', 'btn-sm', segmenFilter === k ? 'btn-dark' : 'btn-ghost')}
+              onClick={() => setSegmenFilter(k)}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      )}
+
       {notice && (
         <div
           className="empty-note"
@@ -156,11 +188,17 @@ export function CustomerManager({
             <table>
               <thead>
                 <tr>
-                  <th>Pelanggan</th>
-                  <th>Terakhir belanja</th>
-                  {full && <th style={{ textAlign: 'right' }}>Total belanja</th>}
-                  {full && <th style={{ textAlign: 'right' }}>Kunjungan</th>}
-                  {full && loyaltyOn && <th style={{ textAlign: 'right' }}>Poin</th>}
+                  <SortTh<CustomerRow> label="Pelanggan" sortKey="name" state={urut} />
+                  <SortTh<CustomerRow> label="Terakhir belanja" sortKey="lastVisitAt" state={urut} />
+                  {full && (
+                    <SortTh<CustomerRow> label="Total belanja" sortKey="totalSpent" state={urut} align="right" />
+                  )}
+                  {full && (
+                    <SortTh<CustomerRow> label="Kunjungan" sortKey="visitCount" state={urut} align="right" />
+                  )}
+                  {full && loyaltyOn && (
+                    <SortTh<CustomerRow> label="Poin" sortKey="points" state={urut} align="right" />
+                  )}
                   <th aria-label="Aksi" />
                 </tr>
               </thead>
@@ -262,7 +300,7 @@ export function CustomerManager({
           {(
             [
               ['name', 'Nama', 'Mis. Bu Sri'],
-              ['phone', 'Nomor HP', '081234567890'],
+              ['phone', 'Nomor HP', 'Ketik nomornya di sini'],
               ['email', 'Email', 'Opsional'],
               ['address', 'Alamat', 'Opsional'],
               ['note', 'Catatan', 'Opsional, mis. langganan beras'],

@@ -65,9 +65,21 @@ export function SendReceiptButton({
   }
 
   function kirimTeks() {
+    /**
+     * Kosong dan salah-format adalah dua hal berbeda, dan dulu keduanya diberi
+     * pesan yang sama: "Nomor HP tidak dikenali. Contoh: 081234567890."
+     *
+     * Pemilik toko yang belum mengetik apa pun melihat placeholder abu-abu
+     * bertuliskan 081234567890, lalu ditolak dengan pesan yang menyebut ANGKA
+     * YANG SAMA. Yang terbaca: "nomornya sudah ada kok, kenapa ditolak?"
+     */
+    if (!nomor.trim()) {
+      setError('Isi dulu nomor WhatsApp pembelinya.')
+      return
+    }
     const hp = normalkanHp(nomor)
     if (!hp) {
-      setError('Nomor HP tidak dikenali. Contoh: 081234567890.')
+      setError('Nomor itu belum lengkap. Tulis lengkap dengan kode awalnya, misalnya 0812 3456 7890.')
       return
     }
     setError(null)
@@ -133,7 +145,7 @@ export function SendReceiptButton({
           id="waNomor"
           value={nomor}
           onChange={(e) => setNomor(e.target.value)}
-          placeholder="081234567890"
+          placeholder="Ketik nomornya di sini"
           inputMode="tel"
         />
         {customerName && (

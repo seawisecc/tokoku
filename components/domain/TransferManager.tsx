@@ -6,6 +6,7 @@ import {
   transferStock,
   type OutletResult,
 } from '@/app/(toko)/pengaturan/outlet-actions'
+import { SortTh, useTableSort } from '@/components/data/SortableTable'
 import { Icon } from '@/components/ui/icons'
 import { tanggal } from '@/lib/format'
 import {
@@ -39,6 +40,10 @@ export function TransferManager({
   const router = useRouter()
   const [pending, startTransition] = useTransition()
   const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null)
+  const { sorted: urutTransfers, ...urut } = useTableSort(transfers, {
+    key: 'transferredOn',
+    dir: 'desc',
+  })
   const [open, setOpen] = useState(false)
 
   const canTransfer = outlets.filter((o) => o.isActive).length > 1 && fromOutlet !== null
@@ -107,13 +112,13 @@ export function TransferManager({
             <table className="buy-table">
               <thead>
                 <tr>
-                  <th>Nota</th>
-                  <th>Tanggal</th>
-                  <th style={{ textAlign: 'right' }}>Jumlah</th>
+                  <SortTh<TransferRow> label="Nota" sortKey="code" state={urut} />
+                  <SortTh<TransferRow> label="Tanggal" sortKey="transferredOn" state={urut} />
+                  <SortTh<TransferRow> label="Jumlah" sortKey="totalQty" state={urut} align="right" />
                 </tr>
               </thead>
               <tbody>
-                {transfers.map((t) => (
+                {urutTransfers.map((t) => (
                   <tr key={t.id}>
                     <td className="by-code">
                       <div className="cell-name mono">{t.code}</div>

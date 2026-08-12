@@ -6,6 +6,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { deleteProduct } from '@/app/(toko)/produk/actions'
 import { IconAction } from '@/components/data/IconAction'
+import { SortTh, useTableSort } from '@/components/data/SortableTable'
 import { Icon } from '@/components/ui/icons'
 import { cn, rupiah } from '@/lib/format'
 import { ProductDrawer, emptyProduct, type ProductFormValue } from './ProductDrawer'
@@ -48,7 +49,7 @@ export function ProductTable({
   const [notice, setNotice] = useState<string | null>(null)
   const [, startTransition] = useTransition()
 
-  const visible = useMemo(() => {
+  const tersaring = useMemo(() => {
     const q = query.trim().toLowerCase()
     return products.filter((p) => {
       if (category !== 'Semua' && p.categoryName !== category) return false
@@ -60,6 +61,13 @@ export function ProductTable({
       )
     })
   }, [products, query, category])
+
+  const [hanyaMenipis, setHanyaMenipis] = useState(false)
+  const tersaring2 = useMemo(
+    () => (hanyaMenipis ? tersaring.filter((p) => p.trackStock && p.isLowStock) : tersaring),
+    [tersaring, hanyaMenipis],
+  )
+  const { sorted: visible, ...urut } = useTableSort(tersaring2, { key: 'name' })
 
   /** SKU berikutnya diusulkan dari yang tertinggi supaya tidak bentrok. */
   function suggestSku(): string {
@@ -90,6 +98,16 @@ export function ProductTable({
           </div>
 
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {/* Saringan yang paling sering dicari pemilik toko: barang apa yang
+                harus dibeli hari ini. Ditaruh sebaris dengan kategori supaya
+                tidak menambah baris kontrol baru di atas tabel. */}
+            <button
+              type="button"
+              className={cn('btn', 'btn-sm', hanyaMenipis ? 'btn-dark' : 'btn-ghost')}
+              onClick={() => setHanyaMenipis((v) => !v)}
+            >
+              Perlu restock
+            </button>
             {['Semua', ...categories.map((c) => c.name)].map((c) => (
               <button
                 key={c}
@@ -140,10 +158,10 @@ export function ProductTable({
             <table>
               <thead>
                 <tr>
-                  <th>Produk</th>
-                  <th>Harga Pokok</th>
-                  <th>Harga Jual</th>
-                  <th>Stok</th>
+                  <SortTh<ProductRow> label="Produk" sortKey="name" state={urut} />
+                  <SortTh<ProductRow> label="Harga Pokok" sortKey="costPrice" state={urut} />
+                  <SortTh<ProductRow> label="Harga Jual" sortKey="sellPrice" state={urut} />
+                  <SortTh<ProductRow> label="Stok" sortKey="stock" state={urut} />
                   {canEdit && <th />}
                 </tr>
               </thead>

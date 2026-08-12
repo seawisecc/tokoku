@@ -8,6 +8,7 @@ import { Drawer } from '@/components/overlay/Drawer'
 import { PurchaseDrawer, type PickProduct, type PickSupplier } from './PurchaseDrawer'
 import { Icon } from '@/components/ui/icons'
 import { cn, rupiah, tanggal } from '@/lib/format'
+import { SortTh, useTableSort } from '@/components/data/SortableTable'
 
 export type PurchaseRow = {
   id: string
@@ -48,6 +49,10 @@ export function PurchaseList({
 }) {
   const router = useRouter()
   const [adding, setAdding] = useState(false)
+  const { sorted: urutPurchases, ...urut } = useTableSort(purchases, {
+    key: 'purchasedAt',
+    dir: 'desc',
+  })
   const [supplierForm, setSupplierForm] = useState(false)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
@@ -114,14 +119,14 @@ export function PurchaseList({
             <table className="buy-table">
               <thead>
                 <tr>
-                  <th>Nota</th>
-                  <th>Tanggal</th>
-                  <th>Pembayaran</th>
-                  <th style={{ textAlign: 'right' }}>Total</th>
+                  <SortTh<PurchaseRow> label="Nota" sortKey="code" state={urut} />
+                  <SortTh<PurchaseRow> label="Tanggal" sortKey="purchasedAt" state={urut} />
+                  <SortTh<PurchaseRow> label="Pembayaran" sortKey="payment" state={urut} />
+                  <SortTh<PurchaseRow> label="Total" sortKey="total" state={urut} align="right" />
                 </tr>
               </thead>
               <tbody>
-                {purchases.map((p) => {
+                {urutPurchases.map((p) => {
                   const unpaid = p.payment === 'credit' && !p.paidAt
                   const left = unpaid && p.dueDate ? daysLeft(p.dueDate) : null
                   return (

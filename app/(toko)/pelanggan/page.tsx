@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { CustomerManager, type CustomerRow } from '@/components/domain/CustomerManager'
 import { PlanLock } from '@/components/domain/PlanLock'
@@ -76,12 +77,18 @@ export default async function PelangganPage() {
             Poin bertambah otomatis setiap transaksi lunas: 1 poin per{' '}
             {rupiah(Number(org?.loyalty_earn_per ?? 10000))} belanja, dan 1 poin bernilai{' '}
             {rupiah(Number(org?.loyalty_point_value ?? 100))} saat ditukar. Transaksi yang
-            dibatalkan mengembalikan poinnya.
+            dibatalkan mengembalikan poinnya.{' '}
+            <Link href="/pengaturan/toko" className="link">
+              Ubah aturan poin
+            </Link>
           </div>
         ) : (
           <div className="field-hint" style={{ marginTop: 12 }}>
-            Poin loyalty belum dinyalakan. Aktifkan di Pengaturan → Toko kalau ingin setiap
-            belanja mengumpulkan poin.
+            Poin loyalty belum dinyalakan.{' '}
+            <Link href="/pengaturan/toko" className="link">
+              Aktifkan di Pengaturan → Toko
+            </Link>{' '}
+            kalau ingin setiap belanja mengumpulkan poin.
           </div>
         )
       ) : (

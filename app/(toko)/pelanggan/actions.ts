@@ -35,7 +35,11 @@ export async function saveCustomer(customerId: string | null, formData: FormData
 
   const hp = v.phone ? normalkanHp(v.phone) : null
   if (v.phone && !hp) {
-    return { ok: false, error: 'Nomor HP tidak dikenali. Contoh: 081234567890.', field: 'phone' }
+    return {
+      ok: false,
+      error: 'Nomor itu belum lengkap. Tulis lengkap dengan kode awalnya, misalnya 0812 3456 7890.',
+      field: 'phone',
+    }
   }
 
   const supabase = await createClient()
