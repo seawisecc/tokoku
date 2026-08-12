@@ -10,6 +10,16 @@ const PATHS = {
    * bobot garis ikon lain. Bukan logo resmi WhatsApp; bentuk gagang telepon di
    * dalam gelembung pesan sudah cukup dikenali dan tidak memakai aset bermerek.
    */
+  /** Bingkai pemindai: empat sudut + garis baca di tengah. */
+  scan: (
+    <>
+      <path d="M3 8V5.5A2.5 2.5 0 0 1 5.5 3H8" />
+      <path d="M16 3h2.5A2.5 2.5 0 0 1 21 5.5V8" />
+      <path d="M21 16v2.5a2.5 2.5 0 0 1-2.5 2.5H16" />
+      <path d="M8 21H5.5A2.5 2.5 0 0 1 3 18.5V16" />
+      <path d="M3 12h18" />
+    </>
+  ),
   whatsapp: (
     <>
       <path d="M3.5 20.5l1.3-4a8 8 0 1 1 3.2 3.1z" />
