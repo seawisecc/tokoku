@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ProdukTabs } from '@/components/domain/ProdukTabs'
 import { TransferManager } from '@/components/domain/TransferManager'
 import { requirePermission } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
@@ -61,6 +62,7 @@ export default async function PindahStokPage() {
 
   return (
     <>
+      <ProdukTabs />
       <PageHeader
         eyebrow={
           <Link href="/produk" style={{ color: 'inherit' }}>

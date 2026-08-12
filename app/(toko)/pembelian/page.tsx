@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { PembelianTabs } from '@/components/domain/PembelianTabs'
 import { PurchaseList } from '@/components/domain/PurchaseList'
 import { requirePermission } from '@/lib/auth'
 import { getPlanFeatures } from '@/lib/plan'
@@ -53,6 +54,7 @@ export default async function PembelianPage() {
 
   return (
     <>
+      <PembelianTabs full={canUseSupplier} />
       <PageHeader
         eyebrow={session.org!.name}
         title="Pembelian"

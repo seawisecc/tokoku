@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { LaporanTabs } from '@/components/domain/LaporanTabs'
 import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
 import { cn, rupiah, tanggal } from '@/lib/format'
@@ -71,6 +72,7 @@ export default async function LaporanShiftPage({
 
   return (
     <>
+      <LaporanTabs />
       <PageHeader
         eyebrow={
           <Link href="/laporan" style={{ color: 'inherit' }}>

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { cn } from '@/lib/format'
 import { Icon } from '@/components/ui/icons'
+import { TransactionRowActions } from './TransactionRowActions'
 
 export type TransactionRow = {
   id: string
@@ -30,9 +31,12 @@ const METHOD_LABEL: Record<string, string> = {
 export function TransactionTable({
   rows,
   showCashier = false,
+  canVoid = false,
 }: {
   rows: TransactionRow[]
   showCashier?: boolean
+  /** Izin `reports`. Kasir tetap boleh melihat & mencetak, tidak membatalkan. */
+  canVoid?: boolean
 }) {
   if (rows.length === 0) {
     return (
@@ -58,6 +62,7 @@ export function TransactionTable({
               {showCashier && <th>Kasir</th>}
               <th>Metode</th>
               <th style={{ textAlign: 'right' }}>Total</th>
+              <th className="trx-act-head" aria-label="Aksi" />
             </tr>
           </thead>
           <tbody>
@@ -106,6 +111,14 @@ export function TransactionTable({
                   }}
                 >
                   {t.total}
+                </td>
+                <td className="trx-act">
+                  <TransactionRowActions
+                    id={t.id}
+                    code={t.code}
+                    voided={voided}
+                    canVoid={canVoid}
+                  />
                 </td>
               </tr>
               )

@@ -168,3 +168,46 @@ export async function adjustStock(
   revalidatePath('/beranda')
   return { ok: true }
 }
+
+/**
+ * Opname satu sesi: banyak produk sekaligus.
+ *
+ * Yang dikirim HANYA baris yang benar-benar diisi angkanya. Baris kosong
+ * berarti "belum dihitung", bukan "stoknya nol" — dikirim sebagai 0, seluruh
+ * rak yang belum sempat dihitung langsung dikosongkan dari pembukuan.
+ *
+ * Baris yang angkanya sama dengan stok tercatat juga tidak dikirim: tidak ada
+ * yang berubah, dan mengirimnya cuma menambah baris "opname 0" di kartu stok
+ * yang membuat riwayat sebenarnya jadi sulit dibaca.
+ */
+export async function bulkOpname(
+  items: { productId: string; qty: number }[],
+  note: string | null,
+): Promise<ActionResult> {
+  const { session, blocked } = await requireWrite('products')
+  if (blocked) return { ok: false, error: blocked }
+  if (!session.outletId) return { ok: false, error: 'Akun ini belum ditugaskan ke outlet.' }
+
+  if (items.length === 0) {
+    return { ok: false, error: 'Belum ada hasil hitung yang berbeda dari stok tercatat.' }
+  }
+  if (items.some((i) => !Number.isInteger(i.qty) || i.qty < 0)) {
+    return { ok: false, error: 'Hasil hitung harus bilangan bulat, minimal 0.' }
+  }
+
+  const supabase = await createClient()
+  const { error } = await supabase.rpc('bulk_adjust_stock', {
+    p_org: session.org!.id,
+    p_outlet: session.outletId,
+    p_items: items.map((i) => ({ product_id: i.productId, qty: i.qty })),
+    p_note: note?.trim() || undefined,
+  })
+
+  if (error) return { ok: false, ...friendly(error.message, error.code) }
+
+  revalidatePath('/produk')
+  revalidatePath('/produk/opname')
+  revalidatePath('/kasir')
+  revalidatePath('/beranda')
+  return { ok: true }
+}

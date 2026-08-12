@@ -47,6 +47,12 @@ databasenya juga; lihat "Deploy tidak responsif" di bawah.
   selisih kas
 - Kartu stok (`/produk/[id]`) — riwayat masuk-keluar per produk dengan saldo
   berjalan
+- **Opname satu sesi** (`/produk/opname`) — hitung fisik banyak produk sekaligus,
+  atomik lewat satu RPC; lihat "Opname satu sesi" di bawah
+- **Tab bagian diseragamkan** — Produk, Laporan, Pembelian, dan Pengaturan
+  memakai `SectionTabs` yang sama; lihat "Tab bagian" di bawah
+- **Aksi baris transaksi** — lihat detail, cetak ulang, batalkan. TIDAK ada
+  hapus, dan itu disengaja; lihat "Transaksi tidak bisa dihapus" di bawah
 - **Logo toko** — unggah di Pengaturan → Toko, tampil di sidebar/topbar dan
   tercetak di struk; lihat "Logo toko" di bawah
 - **Hapus perangkat kasir** (`/pengaturan/sinkronisasi`) — ditolak kalau masih
@@ -725,6 +731,104 @@ penyebabnya.
 Catatan data demo: seed menulis baris "Stok awal" SETELAH beberapa transaksi,
 jadi saldo berjalannya terlihat melompat di data contoh. Bukan bug — ledger
 memang menampilkan urutan penulisan apa adanya.
+
+## Opname satu sesi
+
+`/produk/opname`. Opname per produk sudah ada sejak awal lewat drawer di baris
+tabel Produk, dan untuk warung 50 barang itu memang cukup. Untuk 200+ barang
+sebulan sekali, cara itu berarti 200 kali buka-tutup drawer: orangnya berhenti
+di tengah dan angkanya tidak pernah benar-benar dicocokkan.
+
+**SATU RPC (`bulk_adjust_stock`), bukan perulangan `adjust_stock` dari aplikasi.**
+Sesi opname adalah satu peristiwa. Gagal di tengah berarti sebagian rak sudah
+tertulis angka baru dan sebagian belum, sementara kertas hitungan di tangan
+orangnya menyebut semuanya dan tidak ada yang tahu berhenti di baris mana.
+Dibungkus satu transaksi, hasilnya cuma dua: semua tercatat, atau tidak sama
+sekali dan boleh diulang apa adanya.
+
+**Baris kosong berarti "belum dihitung", BUKAN "stoknya nol".** Dikirim sebagai
+0, seluruh rak yang belum sempat dihitung langsung dikosongkan dari pembukuan.
+Baris yang angkanya sama dengan stok tercatat juga tidak dikirim: tidak ada yang
+berubah, dan mengirimnya cuma menambah baris "opname 0" di kartu stok yang
+membuat riwayat sebenarnya sulit dibaca.
+
+**Produk tanpa `track_stock` tidak ikut ditampilkan.** Stoknya memang tidak
+pernah dicatat, jadi kolom "stok tercatat" selalu 0 dan setiap angka yang
+diketik terbaca sebagai selisih. Daftar penuh selisih palsu membuat selisih
+sungguhan tenggelam.
+
+`bulk_adjust_stock` memeriksa **produk maupun outlet milik organisasi yang
+sama**. `adjust_stock` tidak memeriksanya, dan karena ia SECURITY DEFINER,
+pemeriksaan RLS ikut dilewati — id produk toko lain akan membuat baris
+`product_stocks` bertuan ganda.
+
+Bar simpan `position: sticky` di bawah layar. Daftarnya sepanjang jumlah produk
+toko, dan tombol simpan yang cuma ada di ujung bawah memaksa orang menggulir
+melewati seluruh rak yang sudah dihitung setiap kali mau menyimpan.
+
+**Sudah diuji ujung ke ujung** (12 Agu): 5 penolakan (produk asing di tengah
+daftar, qty negatif, outlet toko lain, daftar kosong, org orang lain) dan pada
+penolakan pertama stok TIDAK berubah sama sekali — atomisitasnya terbukti. Lalu
+di browser: 3 baris diisi, yang angkanya cocok tidak ikut terkirim, saringan
+"hanya yang selisih" menyisakan 2 baris, tersimpan "2 produk disesuaikan", dan
+jejaknya muncul di kartu stok. Data demo dikembalikan sesudahnya.
+
+## Tab bagian
+
+`SectionTabs` (`components/layout/SectionTabs.tsx`). Sampai 12 Agu pola tab cuma
+ada di Pengaturan, sementara bagian lain yang sama-sama bercabang memakai bentuk
+masing-masing: Laporan menaruh "Laporan Shift" sebagai tautan kecil di pojok
+kanan, Konsinyasi dicapai dari tombol di halaman Pembelian, dan Transfer Stok
+cuma bisa dicapai lewat kartu tautan. Tiga bentuk berbeda untuk satu hal yang
+sama, dan tidak satu pun dari yang di luar Pengaturan memberi tahu orang sedang
+berada di sub-halaman mana.
+
+Sekarang empat bagian memakainya: Produk (Daftar · Opname · Transfer), Laporan
+(Penjualan · Shift), Pembelian (Pembelian · Konsinyasi), Pengaturan (7 tab).
+
+**Dipasang per halaman, BUKAN lewat layout.** `/produk/[id]` juga tinggal di
+bawah rute Produk, dan di sana tidak ada tab yang cocok untuk menyala. Baris tab
+dengan nol tab aktif persis cacat yang sudah pernah dilaporkan di Pengaturan.
+
+Tab Konsinyasi hanya muncul di paket `purchasing = 'full'`. Halamannya memang
+sudah mengalihkan ke `/pembelian` kalau paketnya kurang, tapi tab yang tetap
+terlihat lalu memantulkan orang kembali terbaca seperti tombol rusak.
+`SectionTabs` tidak menggambar apa pun kalau tabnya tinggal satu.
+
+## Transaksi tidak bisa dihapus
+
+Baris transaksi punya tiga tombol: lihat detail, cetak ulang, batalkan.
+**Tidak ada hapus, dan itu bukan kelupaan.**
+
+Transaksi adalah catatan keuangan: nomornya berurut, stoknya sudah terpotong,
+poin pelanggannya sudah bertambah, dan angkanya sudah masuk laporan hari itu.
+Menghapus barisnya membuat nomor transaksi bolong tanpa ada yang bisa
+menjelaskan ke mana perginya, dan itu persis bentuk yang dipakai menutupi uang
+yang diambil. Yang benar adalah PEMBATALAN: barisnya tetap ada dan ditandai
+batal, stok dikembalikan, poin ditarik lagi lewat trigger, dan alasannya
+tercatat permanen. Hasil akhirnya sama untuk pemilik toko — angkanya tidak lagi
+dihitung — tapi jejaknya tidak hilang.
+
+Tombol batalkan hanya muncul untuk izin `reports`, sama dengan gerbang di
+`voidTransaction` dan di dalam RPC-nya. Kasir tetap boleh melihat dan mencetak.
+
+**Cetak membawa ke halaman detail dengan `?cetak=1`, bukan mencetak dari
+daftar.** Struk butuh rincian itemnya dan daftar ini tidak memuatnya. Merakit
+struk tersembunyi di dalam daftar berarti jalur cetak KEDUA yang harus ikut
+diuji tiap kali struknya berubah — dan lapis dasar CSS cetak (untuk browser
+tanpa `:has()`) tidak bisa mengembalikan elemen tersembunyi ke halaman, jadi
+jalur itu akan gagal diam-diam di sebagian perangkat. `AutoPrint` dijaga
+`useRef` supaya StrictMode tidak memunculkan dialog cetak dua kali.
+
+Struk transaksi BATAL tidak bisa dicetak dari daftar. Yang keluar dari printer
+memang membawa penanda "TRANSAKSI DIBATALKAN", tapi tombol cetak yang tetap
+hidup di baris batal mengundang orang mencetaknya lalu menyerahkannya ke
+pembeli. Halaman detailnya tetap bisa dicetak; di sana penandanya tidak mungkin
+terlewat.
+
+Di layar sempit tombolnya turun ke barisnya sendiri, rata KIRI: di ponsel ibu
+jari memegang sisi itu, dan tombol batalkan yang dekat tepi kanan gampang
+tersenggol saat menggulir.
 
 ## Pembelian
 
@@ -1411,7 +1515,7 @@ app/
                    atur-sandi, undangan/[token], actions
   auth/konfirmasi  route handler pendaratan tautan email (WAJIB route, bukan page)
   (toko)/          beranda, kasir, transaksi/[id], riwayat, laporan/{,shift},
-                   produk/{,[id],transfer}, pembelian/{,konsinyasi},
+                   produk/{,[id],opname,transfer}, pembelian/{,konsinyasi},
                    pelanggan,
                    pengaturan/{toko,outlet,tim,kategori,printer,sinkronisasi,
                                langganan},
@@ -1427,7 +1531,10 @@ components/
   charts/          DailyRevenueChart, RankedBars, PaymentSplit
   overlay/Drawer   panel geser untuk semua form
   data/IconAction  tombol aksi baris, konfirmasi dua langkah
+  layout/SectionTabs  baris tab bersama untuk bagian yang bercabang
   domain/          AuthPanel, ForgotPasswordForm, NewPasswordForm, QuotaBars,
+                   OpnameSheet, TransactionRowActions,
+                   ProdukTabs / LaporanTabs / PembelianTabs / SettingsNav,
                    LogoUploader, DeviceTable, SettingsNav, WhatsAppButton,
                    CustomerManager, SendReceiptButton,
                    ProductTable/Drawer, StockDrawer, TeamManager,
@@ -1448,7 +1555,7 @@ lib/
 scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  37 file, Postgres 17
+supabase/migrations/  38 file, Postgres 17
 ```
 
 ## RPC yang penting
@@ -1459,7 +1566,7 @@ supabase/migrations/  37 file, Postgres 17
 `provision_organization` (dicabut dari `authenticated`, hanya lewat `register_store`) ·
 `create_purchase` · `record_consignment_intake` / `record_consignment_return` /
 `settle_consignment` / `end_consignment` · `create_outlet` / `set_primary_outlet` /
-`transfer_stock`.
+`transfer_stock` · `bulk_adjust_stock` (opname satu sesi, atomik).
 
 `_apply_customer_effects` (dicabut dari `authenticated`, hanya dipanggil dari
 dalam `_apply_transaction`) memegang seluruh aturan poin loyalty.

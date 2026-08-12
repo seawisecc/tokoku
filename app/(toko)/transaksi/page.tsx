@@ -42,7 +42,7 @@ export default async function TransaksiPage() {
         title="Transaksi"
         subtitle="Riwayat seluruh transaksi kasir."
       />
-      <TransactionTable rows={rows} showCashier />
+      <TransactionTable rows={rows} showCashier canVoid={session.permissions.reports} />
     </>
   )
 }

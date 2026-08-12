@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ProdukTabs } from '@/components/domain/ProdukTabs'
 import { ProductTable, type ProductRow } from '@/components/domain/ProductTable'
 import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
@@ -56,6 +57,7 @@ export default async function ProdukPage() {
 
   return (
     <>
+      <ProdukTabs />
       <PageHeader
         eyebrow={session.org!.name}
         title="Produk & Stok"

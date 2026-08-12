@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Receipt } from '@/components/pos/Receipt'
 import { PrintButton } from '@/components/pos/PrintButton'
+import { AutoPrint } from '@/components/pos/AutoPrint'
 import { VoidTransactionButton } from '@/components/domain/VoidTransactionButton'
 import { SendReceiptButton } from '@/components/domain/SendReceiptButton'
 import { Icon } from '@/components/ui/icons'
@@ -16,10 +17,13 @@ export const dynamic = 'force-dynamic'
 
 export default async function DetailTransaksiPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ cetak?: string }>
 }) {
   const { id } = await params
+  const { cetak } = await searchParams
   const session = await requireSession()
   const supabase = await createClient()
 
@@ -115,6 +119,10 @@ export default async function DetailTransaksiPage({
           </div>
 
           <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
+            {/* Datang dari tombol Cetak di daftar transaksi. Struk batal tidak
+                pernah dicetak otomatis; penandanya harus dilihat orangnya
+                dulu. */}
+            <AutoPrint aktif={cetak === '1' && trx.status !== 'void'} />
             <PrintButton />
             {/* Nota batal tidak boleh dikirim: pembeli akan memegang bukti
                 pembayaran atas transaksi yang uangnya sudah dikembalikan.

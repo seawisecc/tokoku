@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { LaporanTabs } from '@/components/domain/LaporanTabs'
 import { DailyRevenueChart, type DailyPoint } from '@/components/charts/DailyRevenueChart'
 import { PaymentSplit } from '@/components/charts/PaymentSplit'
 import { RankedBars } from '@/components/charts/RankedBars'
@@ -207,6 +208,7 @@ export default async function LaporanPage({
 
   return (
     <>
+      <LaporanTabs />
       <PageHeader
         eyebrow={session.org!.name}
         title="Laporan"
@@ -216,13 +218,6 @@ export default async function LaporanPage({
             : `Penjualan ${days} hari terakhir`
         }
       />
-
-      <div className="section-title" style={{ marginTop: 0 }}>
-        <span />
-        <Link href="/laporan/shift" className="link">
-          Laporan Shift <Icon name="chevronRight" size={13} />
-        </Link>
-      </div>
 
       {/* Cakupan outlet — hanya saat cabangnya memang lebih dari satu.
           Ditaruh SEBELUM pemilih periode karena ia menentukan angka siapa yang

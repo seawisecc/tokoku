@@ -3052,6 +3052,15 @@ export type Database = {
         }
         Returns: Json
       }
+      bulk_adjust_stock: {
+        Args: {
+          p_items: Json
+          p_note?: string
+          p_org: string
+          p_outlet: string
+        }
+        Returns: Json
+      }
       can_manage: { Args: { p_org: string }; Returns: boolean }
       can_read_org: { Args: { p_org: string }; Returns: boolean }
       client_quotas: {

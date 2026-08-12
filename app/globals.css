@@ -573,6 +573,15 @@ tbody tr:hover { background: var(--color-paper); }
     grid-column: 2; grid-row: 2; margin-top: 8px;
     text-align: right; font-size: 11.5px; color: var(--color-ink-faint);
   }
+  /* Tombol aksi turun ke barisnya sendiri, rata kiri.
+     Diselipkan ke kolom kanan baris kedua, ia berebut tempat dengan nama kasir
+     dan keduanya menyusut sampai tidak terbaca. Rata KIRI karena di ponsel ibu
+     jari memegang sisi itu, dan tombol batalkan yang dekat tepi kanan gampang
+     tersenggol saat menggulir. */
+  .trx-table .trx-act {
+    grid-column: 1 / -1; grid-row: 3; margin-top: 10px;
+  }
+  .trx-table .trx-act .row-actions { justify-content: flex-start; }
 }
 
 /* ---------- form ---------- */
@@ -1614,6 +1623,44 @@ tbody tr:hover { background: var(--color-paper); }
   font-size: clamp(24px, 3.6vw, 40px); margin: 0 0 12px;
 }
 .mk-final p { color: var(--color-ink-soft); margin: 0 0 26px; font-size: 15px; }
+
+/* ---------- lembar opname ---------- */
+.opname-table th { white-space: nowrap; }
+.opname-input {
+  width: 84px; text-align: right; font-family: var(--font-mono);
+  padding: 7px 10px; border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+  background: var(--color-card); color: var(--color-ink); font-size: 13px;
+}
+.opname-input:focus-visible { border-color: var(--color-forest-softer); }
+
+/* Bar simpan menempel di bawah layar. Daftarnya sepanjang jumlah produk toko,
+   dan tombol simpan yang hanya ada di ujung bawah memaksa orang menggulir
+   melewati seluruh rak yang sudah dihitung setiap kali mau menyimpan. */
+.opname-bar {
+  position: sticky; bottom: 0; z-index: 20;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin-top: 14px; padding: 12px 16px;
+  /* `env()` supaya tombolnya tidak jatuh di bawah home indicator iPhone —
+     alasan yang sama dengan `.drawer-foot`. Bottom nav ponsel juga menutupi
+     bagian bawah layar, jadi ditambah tingginya. */
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  background: var(--color-card); border: 1px solid var(--color-line);
+  border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+}
+.opname-bar-info { flex: 1 1 200px; font-size: 13px; color: var(--color-ink-soft); }
+.opname-bar-info strong { color: var(--color-ink); font-weight: 700; }
+.opname-minus { color: var(--color-coral); font-weight: 700; }
+@media (max-width: 900px) {
+  /* Bottom nav menutup bagian bawah layar di ponsel. */
+  .opname-bar { bottom: calc(64px + env(safe-area-inset-bottom)); }
+}
+
+/* ---------- tombol aksi di baris transaksi ---------- */
+.row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+.row-actions .icon-btn { width: 32px; height: 32px; }
+.icon-btn-danger:hover { background: var(--color-coral-soft); color: var(--color-coral); }
+.trx-act-head { width: 1%; }
+.trx-act { text-align: right; white-space: nowrap; }
 
 /* ---------- tangkapan layar aplikasi ---------- */
 .mk-shot { margin: 0 0 18px; }

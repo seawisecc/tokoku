@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { PembelianTabs } from '@/components/domain/PembelianTabs'
 import { ConsignmentList } from '@/components/domain/ConsignmentList'
 import { requirePermission } from '@/lib/auth'
 import { getPlanFeatures } from '@/lib/plan'
@@ -76,6 +77,7 @@ export default async function KonsinyasiPage() {
 
   return (
     <>
+      <PembelianTabs full />
       <PageHeader
         eyebrow={
           <Link href="/pembelian" style={{ color: 'inherit' }}>
