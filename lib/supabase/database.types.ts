@@ -481,6 +481,7 @@ export type Database = {
           note: string | null
           organization_id: string
           phone: string | null
+          points: number
           total_spent: number
           updated_at: string
           visit_count: number
@@ -496,6 +497,7 @@ export type Database = {
           note?: string | null
           organization_id: string
           phone?: string | null
+          points?: number
           total_spent?: number
           updated_at?: string
           visit_count?: number
@@ -511,6 +513,7 @@ export type Database = {
           note?: string | null
           organization_id?: string
           phone?: string | null
+          points?: number
           total_spent?: number
           updated_at?: string
           visit_count?: number
@@ -901,6 +904,9 @@ export type Database = {
           legal_name: string | null
           logo_url: string | null
           low_stock_threshold: number
+          loyalty_earn_per: number
+          loyalty_enabled: boolean
+          loyalty_point_value: number
           name: string
           offline_mode_enabled: boolean
           phone: string | null
@@ -931,6 +937,9 @@ export type Database = {
           legal_name?: string | null
           logo_url?: string | null
           low_stock_threshold?: number
+          loyalty_earn_per?: number
+          loyalty_enabled?: boolean
+          loyalty_point_value?: number
           name: string
           offline_mode_enabled?: boolean
           phone?: string | null
@@ -961,6 +970,9 @@ export type Database = {
           legal_name?: string | null
           logo_url?: string | null
           low_stock_threshold?: number
+          loyalty_earn_per?: number
+          loyalty_enabled?: boolean
+          loyalty_point_value?: number
           name?: string
           offline_mode_enabled?: boolean
           phone?: string | null
@@ -2400,6 +2412,8 @@ export type Database = {
           outlet_id: string
           paid_amount: number
           payment_method: Database["public"]["Enums"]["payment_method"]
+          points_earned: number
+          points_redeemed: number
           rounding: number
           shift_id: string | null
           status: Database["public"]["Enums"]["trx_status"]
@@ -2429,6 +2443,8 @@ export type Database = {
           outlet_id: string
           paid_amount?: number
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          points_earned?: number
+          points_redeemed?: number
           rounding?: number
           shift_id?: string | null
           status?: Database["public"]["Enums"]["trx_status"]
@@ -2458,6 +2474,8 @@ export type Database = {
           outlet_id?: string
           paid_amount?: number
           payment_method?: Database["public"]["Enums"]["payment_method"]
+          points_earned?: number
+          points_redeemed?: number
           rounding?: number
           shift_id?: string | null
           status?: Database["public"]["Enums"]["trx_status"]
@@ -3002,6 +3020,17 @@ export type Database = {
       }
     }
     Functions: {
+      _apply_customer_effects: {
+        Args: {
+          p_client_at: string
+          p_customer: string
+          p_org: string
+          p_redeem: number
+          p_total: number
+          p_trx_id: string
+        }
+        Returns: number
+      }
       _apply_transaction: {
         Args: {
           p_cashier: string
