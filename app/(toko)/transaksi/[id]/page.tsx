@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Receipt } from '@/components/pos/Receipt'
 import { PrintButton } from '@/components/pos/PrintButton'
 import { VoidTransactionButton } from '@/components/domain/VoidTransactionButton'
+import { SendReceiptButton } from '@/components/domain/SendReceiptButton'
 import { Icon } from '@/components/ui/icons'
 import { requireSession } from '@/lib/auth'
 import { jam, rupiah, tanggal } from '@/lib/format'
@@ -25,7 +26,7 @@ export default async function DetailTransaksiPage({
   const { data: trx } = await supabase
     .from('transactions')
     .select(
-      'id, code, total, subtotal, discount_total, tax_total, paid_amount, change_amount, payment_method, status, origin, client_created_at, void_reason, profiles:cashier_id(full_name), outlets:outlet_id(name, receipt_settings), organizations:organization_id(name, address, phone, logo_url)',
+      'id, code, total, subtotal, discount_total, tax_total, paid_amount, change_amount, payment_method, status, origin, client_created_at, void_reason, profiles:cashier_id(full_name), outlets:outlet_id(name, receipt_settings), organizations:organization_id(name, address, phone, logo_url), customers:customer_id(name, phone)',
     )
     .eq('id', id)
     .maybeSingle()
@@ -50,6 +51,7 @@ export default async function DetailTransaksiPage({
     receipt_settings: { footer?: string; show_logo?: boolean } | null
   } | null
   const cashier = (trx.profiles as unknown as { full_name: string } | null)?.full_name ?? 'Kasir'
+  const pembeli = trx.customers as unknown as { name: string; phone: string | null } | null
 
   return (
     <>
@@ -114,6 +116,26 @@ export default async function DetailTransaksiPage({
 
           <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
             <PrintButton />
+            {/* Nota batal tidak boleh dikirim: pembeli akan memegang bukti
+                pembayaran atas transaksi yang uangnya sudah dikembalikan.
+                Alasannya sama dengan penanda batal di struk cetak. */}
+            {trx.status === 'paid' && (
+              <SendReceiptButton
+                storeName={org?.name ?? 'Toko'}
+                code={trx.code}
+                at={trx.client_created_at}
+                total={trx.total}
+                paymentMethod={trx.payment_method}
+                customerName={pembeli?.name ?? null}
+                customerPhone={pembeli?.phone ?? null}
+                footer={outlet?.receipt_settings?.footer ?? null}
+                items={(items ?? []).map((it) => ({
+                  name: it.product_name,
+                  qty: it.quantity,
+                  lineTotal: it.line_total,
+                }))}
+              />
+            )}
             {trx.status === 'paid' && session.permissions.reports && (
               <VoidTransactionButton trxId={trx.id} code={trx.code} />
             )}

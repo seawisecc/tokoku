@@ -14,7 +14,7 @@ export default async function PengaturanTokoPage() {
 
   const { data: org } = await supabase
     .from('organizations')
-    .select('name, city, address, phone, email, low_stock_threshold, allow_negative_stock, logo_url')
+    .select('name, city, address, phone, email, low_stock_threshold, allow_negative_stock, logo_url, loyalty_enabled, loyalty_earn_per, loyalty_point_value')
     .eq('id', session.org!.id)
     .single()
 
@@ -31,6 +31,9 @@ export default async function PengaturanTokoPage() {
           email: org?.email ?? '',
           lowStockThreshold: org?.low_stock_threshold ?? 10,
           allowNegativeStock: org?.allow_negative_stock ?? false,
+          loyaltyEnabled: org?.loyalty_enabled ?? false,
+          loyaltyEarnPer: Number(org?.loyalty_earn_per ?? 10000),
+          loyaltyPointValue: Number(org?.loyalty_point_value ?? 100),
         }}
       />
     </>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { saveStore } from '@/app/(toko)/pengaturan/actions'
+import { rupiah } from '@/lib/format'
 import { SettingsForm, ToggleRow } from './SettingsForm'
 
 export type StoreValues = {
@@ -12,6 +13,9 @@ export type StoreValues = {
   email: string
   lowStockThreshold: number
   allowNegativeStock: boolean
+  loyaltyEnabled: boolean
+  loyaltyEarnPer: number
+  loyaltyPointValue: number
 }
 
 export function StoreSettingsForm({ initial }: { initial: StoreValues }) {
@@ -68,6 +72,49 @@ export function StoreSettingsForm({ initial }: { initial: StoreValues }) {
             Dipakai untuk produk baru. Tiap produk bisa punya ambangnya sendiri.
           </div>
         </div>
+
+        <ToggleRow
+          name="loyaltyEnabled"
+          label="Kumpulkan poin loyalty"
+          hint="Poin bertambah otomatis tiap transaksi lunas, dan kembali kalau transaksinya dibatalkan. Matikan kalau toko tidak memakai program poin."
+          defaultChecked={v.loyaltyEnabled}
+          onToggle={(b) => set('loyaltyEnabled', b)}
+        />
+
+        {v.loyaltyEnabled && (
+          <div className="field-row">
+            <div className="field">
+              <label htmlFor="loyaltyEarnPer">Belanja per 1 poin</label>
+              <input
+                id="loyaltyEarnPer"
+                name="loyaltyEarnPer"
+                inputMode="numeric"
+                value={v.loyaltyEarnPer}
+                onChange={(e) =>
+                  set('loyaltyEarnPer', Number(e.target.value.replace(/[^\d]/g, '') || 0))
+                }
+              />
+              <div className="field-hint">
+                Belanja {rupiah(v.loyaltyEarnPer)} dapat 1 poin. Pembulatan ke bawah.
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="loyaltyPointValue">Nilai 1 poin</label>
+              <input
+                id="loyaltyPointValue"
+                name="loyaltyPointValue"
+                inputMode="numeric"
+                value={v.loyaltyPointValue}
+                onChange={(e) =>
+                  set('loyaltyPointValue', Number(e.target.value.replace(/[^\d]/g, '') || 0))
+                }
+              />
+              <div className="field-hint">
+                1 poin dipotong {rupiah(v.loyaltyPointValue)} saat ditukar.
+              </div>
+            </div>
+          </div>
+        )}
 
         <ToggleRow
           name="allowNegativeStock"

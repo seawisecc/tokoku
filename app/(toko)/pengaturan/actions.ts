@@ -54,6 +54,9 @@ const storeSchema = z.object({
   email: z.string().trim().email('Format email tidak valid').optional().or(z.literal('')),
   lowStockThreshold: z.coerce.number().int().min(0).max(9999),
   allowNegativeStock: z.coerce.boolean(),
+  loyaltyEnabled: z.coerce.boolean(),
+  loyaltyEarnPer: z.coerce.number().int().min(1, 'Minimal Rp 1 belanja per poin').max(100_000_000),
+  loyaltyPointValue: z.coerce.number().int().min(0).max(100_000_000),
 })
 
 export async function saveStore(formData: FormData): Promise<Result> {
@@ -67,6 +70,9 @@ export async function saveStore(formData: FormData): Promise<Result> {
     email: formData.get('email') ?? '',
     lowStockThreshold: formData.get('lowStockThreshold') || 10,
     allowNegativeStock: formData.get('allowNegativeStock') === 'on',
+    loyaltyEnabled: formData.get('loyaltyEnabled') === 'on',
+    loyaltyEarnPer: formData.get('loyaltyEarnPer') || 10000,
+    loyaltyPointValue: formData.get('loyaltyPointValue') || 100,
   })
   if (!parsed.success) return firstIssue(parsed.error)
   const v = parsed.data
@@ -82,6 +88,9 @@ export async function saveStore(formData: FormData): Promise<Result> {
       email: v.email || null,
       low_stock_threshold: v.lowStockThreshold,
       allow_negative_stock: v.allowNegativeStock,
+      loyalty_enabled: v.loyaltyEnabled,
+      loyalty_earn_per: v.loyaltyEarnPer,
+      loyalty_point_value: v.loyaltyPointValue,
     })
     .eq('id', session.org!.id)
     .select('id')
