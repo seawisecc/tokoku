@@ -10,19 +10,32 @@ tampilan, buka file itu dulu.
 
 ## Kondisi terkini — mulai baca dari sini
 
-Terakhir dikerjakan **12 Agustus 2026**. Semua yang di bawah ini sudah dibangun
-dan migrasinya sudah diterapkan ke Supabase.
+Terakhir dikerjakan **13 Agustus 2026**. Semua yang di bawah ini sudah dibangun
+dan **42 migrasinya sudah diterapkan** ke Supabase produksi.
 
 **Sudah di-deploy ke Vercel** lewat GitHub (`seawisecc/tokoku`), dan pushing ke
-`main` memicu deploy produksi otomatis. Function berjalan di **sin1 (Singapura)**
-satu region dengan Supabase — jangan pernah memindahkannya tanpa memindahkan
-databasenya juga; lihat "Deploy tidak responsif" di bawah.
+`main` memicu deploy produksi otomatis di `tokoku.seawise.id`. Function berjalan
+di **sin1 (Singapura)** satu region dengan Supabase — jangan pernah
+memindahkannya tanpa memindahkan databasenya juga; lihat "Deploy tidak
+responsif" di bawah.
 
-**Dua hal yang belum tuntas, baca sebelum mengerjakan apa pun:**
-1. **Scan barcode sudah live tapi belum diverifikasi siapa pun.** Lihat bagian
-   bertanda ⚠ di bawah.
-2. **Sandi Super Admin masih `admin123` di produksi.** Akun itu bisa membaca data
-   seluruh toko klien. Harus diganti pemilik project sendiri.
+**Aplikasinya sudah berdiri sendiri.** Email sungguhan jalan (Resend, domain
+`send.seawise.id` terverifikasi SPF/DKIM/DMARC), toko demo sudah dipensiunkan,
+halaman legal sudah ada, dan seluruh jalur uang sudah diuji langsung ke
+database. Yang tersisa untuk berjualan bukan lagi soal fitur — lihat "Sisa
+pekerjaan sebelum dijual".
+
+**Tiga hal yang harus dibaca sebelum mengerjakan apa pun:**
+1. **JANGAN PERNAH meminta atau memakai sandi akun siapa pun.** Sandi Super
+   Admin dan sandi akun toko sudah diganti pemilik project dan TIDAK ada di
+   repo ini. Agen tidak bisa lagi login sebagai siapa pun — pengujian yang
+   butuh sesi harus dikerjakan pemilik project, atau lewat skrip service-role
+   (yang untuk urusan uang justru lebih ketat daripada mengklik di layar).
+2. **Backup database belum ada.** Supabase paket gratis tanpa point-in-time
+   recovery. Ini satu-satunya risiko tersisa yang tidak bisa diperbaiki setelah
+   terjadi — hati-hati dengan migrasi dan skrip yang menulis.
+3. **Halaman legal masih DRAF**, belum ditinjau ahli hukum. Lihat "Halaman
+   legal".
 
 **Sudah jalan:**
 - Auth split-panel dengan animasi clip-path · pendaftaran toko mandiri ·
@@ -94,29 +107,28 @@ databasenya juga; lihat "Deploy tidak responsif" di bawah.
 - **Halaman error & 404 sendiri** (`error.tsx`, `global-error.tsx`,
   `not-found.tsx`) — sebelumnya kegagalan mendarat di layar bawaan Next
   berbahasa Inggris tanpa satu pun jalan kembali
+- **Diskon tiga lapis** — promo produk, diskon nota manual (dijepit batas
+  toko), diskon pelanggan; lihat "Diskon: tiga lapis" di bawah
+- **Produk jasa** — pilihan Barang/Jasa di drawer produk; lihat "Produk jasa"
+- **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — DRAF
+- **Panduan awal toko baru** di beranda; lihat "Panduan awal toko baru"
+- **Pemantauan error** (Sentry) terpasang tapi TIDUR sampai DSN diisi
+- **Email sungguhan jalan** — Resend + Custom SMTP Supabase, template Indonesia
+  sudah dipasang; lihat `docs/EMAIL-TEMPLATES-SUPABASE.md`
+- **Tenant demo dipensiunkan** — `scripts/retire-demo.mjs`
 
 **Belum dikerjakan — urutan yang disarankan:**
-1. Email undangan: KODENYA SUDAH JADI, tinggal isi `RESEND_API_KEY` +
-   `EMAIL_FROM` di `.env.local`. Butuh akun Resend (gratis 3.000 email/bulan)
-   dan domain terverifikasi. Tanpa kunci, aplikasi tetap jalan penuh — lihat
-   "Email undangan" di bawah.
-2. `features` jsonb sisa: `multi_outlet`, `api`, `support` belum dipakai —
-   barangnya memang belum ada. `purchasing` & `reports` sudah ditegakkan, lihat
-   "Pembagian paket" di bawah.
-3. Billing — pemilik toko sekarang BISA melihat paket, sisa trial, kuota, dan
-   riwayat langganannya sendiri di `/pengaturan/langganan`, dan menghubungi
-   admin lewat WhatsApp. Yang belum ada cuma payment gateway-nya: perubahan
-   paket masih dikerjakan tangan lewat Super Admin.
-4. ~~Sandi Super Admin `admin123`~~ **SUDAH DIGANTI pemilik project** (13 Agu,
-   terbukti saat `admin123` ditolak halaman masuk). Sandinya tidak ada di repo
-   ini dan tidak boleh diminta; agen tidak bisa lagi masuk sebagai Super Admin,
-   jadi pengujian apa pun di `/admin/*` harus dikerjakan pemilik project.
-5. **Kebijakan Privasi & Syarat Ketentuan sudah ADA tapi masih DRAF.** Belum
-   ditinjau ahli hukum, dan ada tiga hal yang harus diputuskan pemilik project
-   sendiri — terutama transfer data ke luar negeri. Lihat "Halaman legal".
-6. **Backup database masih belum ada.** Supabase gratis tanpa point-in-time
-   recovery. Ini satu-satunya risiko tersisa yang tidak bisa diperbaiki setelah
-   terjadi.
+1. **Backup database.** Naik ke Supabase Pro, atau `pg_dump` harian ke tempat
+   lain. Satu-satunya risiko yang tidak bisa diperbaiki setelah terjadi.
+2. **Tinjauan hukum atas halaman legal**, terutama transfer data ke Singapura.
+3. **Nyalakan Sentry** — tinggal isi `NEXT_PUBLIC_SENTRY_DSN` di Vercel lalu
+   redeploy. Belum diisi per 13 Agu.
+4. **Payment gateway.** Perubahan paket masih dikerjakan tangan lewat Super
+   Admin. Sanggup untuk sepuluh klien pertama, tidak untuk seratus.
+5. `features` jsonb sisa: `multi_outlet`, `api`, `support` belum dipakai —
+   barangnya memang belum ada. `purchasing`, `reports`, `crm` sudah ditegakkan.
+6. **Penukaran poin sudah jalan penuh** (13 Agu) — butir ini dulu ada di sini,
+   sekarang selesai. Lihat "Penukaran poin di Kasir".
 
 Seluruh modul yang disepakati sudah jadi — Konsinyasi yang terakhir, selesai
 10 Agu 2026. Sisa daftar di atas adalah pengembangan lanjutan, bukan ruang
@@ -299,42 +311,45 @@ dan override inline yang tidak kondisional sudah diganti kelas.
 
 ## Sisa pekerjaan sebelum dijual
 
-Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan, bukan soal fitur.
+Diperbarui 13 Agu. Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan.
 
-**Wajib, tidak bisa dilewati:**
-1. **Ganti sandi Super Admin.** Menunya sudah ada di `/admin/pengaturan`.
-2. **Kebijakan Privasi & Syarat Ketentuan.** Aplikasi ini menyimpan nama dan
-   nomor HP pelanggan milik klien, jadi klien adalah pengendali data dan kita
-   pemroses — UU PDP 27/2022 mengharuskan keduanya punya dasar tertulis. Belum
-   ada halamannya sama sekali. Sebaiknya ditulis/ditinjau orang yang paham
-   hukumnya, bukan digenerate.
-3. **Backup database.** Supabase plan gratis TIDAK punya point-in-time recovery.
+**Wajib:**
+1. ~~Ganti sandi Super Admin~~ ✅ **selesai** 13 Agu. Sandi akun toko ikut
+   diganti setelah terbukti `TokoKu123!` masih bisa login ke produksi.
+2. **Backup database.** Supabase gratis TIDAK punya point-in-time recovery.
    Sekali tabel terhapus, tidak ada jalan kembali untuk seluruh klien sekaligus.
-   Ini risiko terbesar yang tersisa di project ini.
-4. **Penyedia email** (`RESEND_API_KEY` + `EMAIL_FROM`), sekaligus dipasang
-   sebagai Custom SMTP di Supabase. Tanpa itu reset sandi dan konfirmasi
-   pendaftaran dibatasi beberapa email per jam — tidak cukup untuk produksi.
+   **Satu-satunya risiko tersisa yang tidak bisa diperbaiki setelah terjadi.**
+3. **Tinjauan hukum atas halaman legal.** Halamannya sudah ada tapi DRAF; tiga
+   hal ditandai kotak amber di dalamnya, terutama transfer data ke Singapura.
+4. ~~Penyedia email~~ ✅ **selesai** — Resend + Custom SMTP Supabase, template
+   Indonesia terpasang.
 
 **Sangat dianjurkan:**
-5. **Pemantauan error.** Tidak ada Sentry atau sejenisnya; satu-satunya jejak
-   kegagalan adalah `digest` di layar error yang harus dibacakan klien lewat
-   telepon.
-6. **Payment gateway.** Perubahan paket masih dikerjakan tangan lewat Super
-   Admin. Sanggup untuk sepuluh klien pertama, tidak untuk seratus.
-7. **Content-Security-Policy.** Header dasar sudah dipasang di `next.config.ts`
+5. **Nyalakan Sentry** — kodenya sudah siap dan build sudah diuji dengan maupun
+   tanpa DSN. Tinggal isi `NEXT_PUBLIC_SENTRY_DSN` di Vercel lalu redeploy.
+   Belum diisi.
+6. **Payment gateway.** Perubahan paket masih tangan lewat Super Admin.
+7. **Content-Security-Policy.** Header dasar sudah ada di `next.config.ts`
    (nosniff, SAMEORIGIN, referrer policy). CSP butuh nonce untuk script inline
-   Next dan harus diuji per halaman; dipasang asal-asalan, layar kasir berhenti
-   bekerja tanpa pesan.
-8. **`maintenance_mode` tidak dibaca apa pun.** Kolomnya ada sejak migrasi 0002.
-   Sengaja tidak dibuka di halaman pengaturan platform: sakelar yang tidak
-   melakukan apa-apa lebih berbahaya daripada tidak ada sakelar, karena ia akan
-   dipercaya justru saat keadaan darurat.
-9. **`createAdminClient()` tidak dipakai di mana pun.** Boleh dibiarkan, tapi
-   `SUPABASE_SERVICE_ROLE_KEY` karena itu tidak perlu ada di env produksi Vercel
-   sama sekali — dan kunci yang tidak ada tidak bisa bocor.
-10. **Onboarding klien baru masih kosong.** Toko yang baru daftar mendarat di
-    beranda tanpa produk, tanpa panduan. Jalur tercepatnya sekarang sudah ada
-    (impor CSV), tapi tidak ada yang menunjukkannya.
+   Next dan harus diuji per halaman.
+8. ~~Onboarding klien baru~~ ✅ **selesai** — panduan awal di beranda.
+
+**Bisa menunggu:**
+9. `robots.txt` / sitemap belum ada.
+10. **`maintenance_mode` tidak dibaca apa pun.** Kolomnya ada sejak migrasi
+    0002. Sengaja tidak dibuka di halaman pengaturan platform: sakelar yang
+    tidak melakukan apa-apa lebih berbahaya daripada tidak ada sakelar, karena
+    ia akan dipercaya justru saat keadaan darurat.
+11. **`createAdminClient()` tidak dipakai di mana pun.** `SUPABASE_SERVICE_ROLE_KEY`
+    karena itu tidak perlu ada di env produksi Vercel — dan kunci yang tidak ada
+    tidak bisa bocor. (Skrip di `scripts/` memakainya dari `.env.local`, bukan
+    dari Vercel.)
+
+**Saran cara menjual:** jangan buka pendaftaran umum dulu. Ambil 3–5 klien
+pertama yang bisa didampingi langsung — bukan karena kualitas aplikasinya, tapi
+karena penagihan masih manual dan pemantauan error belum menyala. Dengan lima
+klien masih bisa tahu ada masalah sebelum mereka menelepon; dengan lima puluh,
+tidak.
 
 ## Deploy "tidak responsif" — SUDAH DIPERBAIKI (11 Agu)
 
@@ -1926,6 +1941,8 @@ node scripts/grant-platform-admin.mjs <email>   # jadikan Super Admin
 node scripts/recovery-link.mjs <email>          # tautan reset sandi, TANPA kirim email
 node scripts/retire-demo.mjs                    # lapor saja (kering)
 node scripts/retire-demo.mjs --confirm          # pensiunkan tenant demo sungguhan
+node scripts/retire-demo.mjs --confirm --only "X" --keep "Toko Dewi"
+                                                # pensiunkan satu toko, lindungi akun toko lain
 ```
 
 ## Stack
@@ -1937,6 +1954,9 @@ Next.js 16 (App Router) · TypeScript · Tailwind v4 + CSS variables · Supabase
 `auth-js` sudah 2.112.2 sejak lama, jadi lapisan SSR-nya tertinggal jauh). Tidak
 ada perubahan API pada yang dipakai project ini. `barcode-detector` dipakai
 sebagai ponyfill kamera dan diimpor dinamis.
+
+`@sentry/nextjs` dipasang tapi OPSIONAL — tanpa `NEXT_PUBLIC_SENTRY_DSN`,
+`next.config.ts` tidak membungkusnya sama sekali. Lihat "Pemantauan error".
 
 `next.config.ts` memasang tiga header keamanan dasar (nosniff, X-Frame-Options
 SAMEORIGIN, referrer policy). SAMEORIGIN, bukan DENY: pengujian 390px di sini
@@ -2147,9 +2167,13 @@ lib/
   supabase/        client (RLS) · server (RLS) · admin (LEWAT RLS, server-only)
 scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs,
                    retire-demo.mjs (pensiunkan tenant demo — kering by default)
+instrumentation.ts   register Sentry server/edge + onRequestError
+instrumentation-client.ts  Sentry browser (session replay MATI)
+sentry.server.config.ts · sentry.edge.config.ts
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
 supabase/migrations/  42 file, Postgres 17
+docs/EMAIL-TEMPLATES-SUPABASE.md  template email Indonesia untuk ditempel di dashboard
 ```
 
 ## RPC yang penting
@@ -2175,52 +2199,80 @@ menunya pernah muncul.
 
 Penjagaan berlapis tiga: `proxy.ts` (sesi) → layout server (`requirePermission`) → RLS.
 
-## Data demo
+## Data di produksi (per 13 Agu)
 
-Dua tenant, dipakai untuk membuktikan isolasi antar toko:
-> **13 Agu: Warung Rina & Warung Barokah SUDAH DIPENSIUNKAN** dari produksi
-> lewat `scripts/retire-demo.mjs` — di-soft-delete dan sandi akunnya diacak.
-> **Toko Dewi sengaja dipertahankan** sebagai bahan peragaan penjualan.
-> Efek sampingnya: sandi `rina@tokodewi.id` ikut teracak (dia pemilik kedua
-> toko), jadi `TokoKu123!` TIDAK berlaku lagi untuk akun itu. Pemilik project
-> menyetel ulang sendiri lewat `node scripts/recovery-link.mjs rina@tokodewi.id
-> --url https://tokoku.seawise.id`. Akun kasir Toko Dewi lain juga ikut teracak.
-> Skripnya kini punya `--keep "<nama toko>"` supaya kesalahan ini tidak
-> terulang; lihat "Pensiun tenant demo".
+**Ini BUKAN lagi data demo yang bebas diutak-atik.** Toko demo lama sudah
+dipensiunkan; yang tersisa adalah dua tenant hidup di database produksi yang
+sama dengan tempat klien asli nanti tinggal.
 
-- **Toko Dewi** (Denpasar, Growth, aktif) — 9 produk, ~14 transaksi, 5 anggota,
-  **2 outlet**: MAIN (stok terisi) dan OUT-2 "Cabang Renon" (dibuat 10 Agu untuk
-  menguji multi-outlet; berisi 6 Aqua — sisa dari 12 yang dibeli, 1 terjual,
-  5 ditransfer balik ke MAIN)
-- **Warung Rina** (Ubud, Starter, trial) — toko KEDUA milik `rina@tokodewi.id`,
-  dibuat 10 Agu untuk menguji multi-toko. Kosong.
-- **Warung Barokah** (Semarang, Starter, trial) — kosong, hasil pendaftaran mandiri
+| Toko | Status | Isi | Untuk apa |
+|---|---|---|---|
+| **Toko Dewi** (Denpasar) | active, Growth | 10 produk · 49 trx · 3 anggota · 1 pelanggan · 2 outlet (MAIN + Cabang Renon) | bahan peragaan penjualan, sengaja dipertahankan |
+| **Leuca de Perfume** (Denpasar) | trial 14 hari | 1 produk · 1 anggota · 1 outlet | dibuat pemilik project saat menguji alur pendaftaran dari awal |
 
-Sandi akun toko semuanya `TokoKu123!`; Super Admin memakai `admin123`.
-Semuanya kredensial development — **ganti sebelum production.** Sandi Super Admin
-paling mendesak: satu akun itu bisa membaca data SELURUH toko klien.
+Setelan Toko Dewi yang sudah dinyalakan: **poin loyalty ON**, **batas diskon
+kasir 10%**, **satu produk berpromo**, dan `subscription_ends_at` disetel jauh
+ke depan. Jangan mengubahnya tanpa mengembalikan — pemilik project memakainya
+untuk memperagakan aplikasi.
 
-Akunnya diubah 10 Agu dari `admin@tokoku.id`. Yang diperbarui hanya email &
-sandi pada baris auth yang sudah ada, bukan akun baru — `user_id` tetap, jadi
-riwayat akses Super Admin dan jejak perubahan langganan tidak terputus.
+**Sudah dipensiunkan** (soft delete, sandi akunnya diacak): Warung Rina,
+Warung Barokah, dan dua sisa "Uji Trial Bersama". Salinan JSON-nya ada di
+`backup-demo-*/` di mesin pemilik project, tidak ikut ter-commit.
+
+### Kredensial
+
+**TIDAK ADA sandi di repo ini, dan jangan pernah menambahkannya kembali.**
+
+Sandi bawaan lama (`TokoKu123!` untuk akun toko, `admin123` untuk Super Admin)
+sudah **tidak berlaku** — semuanya diganti pemilik project 13 Agu setelah
+terbukti bisa dipakai login ke produksi. Konsekuensinya agen tidak bisa lagi
+masuk sebagai siapa pun, dan itu memang yang diinginkan.
+
+Kalau butuh masuk untuk menguji, dua jalan yang sah:
+- Minta pemilik project menjalankan pengujiannya sendiri
+- `node scripts/recovery-link.mjs <email> --url https://tokoku.seawise.id` —
+  mencetak tautan setel-ulang TANPA mengirim email, lalu **pemilik project**
+  yang membuka dan mengisi sandinya
+
+Untuk memverifikasi angka (diskon, poin, total, stok), skrip service-role jauh
+lebih baik daripada mengklik di layar: ia membandingkan yang tersimpan dengan
+yang diharapkan. Pola yang dipakai 13 Agu ada di riwayat commit "Diskon tiga
+lapis".
 
 | Akun | Peran |
 |---|---|
 | `rina@tokodewi.id` | Pemilik Toko Dewi |
 | `agus@tokodewi.id` | Admin Toko |
-| `nanda@` / `melati@tokodewi.id` | Kasir |
 | `budi@tokodewi.id` | Kasir + izin Laporan |
-| `siti.warungbarokah@gmail.com` | Pemilik Warung Barokah |
-| `seawise.cc@gmail.com` | **Super Admin** — sandi `admin123`, BUKAN `TokoKu123!`. Masuk lewat `/masuk`, diarahkan ke `/admin` |
+| `seawise.cc@gmail.com` | **Super Admin** — masuk lewat `/masuk`, diarahkan ke `/admin` |
 
-Tiga produk sudah diberi barcode EAN-13 asli untuk menguji pemindai: **Aqua
+(`nanda@` dan `melati@tokodewi.id` masih ada sebagai akun auth, tapi
+keanggotaannya sudah tidak aktif — Toko Dewi kini 3 anggota, bukan 5.)
+
+Tiga produk Toko Dewi punya barcode EAN-13 asli untuk menguji pemindai: **Aqua
 600ml `8886008101053`**, Teh Pucuk `8992745700015`, Chitato `8992775311011`.
-Produk lain masih tanpa barcode.
 
-Perangkat POS Toko Dewi: K1–K6 di outlet MAIN dan K1–K2 di Cabang Renon. Sisa
-pengujian, dan sekarang benar-benar bisa dihapus lewat
-`/pengaturan/sinkronisasi` kalau mengganggu —
-kecuali yang punya transaksi (K1, K2, K3, K4 di MAIN; K1 di Renon).
+Perangkat POS Toko Dewi: K1–K7 di MAIN dan K1–K2 di Cabang Renon. Bisa dihapus
+lewat `/pengaturan/sinkronisasi` kecuali yang punya transaksi.
+
+## Layanan pihak ketiga yang sudah terpasang
+
+| | Status | Catatan |
+|---|---|---|
+| **Supabase** `ap-southeast-1` | ✅ produksi | paket GRATIS — tidak ada point-in-time recovery |
+| **Vercel** `sin1` | ✅ produksi | `tokoku.seawise.id` |
+| **Resend** | ✅ jalan | domain `send.seawise.id`, MX + SPF + DKIM + DMARC hijau |
+| **Supabase Custom SMTP** | ✅ jalan | memakai kunci Resend yang sama; template Indonesia sudah dipasang |
+| **Sentry** | ⏸ tidur | kode siap, `NEXT_PUBLIC_SENTRY_DSN` belum diisi di Vercel |
+
+Env produksi yang terpasang: `NEXT_PUBLIC_SUPABASE_URL`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (tidak dipakai kode
+mana pun — boleh dihapus), `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME`,
+`NEXT_PUBLIC_BRAND_TAGLINE`, `RESEND_API_KEY`, `EMAIL_FROM`.
+
+**URL Configuration Supabase sudah benar** (Site URL + Redirect URLs menunjuk
+`tokoku.seawise.id`). Jangan diubah tanpa membaca "Reset kata sandi" — salah di
+sana membuat tautan email mendarat di localhost tanpa error apa pun.
 
 ## Gaya
 
