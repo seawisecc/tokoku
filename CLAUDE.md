@@ -2008,6 +2008,28 @@ Lihat `docs/OFFLINE-ARCHITECTURE.md` §3.
 **Helper RLS wajib `SECURITY DEFINER`.** Tanpa itu policy pada `organization_members`
 memanggil dirinya sendiri dan rekursi.
 
+**`<Icon>` di dalam wadah ber-`text-align: center` TIDAK ikut ke tengah.**
+Preflight Tailwind menyetel `svg { display: block }`, dan elemen block
+mengabaikan `text-align` sepenuhnya — ikonnya menempel ke tepi kiri sementara
+teks di sel sebelahnya tetap di tengah. Sudah menggigit di tabel perbandingan
+halaman `/fitur`: kolom centang terbaca loncat kiri-tengah-kiri dan dilaporkan
+sebagai "centang sama tulisan tidak rata". Obatnya `margin-inline: auto` pada
+svg-nya, bukan mengubah `text-align` induknya.
+
+**`position: sticky` tidak bekerja pada sel yang selebar wadahnya.** Sticky
+menggeser elemen DI DALAM wadahnya; sel yang sudah selebar tabel tidak punya
+ruang untuk bergeser, jadi ia hanyut apa adanya. Judul kelompok di tabel
+`/fitur` (`colSpan` penuh) karena itu hilang total begitu tabelnya digeser di
+ponsel. Yang benar: bungkus teksnya dalam `<span>` dan sticky-kan SPAN-nya.
+
+**Sel sticky butuh `z-index` yang ditata, bukan dibiarkan.** Tanpa itu sel yang
+datang belakangan di DOM menimpa yang sudah menempel. Di `/fitur`, baris judul
+kelompok berlatar putih sempat menutupi seluruh nama paket di kepala tabel.
+Urutannya sekarang: kepala tabel 5 (sudut kiri-atas 6) > sel tbody yang
+menempel 3 > isi biasa. Dan `border-collapse` harus `separate` — dengan
+`collapse`, border tidak ikut menempel bersama selnya dan garisnya tertinggal
+di posisi lama saat digeser.
+
 **Jangan pernah pakai `createAdminClient()` untuk melayani request user biasa.**
 Itu melewati seluruh RLS. Hanya untuk provisioning lintas tenant.
 

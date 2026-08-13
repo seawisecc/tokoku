@@ -553,7 +553,15 @@ export default async function FiturPage() {
                 <Fragment key={g.judul}>
                   <tr className="mk-cmp-group">
                     <th scope="colgroup" colSpan={plans.length + 1}>
-                      {g.judul}
+                      {/* Judulnya dibungkus span, dan SPAN itu yang menempel —
+                          bukan selnya. Sel ini selebar seluruh tabel, jadi
+                          `position: sticky` padanya tidak pernah bekerja:
+                          sticky menggeser elemen di dalam wadahnya, dan sel
+                          yang sudah selebar wadahnya tidak punya ruang untuk
+                          bergeser sama sekali. Akibatnya judul kelompok hanyut
+                          keluar layar begitu tabel digeser, dan yang tersisa
+                          cuma deretan centang tanpa keterangan. */}
+                      <span className="mk-cmp-group-label">{g.judul}</span>
                     </th>
                   </tr>
                   {g.baris.map((b) => (

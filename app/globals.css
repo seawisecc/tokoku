@@ -2070,18 +2070,46 @@ tbody tr:hover { background: var(--color-paper); }
   background-attachment: local, local, scroll, scroll;
 }
 .mk-cmp {
-  width: 100%; border-collapse: collapse; font-size: 13.5px;
+  width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px;
   min-width: 560px;
 }
+
+/* ── Kolom & baris yang MENEMPEL saat tabel digeser ──────────────────────────
+   Tiga hal menempel sekaligus, dan ketiganya perlu di layar 390px tempat
+   hanya satu setengah kolom paket muat sekaligus:
+
+   1. kepala tabel (nama paket)  → menempel ke ATAS saat menggulir turun
+   2. kolom kemampuan            → menempel ke KIRI saat menggeser samping
+   3. judul kelompok             → menempel ke KIRI juga
+
+   Yang ketiga yang paling sering terlupa, dan itu cacat yang dilaporkan:
+   judul "KASIR & PENJUALAN" dan "PRODUK & STOK" HILANG TOTAL begitu tabelnya
+   digeser ke kanan, karena selnya membentang penuh dan ikut hanyut. Yang
+   tersisa cuma deretan centang tanpa satu pun keterangan — persis pertanyaan
+   yang seharusnya dijawab tabel ini.
+
+   `border-collapse: separate` WAJIB. Dengan `collapse`, border tidak ikut
+   menempel bersama sel sticky dan garisnya tertinggal di posisi lama saat
+   digeser — terbaca seperti tabel yang pecah. Konsekuensinya garis dipasang
+   per sel lewat `box-shadow`, bukan `border`. */
 .mk-cmp thead th {
   text-align: center; padding: 12px 14px; vertical-align: bottom;
   font-family: var(--font-display); font-weight: 800; font-size: 15px;
-  border-bottom: 1px solid var(--color-line);
+  /* Menempel tepat di bawah navbar. Angkanya HARUS sama dengan tinggi
+     `.mk-nav` (61px di ponsel maupun desktop) — kurang sedikit saja,
+     sebaris isi tabel mengintip di celah antara navbar dan kepala tabel. */
+  position: sticky; top: 61px; z-index: 5;
+  background: var(--color-card);
+  box-shadow: inset 0 -1px 0 var(--color-line);
 }
-/* Ikut menempel bersama kolom labelnya; kalau tidak, judul "Kemampuan" hanyut
-   ke kiri sementara baris di bawahnya diam, dan kepala tabelnya jadi miring. */
+/* Sudut kiri-atas menempel ke DUA arah sekaligus, jadi ia harus berada di atas
+   keduanya — kalau tidak, kolom yang lewat menutupi judul "Kemampuan". */
+/* Sudut kiri-atas menempel ke DUA arah sekaligus, jadi ia harus berada di atas
+   semuanya. Kepala tabel juga HARUS di atas sel tbody yang menempel: pernah
+   sebaliknya, dan baris judul kelompok yang berlatar putih menutupi seluruh
+   nama paket begitu tabelnya digeser. */
 .mk-cmp thead th:first-child {
-  text-align: left; position: sticky; left: 0; background: var(--color-card);
+  text-align: left; left: 0; z-index: 6;
 }
 .mk-cmp thead th span {
   display: block; font-family: var(--font-sans); font-weight: 500;
@@ -2091,24 +2119,52 @@ tbody tr:hover { background: var(--color-paper); }
   text-align: left; padding: 20px 14px 7px;
   font-size: 11.5px; font-weight: 700; letter-spacing: .05em;
   text-transform: uppercase; color: var(--color-ink-faint);
+  background: var(--color-card);
+  box-shadow: inset 0 1px 0 var(--color-line);
 }
+/* Yang menempel adalah LABELNYA, bukan selnya — lihat catatan di fitur/page.tsx. */
+.mk-cmp-group-label { position: sticky; left: 14px; display: inline-block; }
 .mk-cmp tbody th[scope='row'] {
   text-align: left; font-weight: 500; color: var(--color-ink-soft);
   padding: 9px 14px 9px 0;
-  /* Label kolom pertama ikut menempel saat tabelnya digeser di ponsel; tanpa
-     ini kolom paket bergeser masuk sementara nama kemampuannya sudah keluar
-     layar, dan centangnya jadi tidak menjawab pertanyaan apa pun. */
-  position: sticky; left: 0; background: var(--color-card);
+  position: sticky; left: 0; z-index: 3;
+  background: var(--color-card);
 }
 .mk-cmp tbody td {
   text-align: center; padding: 9px 14px; color: var(--color-ink);
   font-weight: 600; font-size: 13px;
 }
+/**
+ * Ikon centang HARUS diberi `margin-inline: auto`.
+ *
+ * Preflight Tailwind menyetel `svg { display: block }`, dan elemen block
+ * MENGABAIKAN `text-align: center` — jadi centangnya menempel ke tepi kiri sel
+ * sementara tanda "-" (teks inline) tetap di tengah. Hasilnya satu kolom yang
+ * isinya loncat kiri-tengah-kiri, dan itu cacat yang dilaporkan sebagai
+ * "centang sama tulisan tidak rata".
+ *
+ * Jebakan ini berlaku untuk SETIAP <Icon> di dalam wadah ber-text-align:center,
+ * bukan cuma tabel ini.
+ */
+.mk-cmp tbody td svg { margin-inline: auto; }
+
+/* Garis antar baris dipasang lewat box-shadow, bukan border — lihat catatan
+   `border-collapse: separate` di atas. */
 .mk-cmp tbody tr + tr th[scope='row'],
-.mk-cmp tbody tr + tr td { border-top: 1px solid var(--color-line); }
+.mk-cmp tbody tr + tr td { box-shadow: inset 0 1px 0 var(--color-line); }
 .mk-cmp-group + tr th[scope='row'],
-.mk-cmp-group + tr td { border-top: 0; }
-.mk-cmp-group th { border-top: 1px solid var(--color-line); }
+.mk-cmp-group + tr td { box-shadow: none; }
+/* Tepi kanan kolom yang menempel: penanda bahwa kolom itu memang dibekukan,
+   bukan tabel yang kebetulan terpotong. Digabung dengan garis barisnya supaya
+   satu properti tidak menimpa yang lain. */
+.mk-cmp thead th:first-child { box-shadow: inset -1px -1px 0 var(--color-line); }
+.mk-cmp tbody th[scope='row'] { box-shadow: inset -1px 0 0 var(--color-line); }
+.mk-cmp tbody tr + tr th[scope='row'] {
+  box-shadow: inset -1px 0 0 var(--color-line), inset 0 1px 0 var(--color-line);
+}
+.mk-cmp-group th { box-shadow: inset 0 1px 0 var(--color-line); }
+.mk-cmp-group + tr th[scope='row'] { box-shadow: inset -1px 0 0 var(--color-line); }
+
 .mk-yes { color: var(--color-success); vertical-align: middle; }
 .mk-no { color: var(--color-ink-faint); }
 
