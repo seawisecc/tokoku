@@ -1105,6 +1105,11 @@ tbody tr:hover { background: var(--color-paper); }
   border: 2px solid var(--color-card);
 }
 .notif-badge.is-danger { background: var(--color-coral); }
+/* Titik tanpa angka: ada isinya, tapi tidak menuntut tindakan hari ini. */
+.notif-badge.is-quiet {
+  min-width: 9px; width: 9px; height: 9px; padding: 0;
+  background: var(--color-success); top: -1px; right: -1px;
+}
 
 /* Panel digantung dari kanan tombolnya. Di layar sempit ia dijepit ke lebar
    layar supaya tidak mendorong halaman ke samping — topbar di 390px sudah

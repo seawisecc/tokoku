@@ -68,6 +68,51 @@ export async function getNotifications(session: SessionContext): Promise<Notice[
       body: 'Perpanjang sebelum habis supaya kasir tidak berhenti mendadak.',
       href: '/pengaturan/langganan' as Route,
     })
+  } else {
+    /**
+     * Masa aktif yang masih panjang tetap disebut, sebagai KETERANGAN.
+     *
+     * Semula tidak ditampilkan sama sekali sampai tersisa 7 hari, mengikuti
+     * aturan "hanya yang bisa ditindaklanjuti hari ini". Itu keliru untuk yang
+     * satu ini: pertanyaan "trial saya sisa berapa lama" ditanyakan justru di
+     * minggu pertama, bukan di hari terakhir — dan satu-satunya jawabannya ada
+     * di halaman Langganan yang harus dicari sendiri.
+     *
+     * Nadanya `info`, dan `info` TIDAK ikut dihitung di lencana lonceng (lihat
+     * NotificationBell). Jadi keterangan ini tidak pernah membuat lonceng
+     * berangka terus-menerus — yang justru akan membuat angka merah sungguhan
+     * berhenti dibaca.
+     */
+    const iso =
+      session.org.status === 'trial'
+        ? session.org.trialEndsAt
+        : session.org.status === 'active'
+          ? session.org.subscriptionEndsAt
+          : null
+
+    if (iso) {
+      const akhir = new Date(iso)
+      if (!Number.isNaN(akhir.getTime())) {
+        // Selisih HARI KALENDER, sama dengan lib/subscription.ts.
+        const sisa = Math.round(
+          (new Date(akhir.toLocaleDateString('en-CA') + 'T00:00:00').getTime() -
+            new Date(new Date().toLocaleDateString('en-CA') + 'T00:00:00').getTime()) /
+            864e5,
+        )
+        const trial = session.org.status === 'trial'
+        out.push({
+          id: 'sub-info',
+          tone: 'info',
+          title: `${trial ? 'Masa coba gratis' : 'Langganan aktif'} ${sisa} hari lagi`,
+          body: `Berlaku sampai ${akhir.toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })}.`,
+          href: '/pengaturan/langganan' as Route,
+        })
+      }
+    }
   }
 
   const supabase = await createClient()

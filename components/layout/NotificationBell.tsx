@@ -44,6 +44,17 @@ export function NotificationBell({ notices }: { notices: Notice[] }) {
   }, [buka])
 
   const mendesak = notices.some((n) => n.tone === 'danger')
+  /**
+   * Lencana menghitung yang PERLU DITINDAKLANJUTI saja (`danger` + `warn`).
+   *
+   * Butir `info` — sisa masa langganan, stok menipis — tetap tampil di dalam
+   * panel tapi tidak ikut membuat angka. Kalau ikut, toko yang masih dalam masa
+   * coba akan melihat lencana berangka setiap hari selama dua minggu, dan
+   * begitu angka itu jadi pemandangan biasa, angka merah yang sungguhan
+   * berhenti dibaca. Yang tersisa cuma titik kecil: ada isinya, tapi tidak
+   * menuntut apa pun sekarang.
+   */
+  const perluTindakan = notices.filter((n) => n.tone !== 'info').length
 
   return (
     <div className="notif-wrap" ref={wrapRef}>
@@ -53,7 +64,11 @@ export function NotificationBell({ notices }: { notices: Notice[] }) {
         onClick={() => setBuka((v) => !v)}
         aria-expanded={buka}
         aria-label={
-          notices.length ? `Notifikasi, ${notices.length} perlu perhatian` : 'Notifikasi, tidak ada'
+          perluTindakan > 0
+            ? `Notifikasi, ${perluTindakan} perlu perhatian`
+            : notices.length > 0
+              ? `Notifikasi, ${notices.length} keterangan`
+              : 'Notifikasi, tidak ada'
         }
         title="Notifikasi"
       >
@@ -62,14 +77,18 @@ export function NotificationBell({ notices }: { notices: Notice[] }) {
             yang menunggu sebelum panelnya dibuka. Merah hanya kalau ada yang
             mendesak — kalau semua notifikasi berwarna merah, tidak ada yang
             merah. */}
-        {notices.length > 0 && (
-          <span className={cn('notif-badge', mendesak && 'is-danger')}>{notices.length}</span>
+        {perluTindakan > 0 ? (
+          <span className={cn('notif-badge', mendesak && 'is-danger')}>{perluTindakan}</span>
+        ) : (
+          notices.length > 0 && <span className="notif-badge is-quiet" aria-hidden />
         )}
       </button>
 
       {buka && (
         <div className="notif-panel" role="dialog" aria-label="Notifikasi">
-          <div className="notif-head">Perlu perhatian</div>
+          <div className="notif-head">
+            {perluTindakan > 0 ? 'Perlu perhatian' : 'Kabar toko'}
+          </div>
 
           {notices.length === 0 ? (
             <div className="notif-empty">

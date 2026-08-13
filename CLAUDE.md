@@ -1604,6 +1604,7 @@ render halaman. Yang masuk hanya hal yang **bisa ditindaklanjuti hari ini**:
 | butir | warna | tujuan |
 |---|---|---|
 | langganan berakhir / mau berakhir | merah / amber | `/pengaturan/langganan` |
+| sisa masa coba / masa langganan | hijau (keterangan) | `/pengaturan/langganan` |
 | transaksi gagal masuk (`sync_rejections`) | merah | `/pengaturan/sinkronisasi` |
 | nota jatuh tempo ≤7 hari | amber | `/pembelian` |
 | stok menipis | hijau | `/produk` |
@@ -1617,6 +1618,15 @@ Yang disengaja:
 - **Penolakan sinkronisasi paling atas dan selalu merah**, walau cuma satu.
   Tiap penolakan adalah penjualan yang sudah terjadi tapi tidak pernah sampai
   ke pembukuan. Stok menipis bisa menunggu besok; ini tidak.
+- **Lencana hanya menghitung `danger` + `warn`.** Butir `info` (sisa masa
+  langganan, stok menipis) tampil di panel tapi tidak membuat angka; yang
+  tersisa cuma titik kecil. Tanpa pemisahan ini, toko yang masih dalam masa
+  coba melihat lencana berangka setiap hari selama dua minggu — dan begitu
+  angka itu jadi pemandangan biasa, angka merah yang sungguhan berhenti dibaca.
+- **Sisa masa aktif disebut walau masih panjang.** Semula tidak muncul sampai
+  tersisa 7 hari, mengikuti aturan "hanya yang bisa ditindaklanjuti hari ini".
+  Itu keliru untuk yang satu ini: "trial saya sisa berapa" ditanyakan di minggu
+  pertama, bukan di hari terakhir.
 - **Tidak ada tanda "sudah dibaca".** Semua yang muncul adalah keadaan yang
   MASIH berlangsung, bukan peristiwa yang lewat. Stok tidak berhenti menipis
   karena loncengnya dibuka; menandainya terbaca cuma menyembunyikan masalah
