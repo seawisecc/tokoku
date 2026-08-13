@@ -1535,6 +1535,47 @@ Diuji dengan menurunkan Toko Dewi ke Starter lewat Super Admin lalu
 mengembalikannya ke Growth (10 Agu). Turun paket tidak menghapus data apa pun —
 kuota tinggal menampilkan "sudah penuh" sampai kembali di bawah batas.
 
+## Undangan: orang yang belum punya akun
+
+Ditemukan saat menguji email undangan sungguhan (13 Agu), dan ini buntu total.
+Halaman `/undangan/[token]` untuk pengunjung yang belum login cuma menampilkan
+satu tombol: **Masuk**. Padahal yang paling mungkin membuka tautan itu justru
+kasir baru yang BELUM PERNAH punya akun — dia menekan Masuk, mendarat di layar
+yang meminta email dan sandi yang tidak pernah dia punya, lalu berhenti.
+
+Satu-satunya jalan keluar yang tersedia waktu itu adalah mendaftar lewat
+halaman depan — dan itu SALAH, karena `signUp` selalu memanggil
+`register_store` sesudahnya: kasirnya akan mendapat toko sendiri yang kosong,
+memakan satu dari lima jatah toko akunnya, lalu mendarat di toko itu alih-alih
+di toko yang mengundangnya.
+
+Sekarang halamannya menawarkan dua jalan, dengan `signUpForInvitation` yang
+HANYA membuat akun auth (tanpa `register_store`).
+
+Yang disengaja dan jangan diubah:
+- **Pratinjau ditampilkan sebelum login.** `invitation_preview` memang di-grant
+  ke `anon` sejak migrasi 0016 justru untuk ini; halamannya cuma tidak pernah
+  memakainya di cabang belum-login. Orang yang diminta membuat akun berhak tahu
+  dulu toko mana dan peran apa yang ditawarkan. Tokennya sendiri yang jadi
+  kunci, dan token itu hanya ada di email yang dituju.
+- **Email dikunci ke alamat yang diundang** (`readOnly` + hidden field).
+  Dibiarkan bisa diubah, orangnya membuat akun dengan email lain lalu bingung
+  kenapa undangannya "hilang" — padahal undangannya menunggu di alamat satunya.
+- **`emailRedirectTo` mengarah balik ke tautan undangannya.** Konfirmasi email
+  menyala, jadi tanpa itu orangnya mendarat di beranda kosong setelah
+  konfirmasi dan harus mencari lagi email undangan yang tadi.
+- **Peringatan kalau email undangan ≠ email akun yang sedang login.**
+  `accept_invitation` sengaja mengandalkan token, bukan kecocokan email, jadi
+  penerimaannya tetap sah — tapi hampir selalu ini berarti orangnya lupa sedang
+  login sebagai siapa.
+
+**Brand dobel.** Ikut diperbaiki di halaman yang sama: `(auth)/layout.tsx`
+sudah merender blok brand, dan halaman undangan merendernya lagi. Yang kedua
+tampil sebagai logo kembar dengan tulisan yang HILANG — teks brand di layout
+diwarnai putih untuk latar gelap, sementara `BrandMark` memakai warna tinta
+bawaan yang tak terbaca di sana. Halaman auth tidak boleh memasang brand
+sendiri.
+
 ## Reset kata sandi
 
 Alurnya: `/lupa-sandi` → Supabase kirim email → `/auth/konfirmasi` (Route
@@ -1556,6 +1597,23 @@ ada — jalankan `node scripts/recovery-link.mjs <email>` lalu buka tautannya.
 sandi barunya. Yang sudah diuji langsung: jalur `token_hash` sampai form muncul
 dengan akun yang benar, tautan sekali-pakai yang ditolak, tautan rusak tanpa
 sesi, dan pengiriman dari `/lupa-sandi`.
+
+**URL Configuration di Supabase WAJIB diisi, dan kegagalannya senyap.**
+Sempat menggigit saat go-live: tautan reset yang dikirim ke email mendarat di
+`http://localhost:3000/?code=…` — bukan di produksi, dan tanpa path
+`/auth/konfirmasi` sama sekali. Penyebabnya bukan kode: `redirectTo` yang kita
+kirim TIDAK ada di daftar Redirect URLs, jadi Supabase membuangnya diam-diam
+dan memakai **Site URL** bawaannya, yang masih `http://localhost:3000` sejak
+development. Tidak ada error, tidak ada peringatan.
+
+Cara mengenalinya: kalau path pada tautan email hilang (jadi `/` saja),
+itu selalu berarti `redirectTo` ditolak — bukan domain yang salah ketik,
+karena domain yang salah pun tetap membawa path-nya.
+
+Authentication → URL Configuration:
+- **Site URL**: `https://tokoku.seawise.id`
+- **Redirect URLs**: `https://tokoku.seawise.id/**` DAN `http://localhost:3000/**`
+  (yang kedua supaya pengembangan lokal tetap jalan)
 
 **Catatan operasional:** konfirmasi email **menyala** di project Supabase ini.
 Setelah daftar, user harus konfirmasi lalu masuk; aplikasi mengarahkannya ke

@@ -199,6 +199,94 @@ async function clearContextCookies() {
   jar.delete(OUTLET_COOKIE)
 }
 
+export type InviteSignUpState = { error?: string; notice?: string }
+
+/**
+ * Buat akun untuk orang yang DIUNDANG ke toko orang lain.
+ *
+ * Dipisah dari `signUp` biasa, dan itu bukan kerapian: `signUp` selalu
+ * memanggil `register_store` sesudahnya. Dipakai penerima undangan, kasir yang
+ * baru direkrut akan mendapat TOKO SENDIRI yang kosong, memakan satu dari lima
+ * jatah toko akunnya, lalu mendarat di beranda toko itu — bukan di toko yang
+ * mengundangnya. Yang dibutuhkan di sini cuma akunnya.
+ *
+ * Sampai hari ini jalur ini tidak ada sama sekali. Halaman undangan cuma
+ * menawarkan tombol "Masuk", padahal yang diundang justru orang yang BELUM
+ * punya akun — buntu total, dan satu-satunya jalan keluarnya adalah mendaftar
+ * lewat halaman depan yang memaksa membuat toko baru.
+ *
+ * `emailRedirectTo` mengarah balik ke tautan undangannya. Konfirmasi email
+ * menyala di project ini, jadi tanpa itu orangnya mendarat di beranda kosong
+ * setelah konfirmasi dan harus mencari lagi email undangan yang tadi.
+ */
+export async function signUpForInvitation(
+  _prev: InviteSignUpState,
+  formData: FormData,
+): Promise<InviteSignUpState> {
+  const token = String(formData.get('token') ?? '').trim()
+  const fullName = String(formData.get('fullName') ?? '').trim()
+  const email = String(formData.get('email') ?? '').trim()
+  const password = String(formData.get('password') ?? '')
+
+  if (!token) return { error: 'Tautan undangannya tidak lengkap. Buka lagi dari email.' }
+  if (fullName.length < 2) return { error: 'Nama Anda minimal 2 huruf.' }
+  if (!email.includes('@')) return { error: 'Format email tidak valid.' }
+  if (password.length < 8) return { error: 'Kata sandi minimal 8 karakter.' }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      // `full_name` dipakai trigger on_auth_user_created untuk mengisi profil.
+      data: { full_name: fullName },
+      emailRedirectTo: `${await siteOrigin()}/auth/konfirmasi?next=/undangan/${token}`,
+    },
+  })
+
+  if (error) {
+    const m = error.message.toLowerCase()
+    return {
+      error: m.includes('already registered')
+        ? 'Email ini sudah punya akun. Pakai tombol "Masuk" di atas, lalu buka lagi tautan undangan ini.'
+        : m.includes('is invalid') || m.includes('invalid format')
+          ? 'Email ini ditolak. Pakai email aktif yang bisa menerima pesan, mis. Gmail.'
+          : m.includes('weak password') || m.includes('password should')
+            ? 'Kata sandi terlalu lemah. Campur huruf besar, huruf kecil, dan angka.'
+            : m.includes('rate limit') || m.includes('too many')
+              ? 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.'
+              : 'Pendaftaran gagal. Coba lagi sebentar lagi.',
+    }
+  }
+
+  /**
+   * Konfirmasi email menyala: akunnya jadi, tapi sesinya belum ada — jadi
+   * undangannya belum bisa ditukar sekarang. Kalau nanti konfirmasi dimatikan,
+   * cabang di bawahnya yang jalan dan undangan langsung diterima.
+   */
+  if (!data.session) {
+    return {
+      notice:
+        'Akun Anda sudah dibuat. Cek email untuk konfirmasi, lalu buka lagi tautan undangan ini. ' +
+        'Undangannya tetap menunggu.',
+    }
+  }
+
+  const { data: hasil, error: rpcError } = await supabase.rpc('accept_invitation', {
+    p_token: token,
+  })
+
+  if (rpcError || (hasil as { status?: string } | null)?.status !== 'accepted') {
+    return {
+      error:
+        'Akun Anda sudah dibuat, tapi undangannya belum bisa diterima. Coba buka lagi tautan undangan ini.',
+    }
+  }
+
+  revalidatePath('/', 'layout')
+  redirect('/beranda')
+}
+
 export type ChangePasswordState = { error?: string; notice?: string }
 
 /**
