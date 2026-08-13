@@ -5,7 +5,7 @@ import { saveProduct, type ActionResult } from '@/app/(toko)/produk/actions'
 import { Drawer } from '@/components/overlay/Drawer'
 import { BarcodeScanner } from '@/components/pos/BarcodeScanner'
 import { Icon } from '@/components/ui/icons'
-import { rupiah } from '@/lib/format'
+import { cn, rupiah } from '@/lib/format'
 
 export type ProductFormValue = {
   id: string | null
@@ -242,19 +242,25 @@ export function ProductDrawer({
             placeholder="pcs"
           />
         </div>
-        <div className="field">
-          <label htmlFor="minStock">Ambang Stok Menipis</label>
-          <input
-            id="minStock"
-            type="number"
-            min={0}
-            value={draft.minStock}
-            onChange={(e) => set('minStock', e.target.value)}
-            aria-invalid={err?.field === 'minStock'}
-          />
-          <div className="field-hint">Muncul di Beranda kalau stok ≤ angka ini</div>
-          {err?.field === 'minStock' && <div className="field-error">{err.error}</div>}
-        </div>
+        {/* Ambang stok tidak punya arti untuk jasa: stoknya memang tidak
+            pernah dicatat, jadi peringatan "menipis" tidak akan pernah muncul
+            berapa pun angkanya. Isian yang tidak berpengaruh apa-apa membuat
+            orang menebak-nebak apakah dia salah mengisi. */}
+        {draft.trackStock && (
+          <div className="field">
+            <label htmlFor="minStock">Ambang Stok Menipis</label>
+            <input
+              id="minStock"
+              type="number"
+              min={0}
+              value={draft.minStock}
+              onChange={(e) => set('minStock', e.target.value)}
+              aria-invalid={err?.field === 'minStock'}
+            />
+            <div className="field-hint">Muncul di Beranda kalau stok ≤ angka ini</div>
+            {err?.field === 'minStock' && <div className="field-error">{err.error}</div>}
+          </div>
+        )}
       </div>
 
       <div className="field">
@@ -300,24 +306,36 @@ export function ProductDrawer({
         />
       )}
 
-      <label
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          cursor: 'pointer',
-          padding: '10px 0',
-        }}
-      >
-        <span style={{ fontSize: 13, fontWeight: 600 }}>Lacak stok</span>
-        <input
-          type="checkbox"
-          checked={draft.trackStock}
-          onChange={(e) => set('trackStock', e.target.checked)}
-        />
-      </label>
-      <div className="field-hint" style={{ marginBottom: 14 }}>
-        Matikan untuk jasa atau produk tanpa persediaan.
+      {/* Dulu ini sakelar bernama "Lacak stok" dengan keterangan kecil
+          "Matikan untuk jasa". Kemampuannya sudah persis sama sejak awal —
+          yang salah cuma cara bertanyanya. Pemilik warung tidak berpikir
+          "saya mau mematikan pelacakan stok"; dia berpikir "yang ini jasa".
+          Ditanya memakai istilah teknis, fiturnya ada tapi tidak pernah
+          ditemukan. Dua pilihan tegas memakai `.pay-methods`, pola segmented
+          yang sudah dipakai memilih metode bayar. */}
+      <div className="field">
+        <label>Jenis</label>
+        <div className="pay-methods" style={{ margin: '0 0 6px' }}>
+          <button
+            type="button"
+            className={cn(draft.trackStock && 'active')}
+            onClick={() => set('trackStock', true)}
+          >
+            Barang
+          </button>
+          <button
+            type="button"
+            className={cn(!draft.trackStock && 'active')}
+            onClick={() => set('trackStock', false)}
+          >
+            Jasa
+          </button>
+        </div>
+        <div className="field-hint">
+          {draft.trackStock
+            ? 'Stoknya dihitung, berkurang tiap terjual, dan diperingatkan saat menipis.'
+            : 'Tanpa stok: bisa dijual berapa kali pun. Untuk jasa seperti potong rambut, isi pulsa, atau ongkos antar.'}
+        </div>
       </div>
 
       {showGeneral && err && (

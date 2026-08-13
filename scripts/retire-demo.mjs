@@ -68,6 +68,18 @@ const args = process.argv.slice(2)
 const confirm = args.includes('--confirm')
 const onlyIdx = args.indexOf('--only')
 const only = onlyIdx >= 0 ? args[onlyIdx + 1] : null
+/**
+ * Toko demo yang SENGAJA dipertahankan, mis. untuk memperagakan aplikasi ke
+ * calon klien. Akun yang juga jadi anggota toko ini tidak akan diacak sandinya.
+ *
+ * Ditambahkan setelah menggigit sungguhan (13 Agu): `--only "Warung Rina"`
+ * dijalankan untuk memensiunkan satu toko saja, tapi pemiliknya juga pemilik
+ * Toko Dewi yang justru mau dipertahankan — dan sandinya ikut teracak, sehingga
+ * toko demonya tidak bisa dibuka lagi. `--only` ternyata cuma membatasi toko
+ * mana yang DIHAPUS, bukan akun mana yang aman.
+ */
+const keepIdx = args.indexOf('--keep')
+const keep = keepIdx >= 0 ? args[keepIdx + 1] : null
 
 /** Nama toko demo yang dibuat `seed-demo.mjs` dan pengujian multi-toko. */
 const DEMO = ['Toko Dewi', 'Warung Rina', 'Warung Barokah']
@@ -77,6 +89,7 @@ const log = (...a) => console.log(...a)
 const rp = (n) => 'Rp ' + Number(n || 0).toLocaleString('id-ID')
 
 async function main() {
+  if (keep) log(`◆ Dipertahankan: ${keep} — akun anggotanya tidak akan diacak sandinya\n`)
   log(confirm ? '● MODE SUNGGUHAN\n' : '○ MODE KERING — tidak ada yang diubah. Tambah --confirm untuk mengerjakan.\n')
 
   const { data: orgs, error } = await db
@@ -174,6 +187,9 @@ async function main() {
         // Relasi tidak terbaca — jangan ditebak aman.
         if (!o?.name) throw new Error(`Toko ${x.organization_id} tidak terbaca; hentikan.`)
         if (o.deleted_at) return false
+        // Toko yang dipertahankan diperlakukan seperti toko asli: akunnya
+        // masih dipakai orang, jadi sandinya tidak boleh disentuh.
+        if (keep && o.name === keep) return true
         return !DEMO.includes(o.name)
       })
       if (punyaTokoAsli) {

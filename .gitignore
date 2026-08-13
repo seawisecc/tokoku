@@ -12,3 +12,7 @@ next-env.d.ts
 supabase/.temp
 supabase/.branches
 .env*
+
+# Salinan tenant demo dari scripts/retire-demo.mjs — berisi data nyata,
+# tidak boleh ikut ter-commit.
+backup-demo-*/

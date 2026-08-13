@@ -2077,6 +2077,16 @@ Penjagaan berlapis tiga: `proxy.ts` (sesi) → layout server (`requirePermission
 ## Data demo
 
 Dua tenant, dipakai untuk membuktikan isolasi antar toko:
+> **13 Agu: Warung Rina & Warung Barokah SUDAH DIPENSIUNKAN** dari produksi
+> lewat `scripts/retire-demo.mjs` — di-soft-delete dan sandi akunnya diacak.
+> **Toko Dewi sengaja dipertahankan** sebagai bahan peragaan penjualan.
+> Efek sampingnya: sandi `rina@tokodewi.id` ikut teracak (dia pemilik kedua
+> toko), jadi `TokoKu123!` TIDAK berlaku lagi untuk akun itu. Pemilik project
+> menyetel ulang sendiri lewat `node scripts/recovery-link.mjs rina@tokodewi.id
+> --url https://tokoku.seawise.id`. Akun kasir Toko Dewi lain juga ikut teracak.
+> Skripnya kini punya `--keep "<nama toko>"` supaya kesalahan ini tidak
+> terulang; lihat "Pensiun tenant demo".
+
 - **Toko Dewi** (Denpasar, Growth, aktif) — 9 produk, ~14 transaksi, 5 anggota,
   **2 outlet**: MAIN (stok terisi) dan OUT-2 "Cabang Renon" (dibuat 10 Agu untuk
   menguji multi-outlet; berisi 6 Aqua — sisa dari 12 yang dibeli, 1 terjual,
