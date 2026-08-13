@@ -226,8 +226,9 @@ dengan penjualan.
 
 **Sudah diuji langsung** (13 Agu): sandi lama yang salah ditolak dengan kalimat
 yang benar tanpa mengganggu sesi, penggantian yang benar berhasil dan sesinya
-tetap hidup, kotaknya dikosongkan lalu formnya menutup sendiri. Sandi
-`rina@tokodewi.id` dikembalikan ke `TokoKu123!` sesudahnya.
+tetap hidup, kotaknya dikosongkan lalu formnya menutup sendiri. Sandi akunnya
+dikembalikan sesudahnya — dan belakangan diganti lagi oleh pemilik project
+saat seluruh kredensial bawaan dipensiunkan.
 
 ## Impor CSV & backup
 
