@@ -8,6 +8,12 @@ export type CartLine = {
   name: string
   sku: string | null
   price: number
+  /**
+   * Harga normal, hanya diisi kalau barang ini sedang promo. Dibawa sampai ke
+   * struk supaya pembeli melihat berapa yang dihematnya — itulah gunanya promo
+   * dicetak sama sekali.
+   */
+  normalPrice?: number
   qty: number
   stock: number
 }

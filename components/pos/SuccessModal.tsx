@@ -57,6 +57,7 @@ export function SuccessModal({
       qty: i.quantity,
       unitPrice: i.unit_price,
       lineTotal: i.unit_price * i.quantity - i.discount,
+      normalPrice: i.normal_price,
     })),
     subtotal: trx.items.reduce((s, i) => s + i.unit_price * i.quantity, 0),
     // Ketiga lapis digabung jadi satu baris "Potongan" di struk, dengan

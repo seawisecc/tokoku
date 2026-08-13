@@ -15,7 +15,14 @@ export type ReceiptData = {
   cashierName: string
   at: string
   paymentMethod: 'cash' | 'qris' | string
-  items: { name: string; qty: number; unitPrice: number; lineTotal: number }[]
+  items: {
+    name: string
+    qty: number
+    unitPrice: number
+    lineTotal: number
+    /** Harga sebelum promo. Dicetak sebagai baris kecil di bawah harganya. */
+    normalPrice?: number
+  }[]
   subtotal: number
   discount?: number
   /**
@@ -118,6 +125,15 @@ export function Receipt({ data }: { data: ReceiptData }) {
             </span>
             <span>{rupiah(it.lineTotal)}</span>
           </div>
+          {/* Satu baris tambahan HANYA untuk barang yang sedang promo. Kertas
+              thermal dibayar per sentimeter, jadi baris ini tidak boleh muncul
+              di nota biasa — tapi untuk barang promo justru inilah yang membuat
+              pembeli tahu dia dapat potongan. */}
+          {!!it.normalPrice && it.normalPrice > it.unitPrice && (
+            <div className="r-dim r-promo">
+              promo, normal {rupiah(it.normalPrice)}
+            </div>
+          )}
         </div>
       ))}
 

@@ -841,6 +841,15 @@ tbody tr:hover { background: var(--color-paper); }
 /* Monospace penuh dan lebar tetap: printer thermal murah menyelaraskan kolom
    berdasarkan jumlah karakter, bukan lebar piksel. */
 .receipt {
+  /* `text-align: left` WAJIB eksplisit, bukan mengandalkan bawaan.
+     Struk ini ikut dirender di dalam `.modal-card.success-wrap` yang
+     ber-`text-align: center`, dan tanpa baris ini SETIAP nama barang di layar
+     sukses tampil ke tengah sementara baris qty/harga di bawahnya rata
+     kiri-kanan karena flex. Notanya jadi terbaca seperti cetakan yang rusak —
+     dan itu justru layar yang paling sering dilihat kasir. Halaman detail
+     transaksi kebetulan terlihat benar karena tidak berada di dalam wadah
+     yang ditengahkan, jadi bugnya sempat lolos. */
+  text-align: left;
   width: 48mm; margin: 0 auto; padding: 4mm 0;
   font-family: var(--font-mono); font-size: 9px; line-height: 1.45;
   color: #000; background: #fff;
@@ -852,6 +861,9 @@ tbody tr:hover { background: var(--color-paper); }
 .receipt .r-row { display: flex; justify-content: space-between; gap: 6px; }
 .receipt .r-row span:last-child { white-space: nowrap; }
 .receipt .r-item { margin-bottom: 3px; }
+/* Baris "promo, normal Rp X". Menjorok sedikit supaya terbaca sebagai
+   keterangan barang di atasnya, bukan barang baru. */
+.receipt .r-promo { padding-left: 8px; font-size: 8px; }
 .receipt .r-total { font-size: 11px; margin: 3px 0; }
 .receipt .r-brand { margin-top: 6px; font-size: 8px; }
 

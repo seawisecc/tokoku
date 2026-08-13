@@ -18,7 +18,13 @@ export type ReceiptImageData = {
   code: string
   at: string
   cashierName: string
-  items: { name: string; qty: number; unitPrice: number; lineTotal: number }[]
+  items: {
+    name: string
+    qty: number
+    unitPrice: number
+    lineTotal: number
+    normalPrice?: number
+  }[]
   subtotal: number
   discount?: number
   /** Sebutan potongan; "Tukar 50 poin" untuk penukaran loyalty. */
@@ -59,7 +65,9 @@ export async function buatGambarStruk(d: ReceiptImageData): Promise<Blob> {
   if (d.outletName && d.outletName !== d.storeName) baris += 1
   baris += 3 // kode, waktu, kasir
   baris += 1 // garis
-  baris += d.items.length * 2 // tiap barang dua baris
+  // Tiap barang dua baris, plus satu lagi kalau sedang promo. Taksirannya
+  // boleh berlebih — kelebihannya dipotong di akhir — tapi TIDAK BOLEH kurang.
+  baris += d.items.length * 2 + d.items.filter((i) => i.normalPrice).length
   baris += 1 // garis
   if (d.discount && d.discount > 0) baris += 1
   baris += 4 // subtotal, total, bayar, kembali
@@ -138,6 +146,9 @@ export async function buatGambarStruk(d: ReceiptImageData): Promise<Blob> {
     const nama = it.name.length > 30 ? it.name.slice(0, 29) + '…' : it.name
     kiri(nama, 12)
     duaKolom(`  ${it.qty} x ${rp(it.unitPrice)}`, rp(it.lineTotal), 11)
+    if (it.normalPrice && it.normalPrice > it.unitPrice) {
+      kiri(`  promo, normal ${rp(it.normalPrice)}`, 10)
+    }
   }
   garis()
 

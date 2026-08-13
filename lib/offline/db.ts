@@ -68,6 +68,8 @@ export type OutboxItem = {
   quantity: number
   unit_price: number
   discount: number
+  /** Harga sebelum promo. Undefined = tidak sedang promo. Untuk struk saja. */
+  normal_price?: number
 }
 
 export type OutboxTransaction = {
