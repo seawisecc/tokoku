@@ -21,6 +21,8 @@ export type ReceiptImageData = {
   items: { name: string; qty: number; unitPrice: number; lineTotal: number }[]
   subtotal: number
   discount?: number
+  /** Sebutan potongan; "Tukar 50 poin" untuk penukaran loyalty. */
+  discountLabel?: string
   total: number
   paid: number
   change: number
@@ -140,7 +142,7 @@ export async function buatGambarStruk(d: ReceiptImageData): Promise<Blob> {
   garis()
 
   duaKolom('Subtotal', rp(d.subtotal))
-  if (d.discount && d.discount > 0) duaKolom('Diskon', '-' + rp(d.discount))
+  if (d.discount && d.discount > 0) duaKolom(d.discountLabel || 'Diskon', '-' + rp(d.discount))
   duaKolom('TOTAL', rp(d.total), 15, true)
   duaKolom(METODE[d.paymentMethod] ?? d.paymentMethod.toUpperCase(), rp(d.paid))
   duaKolom('Kembali', rp(d.change))

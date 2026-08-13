@@ -51,13 +51,12 @@ export function StockDrawer({
       onClose={onClose}
       footer={
         <>
-          <button type="button" className="btn btn-ghost" style={{ flex: 1 }} onClick={onClose}>
+          <button type="button" className="btn btn-ghost" onClick={onClose}>
             Batal
           </button>
           <button
             type="button"
             className="btn btn-dark"
-            style={{ flex: 1, justifyContent: 'center' }}
             disabled={pending || !valid || delta === 0}
             onClick={submit}
           >

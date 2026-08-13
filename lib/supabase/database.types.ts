@@ -3094,6 +3094,15 @@ export type Database = {
         Args: { p_consignment: string; p_org: string }
         Returns: Json
       }
+      import_products: {
+        Args: {
+          p_org: string
+          p_outlet: string
+          p_rows: Json
+          p_update_existing?: boolean
+        }
+        Returns: Json
+      }
       invitation_preview: { Args: { p_token: string }; Returns: Json }
       is_platform_admin: { Args: never; Returns: boolean }
       open_shift: {

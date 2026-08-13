@@ -283,6 +283,45 @@ h3,
 }
 .cust-row:hover { border-color: var(--color-success); }
 
+/* ── Penukaran poin ────────────────────────────────────────────────────────
+   Duduk tepat di bawah pelanggan yang sudah dipilih, dan sengaja memakai warna
+   yang sama dengan `.cust-picked`: keduanya menjelaskan satu hal yang sama
+   ("pembeli ini"), dan memberi kotak poin warnanya sendiri membuat layar bayar
+   punya tiga blok berwarna yang saling berebut perhatian di detik-detik kasir
+   menghitung uang. */
+.redeem-box {
+  border: 1px solid var(--color-line); border-radius: var(--radius-md);
+  padding: 10px 12px; background: var(--color-paper);
+}
+.redeem-empty {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--color-ink-faint);
+}
+.redeem-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.redeem-saldo { font-size: 12.5px; }
+.redeem-rate { font-size: 11.5px; color: var(--color-ink-faint); margin-left: auto; }
+/* Kotak angka dan tombol "tukar semua" sebaris: kasir hampir selalu menukar
+   seluruhnya, jadi jalan tercepatnya harus terlihat tanpa mengetik. */
+.redeem-row { display: flex; gap: 8px; align-items: stretch; margin-top: 8px; }
+.redeem-row input {
+  flex: 1 1 0; min-width: 0;
+  border: 1px solid var(--color-line); border-radius: var(--radius-sm);
+  padding: 9px 12px; font-size: 14px; font-weight: 700;
+  font-family: var(--font-mono); background: var(--color-card); color: var(--color-ink);
+}
+.redeem-row input:focus { outline: none; border-color: var(--color-success); }
+.redeem-row .btn { flex: 0 0 auto; }
+
+/* Ringkasan potongan di layar bayar. Diberi latar sendiri supaya angka yang
+   BERUBAH karena penukaran tidak terbaca sebagai bagian dari daftar biasa —
+   yang dibayar pembeli bukan lagi angka di kepala modal. */
+.pay-summary {
+  background: var(--color-paper); border-radius: var(--radius-sm);
+  padding: 2px 12px; margin-bottom: 12px;
+}
+.kv-strong span { font-size: 14px; }
+.kv-strong span:first-child { color: var(--color-ink); font-weight: 700; }
+
 /* ── Pemindai barcode ──────────────────────────────────────────────────────
    Tombol kamera duduk sebaris dengan kotak cari, bukan di bawahnya: di layar
    kasir setiap baris vertikal yang dipakai kontrol adalah satu baris produk
@@ -609,10 +648,28 @@ tbody tr:hover { background: var(--color-paper); }
 }
 .mini-stat span { font-size: 10.5px; color: var(--color-ink-soft); }
 
+/* Kotak pesan sebaris. Bawaannya MERAH karena itu penggunaan pertamanya:
+   memberi tahu ada yang salah. */
 .empty-note {
   display: flex; gap: 10px; background: var(--color-coral-soft); color: var(--color-coral);
   border-radius: 12px; padding: 12px 14px; font-size: 12.5px; font-weight: 600; align-items: flex-start;
 }
+/**
+ * Pesan BERHASIL dan pesan PERINGATAN.
+ *
+ * Sampai hari ini keduanya memakai `.empty-note` polos, jadi setiap kabar baik
+ * di aplikasi ini tampil dengan latar merah muda dan tulisan merah: "Kata sandi
+ * sudah diganti", "2 produk disesuaikan", "Nota terkirim" — semuanya terbaca
+ * sebagai kegagalan, lengkap dengan ikon centang hijau di sebelah tulisan merah
+ * yang saling membantah. Orang berhenti sejenak untuk memastikan pekerjaannya
+ * tidak gagal, setiap kali, di setiap layar.
+ *
+ * Peringatan (mode offline, tempo jatuh) sempat diberi warna amber lewat
+ * `style` di tiap pemanggil — sama benarnya, tapi disalin di enam tempat dan
+ * dua di antaranya sudah tertinggal.
+ */
+.empty-note.is-ok { background: var(--color-success-soft); color: var(--color-success); }
+.empty-note.is-warn { background: var(--color-amber-soft); color: var(--color-amber-ink); }
 .placeholder-card { border: 1px dashed var(--color-line); border-radius: var(--radius-md); padding: 40px 20px; text-align: center; color: var(--color-ink-faint); }
 
 .team-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-line); }
@@ -911,6 +968,22 @@ tbody tr:hover { background: var(--color-paper); }
   border-top: 1px solid var(--color-line);
   display: flex; gap: 10px; flex: 0 0 auto;
 }
+/* Tombol kaki drawer selalu berbagi lebar sama rata DAN rata tengah.
+   Sebelum ini keduanya diatur inline di tiap drawer, dan hasilnya seragam
+   salah di SELURUH aplikasi: tombol simpan diberi `justifyContent: center`
+   sementara "Batal" di sebelahnya tidak, jadi label kiri menempel ke tepi kiri
+   tombolnya sementara label kanan duduk di tengah. Dua tombol sebesar sama
+   persis, bersebelahan, dengan tulisan yang tidak sejajar — hal kecil yang
+   membuat seluruh form terbaca seperti belum selesai dikerjakan.
+   Ditulis di sini, bukan di tiap pemanggil, supaya drawer berikutnya tidak
+   bisa lupa. */
+.drawer-foot .btn { flex: 1 1 0; justify-content: center; }
+
+/* Sepasang tombol berdampingan DI LUAR drawer (modal bayar, layar sukses,
+   pemilih pelanggan). Aturannya sama persis dengan kaki drawer; dijadikan
+   class supaya keduanya tidak pelan-pelan berbeda. */
+.btn-pair { display: flex; gap: 8px; }
+.btn-pair .btn { flex: 1 1 0; justify-content: center; }
 .field-hint { font-size: 11.5px; color: var(--color-ink-faint); margin-top: 4px; }
 .field-error { font-size: 11.5px; color: var(--color-coral); margin-top: 4px; font-weight: 600; }
 .field input[aria-invalid='true'] { border-color: var(--color-coral); }
@@ -1084,6 +1157,20 @@ tbody tr:hover { background: var(--color-paper); }
 .auth-single .auth-container { padding: 34px 30px; }
 @media (max-width: 767px) {
   .auth-single .auth-container { padding: 26px 22px; }
+}
+
+/* Layar pesan berdiri sendiri: 404 dan penangkap error. Tidak memakai AppShell
+   karena keduanya bisa muncul SEBELUM sesi terbaca — dan halaman error yang
+   ikut memuat sidebar berisiko gagal untuk alasan yang sama seperti halaman
+   yang barusan gagal. */
+.pesan-layar {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 24px; background: var(--color-paper);
+}
+.pesan-kartu {
+  width: 100%; max-width: 420px; text-align: center;
+  background: var(--color-card); border: 1px solid var(--color-line);
+  border-radius: var(--radius-md); padding: 32px 26px;
 }
 
 .auth-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--color-ink-faint); margin: 0 0 6px; }
@@ -1471,6 +1558,66 @@ tbody tr:hover { background: var(--color-paper); }
    kehilangan pasangan label-isiannya, dan tidak ada satu pun isian di aplikasi
    ini yang isinya sepanjang itu. */
 .form-narrow { max-width: 760px; }
+
+/* ── Impor & backup ───────────────────────────────────────────────────────── */
+
+/* Kartu unduhan disusun grid, bukan daftar bertumpuk: keempatnya setara dan
+   dipilih dengan melirik, bukan dibaca berurutan. */
+.unduh-grid {
+  display: grid; gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+.unduh-kartu {
+  display: flex; align-items: flex-start; gap: 12px;
+  background: var(--color-card); border: 1px solid var(--color-line);
+  border-radius: var(--radius-md); padding: 12px 14px;
+  text-decoration: none; color: inherit;
+}
+.unduh-kartu:hover { border-color: var(--color-success); }
+.unduh-judul {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 2px;
+}
+.unduh-judul .badge { flex: 0 0 auto; }
+.unduh-ikon {
+  flex: 0 0 auto; width: 36px; height: 36px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  background: var(--color-success-soft); color: var(--color-success);
+}
+
+/* Baris tombol pilih berkas. Membungkus di layar sempit — tiga tombol sebaris
+   butuh ~330px sementara isi kartunya tinggal ~310px di 390px. */
+.impor-aksi { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+/* Input file bawaan tidak bisa digayakan dan tampilannya berbeda di tiap
+   browser; yang terlihat adalah <label> ber-class .btn di atasnya. Disembunyikan
+   dengan cara yang TETAP terbaca pembaca layar dan tetap bisa difokus keyboard —
+   `display: none` akan membuatnya hilang dari urutan tab. */
+.impor-file {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.impor-file:focus-visible + label { outline: 2px solid var(--color-success); outline-offset: 2px; }
+.impor-ringkas { display: flex; flex-wrap: wrap; gap: 6px; }
+.impor-timpa {
+  display: flex; align-items: flex-start; gap: 9px; margin-top: 14px;
+  font-size: 12.5px; color: var(--color-ink-soft); cursor: pointer;
+}
+.impor-timpa input { margin-top: 2px; flex: 0 0 auto; }
+/* Baris yang akan dilewati. Diredupkan DAN diberi latar, bukan hanya diberi
+   teks merah di kolom terakhir: di layar sempit kolom itu yang paling dulu
+   tergeser keluar. Pola yang sama dengan baris transaksi batal. */
+.row-error { background: var(--color-coral-soft); }
+.row-error td { color: var(--color-ink-soft); }
+
+/* Kepala kartu ganti sandi: keterangan di kiri, tombol buka di kanan. Membungkus
+   di layar sempit supaya tombolnya tidak menggencet keterangannya sampai pecah
+   satu kata per baris — masalah yang sama sudah pernah diperbaiki di
+   `.team-row`. */
+.cp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+@media (max-width: 480px) {
+  .cp-head { flex-wrap: wrap; }
+  .cp-head .btn { width: 100%; justify-content: center; }
+}
 
 /* Detail transaksi: kartu rincian + struk berdampingan begitu ada ruang.
    Sebelumnya struk selalu jatuh di bawah sementara kartunya melar penuh. */

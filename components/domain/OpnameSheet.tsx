@@ -231,7 +231,7 @@ export function OpnameSheet({ rows, outletName }: { rows: OpnameRow[]; outletNam
         </div>
       )}
       {sukses && (
-        <div className="empty-note" style={{ marginTop: 12 }} role="status">
+        <div className="empty-note is-ok" style={{ marginTop: 12 }} role="status">
           <Icon name="check" size={16} style={{ marginTop: 1 }} />
           <div style={{ flex: 1 }}>{sukses}</div>
         </div>

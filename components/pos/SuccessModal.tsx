@@ -48,6 +48,10 @@ export function SuccessModal({
       lineTotal: i.unit_price * i.quantity - i.discount,
     })),
     subtotal: trx.items.reduce((s, i) => s + i.unit_price * i.quantity, 0),
+    discount: trx.points_value || undefined,
+    discountLabel: trx.points_redeemed
+      ? `Tukar ${trx.points_redeemed.toLocaleString('id-ID')} poin`
+      : undefined,
     total: trx.total,
     paid: trx.paid_amount,
     change,
@@ -69,6 +73,17 @@ export function SuccessModal({
           </div>
 
           <div style={{ textAlign: 'left', marginBottom: 16 }}>
+            {/* Potongan poin disebut di layar sukses, bukan cuma di struk:
+                pembelinya masih berdiri di depan kasir, dan di sinilah dia
+                bertanya "poin saya jadi berapa?". */}
+            {!!trx.points_redeemed && (
+              <div className="kv">
+                <span>Tukar {trx.points_redeemed.toLocaleString('id-ID')} poin</span>
+                <span style={{ color: 'var(--color-forest)' }}>
+                  -{rupiah(trx.points_value ?? 0)}
+                </span>
+              </div>
+            )}
             <div className="kv">
               <span>Total</span>
               <span>{rupiah(trx.total)}</span>
@@ -93,13 +108,9 @@ export function SuccessModal({
 
           {!online && (
             <div
-              className="empty-note"
-              style={{
-                textAlign: 'left',
-                marginBottom: 14,
-                background: 'var(--color-amber-soft)',
-                color: 'var(--color-amber-ink)',
-              }}
+              className="empty-note is-warn"
+              style={{ textAlign: 'left',
+                marginBottom: 14 }}
             >
               <Icon name="wifiOff" size={16} style={{ marginTop: 1 }} />
               <div style={{ flex: 1 }}>
@@ -135,6 +146,8 @@ export function SuccessModal({
                 cashierName: trx.cashier_name,
                 items: receipt.items,
                 subtotal: receipt.subtotal,
+                discount: receipt.discount,
+                discountLabel: receipt.discountLabel,
                 total: trx.total,
                 paid: trx.paid_amount,
                 change,
@@ -144,11 +157,10 @@ export function SuccessModal({
             />
           </div>
 
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="btn-pair">
             <button
               type="button"
               className="btn btn-ghost"
-              style={{ flex: 1, justifyContent: 'center' }}
               onClick={() => {
                 // Pratinjau dulu supaya elemen struk ada di DOM sebelum dicetak;
                 // aturan @media print hanya menampilkan .receipt.
@@ -165,7 +177,6 @@ export function SuccessModal({
             <button
               type="button"
               className="btn btn-primary"
-              style={{ flex: 1, justifyContent: 'center' }}
               onClick={onClose}
             >
               Selesai

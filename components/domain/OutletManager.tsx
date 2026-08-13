@@ -303,12 +303,11 @@ function OutletDrawer({
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-ghost" style={{ flex: 1 }} type="button" onClick={onClose}>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>
             Batal
           </button>
           <button
             className="btn btn-primary"
-            style={{ flex: 1, justifyContent: 'center' }}
             type="button"
             disabled={pending}
             onClick={() => onSubmit({ name, code, address, phone }, onClose)}

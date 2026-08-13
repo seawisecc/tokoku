@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Icon } from '@/components/ui/icons'
 import { cn, rupiah } from '@/lib/format'
 
@@ -8,11 +8,18 @@ const QUICK_CASH = [1000, 2000, 5000, 10000, 20000, 50000, 100000]
 
 export function PaymentModal({
   total,
+  discount = 0,
+  discountLabel = 'Potongan',
   onClose,
   onConfirm,
   customerSlot,
+  redeemSlot,
 }: {
+  /** Total belanja SEBELUM potongan. */
   total: number
+  /** Potongan penukaran poin, dalam rupiah. */
+  discount?: number
+  discountLabel?: string
   onClose: () => void
   onConfirm: (method: 'cash' | 'qris', paid: number) => Promise<void>
   /**
@@ -21,20 +28,39 @@ export function PaymentModal({
    * layarnya sama di desktop maupun ponsel.
    */
   customerSlot?: React.ReactNode
+  /**
+   * Penukaran poin. Slot terpisah dari `customerSlot` supaya urutannya di layar
+   * mengikuti urutan percakapan di kasir: pilih pembelinya dulu, baru poinnya
+   * punya arti.
+   */
+  redeemSlot?: React.ReactNode
 }) {
   const [method, setMethod] = useState<'cash' | 'qris'>('qris')
-  const [paid, setPaid] = useState(total)
+  const bayar = Math.max(total - discount, 0)
+  const [paid, setPaid] = useState(bayar)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const change = Math.max(paid - total, 0)
-  const short = method === 'cash' && paid < total
+  /**
+   * Uang diterima ikut naik saat tagihannya berubah — tapi TIDAK ikut turun.
+   *
+   * Kasir menukar poin setelah mengetik uang yang sudah dipegangnya; menimpa
+   * angka itu berarti kembaliannya salah hitung dan pembeli menerima uang
+   * kurang. Yang perlu diikuti cuma keadaan "uang kurang", yang kalau
+   * dibiarkan membuat tombol bayar mati tanpa sebab yang kelihatan.
+   */
+  useEffect(() => {
+    setPaid((p) => (p < bayar ? bayar : p))
+  }, [bayar])
+
+  const change = Math.max(paid - bayar, 0)
+  const short = method === 'cash' && paid < bayar
 
   // Pembulatan ke atas ke kelipatan uang yang lazim dipegang pembeli.
   const suggestions = Array.from(
-    new Set([total, ...QUICK_CASH.map((n) => Math.ceil(total / n) * n)]),
+    new Set([bayar, ...QUICK_CASH.map((n) => Math.ceil(bayar / n) * n)]),
   )
-    .filter((n) => n >= total)
+    .filter((n) => n >= bayar)
     .sort((a, b) => a - b)
     .slice(0, 4)
 
@@ -43,7 +69,7 @@ export function PaymentModal({
     setBusy(true)
     setError(null)
     try {
-      await onConfirm(method, method === 'cash' ? paid : total)
+      await onConfirm(method, method === 'cash' ? paid : bayar)
       // Sukses: komponen ini di-unmount oleh induknya, jadi tidak perlu
       // mengembalikan busy ke false.
     } catch (e) {
@@ -68,6 +94,20 @@ export function PaymentModal({
           </div>
 
           {customerSlot && <div style={{ margin: '10px 0 12px' }}>{customerSlot}</div>}
+          {redeemSlot && <div style={{ margin: '0 0 12px' }}>{redeemSlot}</div>}
+
+          {discount > 0 && (
+            <div className="pay-summary">
+              <div className="kv">
+                <span>{discountLabel}</span>
+                <span style={{ color: 'var(--color-forest)' }}>-{rupiah(discount)}</span>
+              </div>
+              <div className="kv kv-strong">
+                <span>Yang harus dibayar</span>
+                <span>{rupiah(bayar)}</span>
+              </div>
+            </div>
+          )}
 
           <div className="pay-methods">
             <button
@@ -82,7 +122,7 @@ export function PaymentModal({
               className={cn(method === 'cash' && 'active')}
               onClick={() => {
                 setMethod('cash')
-                setPaid(total)
+                setPaid(bayar)
               }}
             >
               Tunai
@@ -98,7 +138,7 @@ export function PaymentModal({
                   type="number"
                   inputMode="numeric"
                   value={paid}
-                  min={total}
+                  min={bayar}
                   onChange={(e) => setPaid(Number(e.target.value) || 0)}
                 />
               </div>

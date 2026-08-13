@@ -100,7 +100,7 @@ export function ClientDetail({
       )}
 
       {client.lapsed && (
-        <div className="empty-note" style={{ marginBottom: 16 }} role="status">
+        <div className="empty-note is-ok" style={{ marginBottom: 16 }} role="status">
           <Icon name="alert" size={16} style={{ marginTop: 1 }} />
           <div style={{ flex: 1 }}>
             <strong>Akses toko ini sedang tertutup.</strong> Kasir tidak bisa membuat transaksi
@@ -279,12 +279,11 @@ export function ClientDetail({
           onClose={() => setAsking(false)}
           footer={
             <>
-              <button className="btn btn-ghost" style={{ flex: 1 }} type="button" onClick={() => setAsking(false)}>
+              <button className="btn btn-ghost" type="button" onClick={() => setAsking(false)}>
                 Batal
               </button>
               <button
                 className="btn btn-dark"
-                style={{ flex: 1, justifyContent: 'center' }}
                 type="button"
                 disabled={pending || reason.trim().length < 4}
                 onClick={() => startTransition(() => startImpersonation(client.id, reason))}

@@ -41,6 +41,10 @@ export function toSyncPayload(trx: OutboxTransaction) {
     client_created_at: trx.client_created_at,
     payment_method: trx.payment_method,
     paid_amount: trx.paid_amount,
+    // Potongan poin. Server tidak menerima `discount_total` dari perangkat
+    // sama sekali — ia menghitung sendiri dari jumlah poinnya. Lihat 0039.
+    points_redeemed: trx.points_redeemed ?? 0,
+    points_value: trx.points_value ?? 0,
     origin: trx.origin,
     items: trx.items.map((i) => ({
       product_id: i.product_id,

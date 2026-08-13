@@ -422,12 +422,11 @@ function IntakeDrawer({
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-ghost" style={{ flex: 1 }} type="button" onClick={onClose}>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>
             Batal
           </button>
           <button
             className="btn btn-primary"
-            style={{ flex: 1, justifyContent: 'center' }}
             type="button"
             disabled={pending}
             onClick={() =>
@@ -539,7 +538,7 @@ function IntakeDrawer({
         // hasil yang wajar bukan peringatan, jadi warnanya dinetralkan; hanya
         // margin negatif yang boleh tampil merah.
         <div
-          className="empty-note"
+          className="empty-note is-ok"
           style={
             margin < 0
               ? { marginBottom: 14 }
@@ -617,12 +616,11 @@ function ReturnDrawer({
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-ghost" style={{ flex: 1 }} type="button" onClick={onClose}>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>
             Batal
           </button>
           <button
             className="btn btn-primary"
-            style={{ flex: 1, justifyContent: 'center' }}
             type="button"
             disabled={pending || tooMany || qty <= 0}
             onClick={() =>
@@ -720,12 +718,11 @@ function SettleDrawer({
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-ghost" style={{ flex: 1 }} type="button" onClick={onClose}>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>
             Batal
           </button>
           <button
             className="btn btn-primary"
-            style={{ flex: 1, justifyContent: 'center' }}
             type="button"
             disabled={pending}
             onClick={() => onSubmit({ supplierId: supplier.id, settledOn, note }, onClose)}
@@ -739,7 +736,7 @@ function SettleDrawer({
           coral, dan memakainya di sini membuat setoran yang wajar terbaca
           seperti ada yang salah. */}
       <div
-        className="empty-note"
+        className="empty-note is-ok"
         style={{
           marginBottom: 16,
           background: 'var(--color-paper)',

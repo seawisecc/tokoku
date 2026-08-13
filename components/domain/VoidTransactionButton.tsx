@@ -42,7 +42,6 @@ export function VoidTransactionButton({ trxId, code }: { trxId: string; code: st
               <button
                 type="button"
                 className="btn btn-ghost"
-                style={{ flex: 1 }}
                 onClick={() => setOpen(false)}
               >
                 Jangan jadi
@@ -50,7 +49,7 @@ export function VoidTransactionButton({ trxId, code }: { trxId: string; code: st
               <button
                 type="button"
                 className="btn"
-                style={{ flex: 1, justifyContent: 'center', background: 'var(--color-coral)', color: '#fff' }}
+                style={{ background: 'var(--color-coral)', color: '#fff' }}
                 disabled={pending}
                 onClick={submit}
               >

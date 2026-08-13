@@ -53,7 +53,7 @@ export function ForgotPasswordForm() {
         )}
         {state.notice && (
           <div
-            className="empty-note"
+            className="empty-note is-ok"
             style={{
               marginBottom: 14,
               background: 'var(--color-success-soft)',

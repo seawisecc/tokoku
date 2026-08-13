@@ -85,6 +85,20 @@ export type OutboxTransaction = {
   client_created_at: string
   payment_method: 'cash' | 'qris'
   paid_amount: number
+  /**
+   * Poin yang ditukar pembeli di nota ini, dan nilai rupiahnya menurut struk
+   * yang sudah dicetak.
+   *
+   * Keduanya dikirim, walau server menghitung ulang potongannya sendiri:
+   * `points_value` dipakai server sebagai BATAS ATAS, supaya transaksi offline
+   * yang baru tersinkron berhari-hari kemudian tidak diberi potongan lebih
+   * besar daripada yang tercetak di kertas. Lihat migrasi 0039.
+   *
+   * Opsional demi baris lama yang sudah telanjur ada di antrean perangkat
+   * sebelum fitur ini terpasang — di sana keduanya undefined dan dibaca 0.
+   */
+  points_redeemed?: number
+  points_value?: number
   total: number
   origin: 'online' | 'offline'
   items: OutboxItem[]

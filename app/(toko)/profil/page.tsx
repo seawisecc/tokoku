@@ -3,6 +3,7 @@ import { signOut } from '@/app/(auth)/actions'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Icon } from '@/components/ui/icons'
 import { ShiftCard } from '@/components/domain/ShiftCard'
+import { ChangePasswordCard } from '@/components/domain/ChangePasswordCard'
 import { initialsOf, requireSession } from '@/lib/auth'
 import { cn } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
@@ -148,6 +149,9 @@ export default async function ProfilPage({
           </div>
         </>
       )}
+
+      <div className="section-title">Keamanan Akun</div>
+      <ChangePasswordCard />
 
       <form action={signOut} style={{ marginTop: 20 }}>
         <button className="btn btn-ghost btn-block" type="submit">

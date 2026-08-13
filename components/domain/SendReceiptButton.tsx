@@ -57,9 +57,17 @@ export function SendReceiptButton({
       '',
       ...data.items.map((i) => `${i.name} x${i.qty}  ${rupiah(i.lineTotal)}`),
       '',
+    ]
+    // Potongan disebut sebelum total. Tanpa baris ini, pembeli yang menukar
+    // poin menerima nota yang totalnya lebih kecil dari jumlah barangnya tanpa
+    // penjelasan apa pun — dan poin yang hilang tidak punya buktinya.
+    if (data.discount && data.discount > 0) {
+      baris.push(`${data.discountLabel || 'Potongan'}: -${rupiah(data.discount)}`)
+    }
+    baris.push(
       `*Total: ${rupiah(data.total)}*`,
       `Bayar: ${METODE[data.paymentMethod] ?? data.paymentMethod}`,
-    ]
+    )
     baris.push('', data.footer?.trim() || 'Terima kasih sudah berbelanja.')
     return baris.join('\n')
   }
@@ -174,7 +182,7 @@ export function SendReceiptButton({
       </div>
 
       {info && (
-        <div className="empty-note" style={{ marginTop: 10 }} role="status">
+        <div className="empty-note is-warn" style={{ marginTop: 10 }} role="status">
           <Icon name="alert" size={16} style={{ marginTop: 1 }} />
           <div style={{ flex: 1 }}>{info}</div>
         </div>

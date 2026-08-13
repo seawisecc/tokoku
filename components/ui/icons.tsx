@@ -26,6 +26,15 @@ const PATHS = {
       <path d="M9 9.2c0 3 2.3 5.3 5.3 5.3l.9-1.4-1.9-.9-.8.8a4 4 0 0 1-1.9-1.9l.8-.8-.9-1.9z" />
     </>
   ),
+  /**
+   * Poin loyalty. Ikon kedua yang bukan dari wireframe — di sana memang belum
+   * ada poin sama sekali. Bintang dipilih karena itulah bentuk yang sudah
+   * dikenali orang sebagai "poin"; ikon lain yang ada (kartu, grafik) berarti
+   * hal lain di aplikasi ini dan akan membingungkan kalau dipinjam.
+   */
+  star: (
+    <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z" />
+  ),
   grid: (
     <>
       <rect x="3" y="3" width="7" height="7" rx="1.5" />

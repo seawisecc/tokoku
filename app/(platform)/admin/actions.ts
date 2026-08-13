@@ -234,3 +234,75 @@ export async function setClientStatus(
   revalidatePath('/admin')
   return { ok: true, message: 'Status klien diperbarui.' }
 }
+
+const platformSchema = z.object({
+  platformName: z.string().trim().min(2, 'Nama platform minimal 2 huruf').max(60),
+  brandTagline: z.string().trim().max(80),
+  supportEmail: z.email('Alamat email support belum benar'),
+  supportPhone: z.string().trim().max(30),
+  defaultTimezone: z.string().trim().min(3, 'Zona waktu wajib diisi').max(60),
+  trialDays: z.coerce
+    .number()
+    .int('Masa coba dihitung dalam hari bulat')
+    .min(0, 'Masa coba tidak bisa negatif')
+    .max(365, 'Masa coba paling lama 365 hari'),
+})
+
+/**
+ * Simpan pengaturan platform.
+ *
+ * Sampai hari ini halaman ini hanya MENAMPILKAN isinya: seluruh kotaknya
+ * `readOnly` dan tombol simpannya mati dengan keterangan "Menyusul di fase 7".
+ * Yang paling mengganggu bukan tombolnya, melainkan `trial_days` — angka itu
+ * dipakai `register_store` untuk menentukan panjang masa coba SETIAP toko baru,
+ * jadi satu-satunya cara mengubah penawaran komersial platform ini adalah
+ * membuka SQL editor Supabase.
+ *
+ * `maintenance_mode` sengaja TIDAK ikut dibuka di sini. Kolomnya memang ada
+ * sejak migrasi 0002, tapi tidak ada satu pun bagian aplikasi yang membacanya —
+ * sakelar yang tidak melakukan apa-apa jauh lebih berbahaya daripada tidak ada
+ * sakelar sama sekali, karena ia akan dipercaya justru saat keadaan darurat.
+ */
+export async function savePlatformSettings(
+  _prev: AdminResult | null,
+  formData: FormData,
+): Promise<AdminResult> {
+  await requirePlatformAdmin()
+
+  const parsed = platformSchema.safeParse({
+    platformName: formData.get('platformName'),
+    brandTagline: formData.get('brandTagline') ?? '',
+    supportEmail: formData.get('supportEmail'),
+    supportPhone: formData.get('supportPhone') ?? '',
+    defaultTimezone: formData.get('defaultTimezone'),
+    trialDays: formData.get('trialDays') || 0,
+  })
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0].message }
+  const v = parsed.data
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('platform_settings')
+    .update({
+      platform_name: v.platformName,
+      brand_tagline: v.brandTagline,
+      support_email: v.supportEmail,
+      support_phone: v.supportPhone || null,
+      default_timezone: v.defaultTimezone,
+      trial_days: v.trialDays,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', true)
+    .select('id')
+
+  if (error) return { ok: false, error: error.message }
+  // UPDATE yang ditolak RLS menjawab "berhasil" dengan NOL baris, bukan error.
+  // Tanpa pemeriksaan ini, admin melihat "tersimpan" sementara tidak ada yang
+  // berubah. Lihat "Jebakan yang sudah pernah menggigit".
+  if (!data || data.length === 0) {
+    return { ok: false, error: 'Perubahan ditolak. Akun ini bukan Super Admin.' }
+  }
+
+  revalidatePath('/admin/pengaturan')
+  return { ok: true, message: 'Pengaturan platform tersimpan.' }
+}

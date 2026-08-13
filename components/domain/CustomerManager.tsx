@@ -280,7 +280,6 @@ export function CustomerManager({
               <button
                 type="button"
                 className="btn btn-ghost"
-                style={{ flex: 1 }}
                 onClick={() => setEditing(null)}
               >
                 Batal
@@ -288,7 +287,6 @@ export function CustomerManager({
               <button
                 type="button"
                 className="btn btn-dark"
-                style={{ flex: 1, justifyContent: 'center' }}
                 disabled={pending}
                 onClick={simpan}
               >

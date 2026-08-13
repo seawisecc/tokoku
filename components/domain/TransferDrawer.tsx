@@ -78,12 +78,11 @@ export function TransferDrawer({
       onClose={onClose}
       footer={
         <>
-          <button className="btn btn-ghost" style={{ flex: 1 }} type="button" onClick={onClose}>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>
             Batal
           </button>
           <button
             className="btn btn-primary"
-            style={{ flex: 1, justifyContent: 'center' }}
             type="button"
             disabled={pending || over || totalQty === 0 || !toOutletId}
             onClick={() =>
@@ -107,7 +106,7 @@ export function TransferDrawer({
       }
     >
       {targets.length === 0 ? (
-        <div className="empty-note" role="status">
+        <div className="empty-note is-ok" role="status">
           <Icon name="alert" size={16} style={{ marginTop: 1 }} />
           <div style={{ flex: 1 }}>
             Belum ada outlet lain yang aktif sebagai tujuan. Tambah outlet dulu di halaman ini.

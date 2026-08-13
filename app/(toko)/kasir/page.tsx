@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { PosClient } from '@/components/pos/PosClient'
 import { isLapsed, subscriptionState } from '@/lib/subscription'
 import { requirePermission } from '@/lib/auth'
+import { getPlanFeatures } from '@/lib/plan'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = { title: 'Kasir | TokoKu' }
@@ -31,7 +32,7 @@ export default async function KasirPage() {
     )
   }
 
-  const [{ data: products }, { data: categories }, { data: org }, { data: outlet }] =
+  const [{ data: products }, { data: categories }, { data: org }, { data: outlet }, features] =
     await Promise.all([
     supabase
       .from('v_product_stock')
@@ -50,7 +51,9 @@ export default async function KasirPage() {
       .order('sort_order'),
     supabase
       .from('organizations')
-      .select('name, address, phone, allow_negative_stock, logo_url')
+      .select(
+        'name, address, phone, allow_negative_stock, logo_url, loyalty_enabled, loyalty_point_value',
+      )
       .eq('id', orgId)
       .single(),
     supabase
@@ -58,6 +61,7 @@ export default async function KasirPage() {
       .select('name, receipt_settings')
       .eq('id', session.outletId)
       .single(),
+    getPlanFeatures(orgId),
   ])
 
   // Satu kali dibaca, dipakai dua kali di bawah — `receipt_settings` adalah
@@ -75,6 +79,14 @@ export default async function KasirPage() {
       cashierName={session.fullName}
       supabaseUrl={process.env.NEXT_PUBLIC_SUPABASE_URL!}
       allowNegativeStock={org?.allow_negative_stock ?? false}
+      /* Sakelar toko DAN gerbang paket digabung di sini. Poin adalah lapisan
+         analisa (paket `full`), sementara mencatat pelanggan tetap terbuka di
+         paket bawah — lihat "Pembagian paket". Digabung di server supaya kasir
+         tidak pernah melihat tombol tukar poin yang lalu ditolak diam-diam. */
+      loyalty={{
+        enabled: org?.loyalty_enabled === true && features.crm === 'full',
+        pointValue: Number(org?.loyalty_point_value ?? 0),
+      }}
       store={{
         name: org?.name ?? 'Toko',
         outletName: outlet?.name ?? null,

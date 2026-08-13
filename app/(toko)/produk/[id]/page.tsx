@@ -123,7 +123,7 @@ export default async function KartuStokPage({ params }: { params: Promise<{ id: 
       </div>
 
       {!product.track_stock && (
-        <div className="empty-note" style={{ marginBottom: 16 }} role="status">
+        <div className="empty-note is-ok" style={{ marginBottom: 16 }} role="status">
           <div style={{ flex: 1 }}>
             Produk ini disetel <strong>tanpa pelacakan stok</strong>, jadi penjualannya tidak
             mengurangi persediaan dan tidak muncul di kartu ini.

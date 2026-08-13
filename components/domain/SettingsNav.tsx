@@ -8,6 +8,7 @@ const TABS: (SectionTab & { ownerOnly?: boolean })[] = [
   { href: '/pengaturan/kategori' as Route, label: 'Kategori' },
   { href: '/pengaturan/printer' as Route, label: 'Struk & Printer' },
   { href: '/pengaturan/sinkronisasi' as Route, label: 'Sinkronisasi' },
+  { href: '/pengaturan/data' as Route, label: 'Impor & Backup' },
   // Sengaja paling kanan: yang dibuka sehari-hari ada di kiri, dan langganan
   // adalah hal yang dilihat sesekali — bukan tiap hari.
   { href: '/pengaturan/langganan' as Route, label: 'Langganan' },

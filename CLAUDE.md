@@ -61,6 +61,15 @@ databasenya juga; lihat "Deploy tidak responsif" di bawah.
   bar kuota, riwayat, tombol WhatsApp admin; lihat "Langganan sisi toko" di bawah
 - **CRM & poin loyalty** (`/pelanggan`) — daftar pelanggan, segmentasi, poin
   otomatis; lihat "CRM, poin loyalty, dan nota WhatsApp" di bawah
+- **Penukaran poin di Kasir** — potongan dihitung SERVER dari jumlah poin;
+  lihat "Penukaran poin di Kasir" di bawah
+- **Ganti kata sandi dari dalam aplikasi** — `/profil` (toko) dan
+  `/admin/pengaturan` (Super Admin); lihat "Ganti kata sandi" di bawah
+- **Impor CSV & backup** (`/pengaturan/data`) — impor daftar produk, ekspor
+  produk/pelanggan/transaksi/item; ekspor read-only juga ada di detail klien
+  Super Admin. Lihat "Impor CSV & backup" di bawah
+- **Pengaturan Platform akhirnya bisa disimpan** — termasuk `trial_days`, yang
+  sebelumnya cuma bisa diubah lewat SQL editor
 - **Nota via WhatsApp** — tombol di detail transaksi, membuka WhatsApp kasir
   sendiri dengan notanya sudah tertulis
 - **Scan barcode** (kamera + alat pemindai) — SUDAH DI-DEPLOY TAPI BELUM
@@ -79,6 +88,12 @@ databasenya juga; lihat "Deploy tidak responsif" di bawah.
   outlet" di bawah
 - **Mobile 390px sudah ditelusuri langsung** (10 Agu) — beranda, kasir, produk,
   laporan, tim. Empat masalah ditemukan dan diperbaiki; lihat "Mobile" di bawah.
+- **Sapuan konsistensi UI 13 Agu** — dua cacat yang berlaku di SELURUH aplikasi
+  ditemukan & diperbaiki (tombol drawer tidak sejajar, pesan sukses berwarna
+  merah); lihat "Konsistensi UI" di bawah
+- **Halaman error & 404 sendiri** (`error.tsx`, `global-error.tsx`,
+  `not-found.tsx`) — sebelumnya kegagalan mendarat di layar bawaan Next
+  berbahasa Inggris tanpa satu pun jalan kembali
 
 **Belum dikerjakan — urutan yang disarankan:**
 1. Email undangan: KODENYA SUDAH JADI, tinggal isi `RESEND_API_KEY` +
@@ -92,15 +107,13 @@ databasenya juga; lihat "Deploy tidak responsif" di bawah.
    riwayat langganannya sendiri di `/pengaturan/langganan`, dan menghubungi
    admin lewat WhatsApp. Yang belum ada cuma payment gateway-nya: perubahan
    paket masih dikerjakan tangan lewat Super Admin.
-4. **Penukaran poin di Kasir.** Aturan dan databasenya sudah jalan penuh dan
-   teruji (`_apply_customer_effects` menerima `points_redeemed`), tapi belum ada
-   antarmukanya: kasir belum bisa memilih pelanggan lalu menukar poin saat
-   membayar. Menyentuh alur pembayaran DAN sinkronisasi offline sekaligus, jadi
-   jangan diselipkan tanpa pengujian yang layak. Untuk sekarang poin bertambah
-   otomatis tapi tidak bisa ditukar dari kasir.
-5. **Sandi Super Admin `admin123` masih berlaku di produksi.** Satu akun itu
-   bisa membaca data SELURUH toko klien. Harus diganti pemilik project sendiri;
-   bukan sesuatu yang boleh dikerjakan agen.
+4. **Sandi Super Admin `admin123` masih berlaku di produksi.** Satu akun itu
+   bisa membaca data SELURUH toko klien. Sekarang sudah ADA menunya
+   (`/admin/pengaturan` → Keamanan Akun), jadi tinggal dikerjakan pemilik
+   project sendiri; bukan sesuatu yang boleh dikerjakan agen.
+5. **Belum ada Kebijakan Privasi & Syarat Ketentuan.** Aplikasi ini menyimpan
+   nama dan nomor HP pelanggan milik klien, jadi UU PDP 27/2022 berlaku. Lihat
+   "Sisa pekerjaan sebelum dijual" di bawah.
 
 Seluruh modul yang disepakati sudah jadi — Konsinyasi yang terakhir, selesai
 10 Agu 2026. Sisa daftar di atas adalah pengembangan lanjutan, bukan ruang
@@ -108,6 +121,217 @@ lingkup yang masih terhutang.
 
 **Mobile:** seluruh aplikasi sudah ditelusuri di 390px, termasuk `/admin/*`.
 Tabel Super Admin tetap tabel geser di ponsel — disengaja, itu alat desktop.
+
+## Penukaran poin di Kasir
+
+Migrasi 0037 sudah menerima `points_redeemed` dan mengurangi saldo poin pembeli,
+tapi tidak pernah mengubah TOTAL yang harus dibayar: poin berkurang sementara
+pembeli tetap membayar penuh. Jadi penukarannya belum benar-benar ada — dan
+itulah sebabnya kasir tidak pernah diberi tombolnya. Migrasi 0039 menambahkan
+potongan rupiahnya.
+
+**POTONGANNYA DIHITUNG SERVER, dan ini keputusan paling menentukan.**
+`_apply_transaction` sebenarnya sudah membaca `discount_total` dari perangkat
+sejak migrasi 0009, walau tidak ada satu pun pemanggil yang mengisinya. Memakai
+jalur itu adalah cara termudah — dan lubangnya besar: siapa pun yang bisa
+membuka DevTools di layar kasir bisa mengirim potongan sebesar seluruh
+belanjaan. Stok tetap berkurang, struknya tetap sah, dan uangnya hilang TANPA
+meninggalkan selisih kas, karena total yang tercatat ikut mengecil sehingga laci
+tetap "cocok" saat tutup shift. Itu lebih buruk daripada penjualan yang tidak
+diketik sama sekali, yang setidaknya menyisakan stok tekor.
+
+Jadi `discount_total` dari perangkat sekarang **diabaikan sepenuhnya**. Yang
+diterima cuma "berapa poin", dan rupiahnya dihitung ulang dari
+`organizations.loyalty_point_value`.
+
+`points_value` tetap ikut dikirim perangkat, tapi hanya sebagai **batas atas**.
+Transaksi offline bisa sampai server berhari-hari kemudian; kalau pemilik toko
+sempat MENAIKKAN nilai poin di antaranya, hitungan hari ini akan memberi
+potongan lebih besar daripada yang tercetak di struk pembeli. Diambil yang
+terkecil: angka di kertas tidak pernah dilampaui, dan angka karangan perangkat
+tidak pernah dituruti.
+
+**Dua batas dipakai bersamaan, dan aturannya sengaja berbeda:**
+- **Muat di nota** (`_apply_transaction`) — poin yang tidak muat TIDAK dipotong
+  sama sekali. Poin tidak boleh membuat total minus, dan toko tidak
+  mengembalikan kelebihannya sebagai uang tunai.
+- **Saldo pembeli** (`_apply_customer_effects`) — saldo yang kurang tetap diberi
+  potongan penuh, karena struknya sudah terlanjur di tangan pembeli. Aturan lama
+  dari 0037, tidak diubah.
+
+**Pelanggan DILEPAS otomatis setelah transaksi selesai.** Cacat lama yang ikut
+ditemukan: pilihannya menempel sampai kasir melepasnya sendiri, dan tidak ada
+apa pun di layar yang mengingatkan. Pembeli berikutnya yang tidak terdaftar
+tercatat atas nama pembeli sebelumnya — belanjanya bertambah, kunjungannya
+bertambah, poinnya ikut lahir. Satu antrean pagi cukup untuk mengacaukan seluruh
+data CRM.
+
+Gerbang paket digabung di server (`loyalty_enabled && crm === 'full'`), jadi
+kasir tidak pernah melihat tombol tukar poin yang lalu ditolak diam-diam.
+
+**Sudah diuji ujung ke ujung** (13 Agu, setelah 0039 di-push). Pelanggan Gede
+bersaldo 18 poin, Teh Pucuk Rp 5.000, ditukar 10 poin:
+- layar bayar: potongan Rp 1.000, "yang harus dibayar" Rp 4.000, uang Rp 5.000
+  → kembalian Rp 1.000
+- SERVER: poin 18 → **8**, total belanja naik **Rp 4.000** (bukan 5.000), jadi
+  potongannya memang dihitung server, bukan cuma tampilan
+- struk & detail transaksi: baris "Tukar 10 poin -Rp 1.000" dan "Poin Gede
+  -10 ditukar"
+- dibatalkan → poin kembali **18**, belanja kembali Rp 198.500, kunjungan
+  kembali 4
+
+Data demo sudah dikembalikan; yang tersisa cuma satu baris transaksi bertanda
+batal, yang memang tidak boleh dihapus.
+
+## Ganti kata sandi
+
+`/profil` untuk toko, `/admin/pengaturan` untuk Super Admin, satu komponen yang
+sama (`ChangePasswordCard`). Sebelum ini satu-satunya cara mengganti sandi
+adalah "Lupa kata sandi" di halaman masuk — harus keluar dulu, lalu menunggu
+email yang bisa tersangkut di spam. Untuk sesuatu yang paling mendesak
+dikerjakan (mengganti sandi bawaan setelah akun diserahkan) itu terlalu jauh.
+
+**Sandi lama wajib.** Layar kasir sering ditinggal terbuka di meja; tanpa
+memintanya, siapa pun yang lewat bisa mengunci pemilik toko keluar dari usahanya
+sendiri dalam sepuluh detik.
+
+**Diperiksa lewat klien Supabase SEKALI PAKAI** (`persistSession: false`).
+`signInWithPassword` pada klien server biasa akan MENIMPA cookie sesi yang
+sedang berjalan — untuk user yang sama tidak berbahaya, tapi Super Admin yang
+sedang "Lihat sebagai Klien" kehilangan konteksnya di tengah jalan. Sengaja
+TIDAK memanggil `signOut()` pada klien itu: bawaan `signOut` berlingkup GLOBAL
+dan akan menutup sesi user di semua perangkatnya, termasuk mesin kasir lain yang
+sedang melayani antrean.
+
+**Sesinya TIDAK ditutup setelah berhasil**, beda dengan jalur reset lewat email.
+Di sana sesinya datang dari tautan dan perangkatnya belum tentu milik user; di
+sini orangnya sudah membuktikan diri dua kali, dan menendang kasir keluar di
+tengah shift menghentikan antrean karena sesuatu yang tidak ada hubungannya
+dengan penjualan.
+
+**Sudah diuji langsung** (13 Agu): sandi lama yang salah ditolak dengan kalimat
+yang benar tanpa mengganggu sesi, penggantian yang benar berhasil dan sesinya
+tetap hidup, kotaknya dikosongkan lalu formnya menutup sendiri. Sandi
+`rina@tokodewi.id` dikembalikan ke `TokoKu123!` sesudahnya.
+
+## Impor CSV & backup
+
+`/pengaturan/data` (tab "Impor & Backup"). Alasannya bukan kemewahan: toko yang
+pindah dari pencatatan lain sudah punya daftar barangnya, dan mengetik ulang 300
+barang lewat drawer berarti dua hari kerja sebelum aplikasinya bisa dipakai sama
+sekali. Di situlah kebanyakan orang berhenti mencoba.
+
+**Impor ada di sisi KLIEN, bukan Super Admin, dan itu disengaja.** Menulis ke
+tenant klien dari panel admin butuh `createAdminClient()` yang melewati seluruh
+RLS — dilarang di project ini untuk melayani request biasa. Konsekuensi
+produknya lebih berat lagi: begitu admin bisa memasukkan barang atas nama klien,
+"siapa yang mengubah daftar harga saya" kehilangan jawaban tunggalnya. Yang
+diberikan ke Super Admin cuma EKSPOR (`/admin/klien/[id]/ekspor`), karena
+"tolong kirimkan backup saya" adalah permintaan yang nyata dan alternatifnya
+adalah admin membuka SQL editor — yang cepat berubah jadi kebiasaan mengambil
+data klien tanpa jejak.
+
+**Satu RPC atomik** (`import_products`), alasannya sama dengan
+`bulk_adjust_stock`: gagal di baris ke-180 berarti 179 produk masuk dan sisanya
+tidak, sementara berkas CSV di tangan pemilik toko memuat semuanya dan tidak ada
+yang tahu harus melanjutkan dari mana. Kuota `max_products` tetap ditegakkan
+trigger — kalau kena, SELURUH impor batal.
+
+Yang sudah diputuskan dan jangan diubah tanpa alasan:
+- **Pemisah kolom dideteksi, bukan dipatok koma.** Excel berlokal Indonesia
+  menyimpan CSV dengan titik koma, dan itu justru bentuk yang paling sering
+  sampai ke kita karena berkasnya dibuat pemilik toko di laptopnya sendiri.
+- **"Rp 12.500,00" dibaca 12.500, bukan 1.250.000.** Bagian sen dibuang dulu
+  baru sisanya disaring digit. Tanpa itu seluruh daftar harga jadi seratus kali
+  lipat tanpa satu pun pesan error.
+- **Kolom stok yang KOSONG berarti "jangan sentuh", bukan nol.** Aturan yang
+  sama dengan baris kosong di opname satu sesi: dikirim sebagai 0, impor ulang
+  untuk memperbaiki harga akan mengosongkan seluruh rak.
+- **Nama kolom dicocokkan PERSIS setelah dinormalkan**, bukan dengan `includes`.
+  "stok" dan "stok minimal" cuma beda satu kata, dan pencocokan longgar akan
+  membaca ambang stok menipis sebagai jumlah barang di rak.
+- **Kategori yang belum ada dibuat**, warnanya digilir. Memaksa pemilik toko
+  membuat 12 kategori dengan tangan sebelum boleh mengimpor sama saja dengan
+  menyuruhnya mengetik ulang; delapan kategori seragam abu membuat pil kategori
+  di layar kasir harus dibaca satu per satu.
+- **SKU kembar di satu berkas DITOLAK**, tidak dibiarkan yang terakhir menang —
+  itu hampir selalu berarti barang yang sama tercatat dua kali dengan harga
+  berbeda.
+- **Ekspor produk berkolom sama persis dengan impor.** Backup yang tidak bisa
+  dimasukkan kembali bukan backup, dan bentuk yang sama membuat "ekspor,
+  rapikan di Excel, impor lagi" jadi cara wajar mengubah harga 200 barang.
+- **Ekspor transaksi TIDAK disaring per outlet.** Ini backup pembukuan, bukan
+  layar kerja; nama cabangnya jadi kolom tersendiri. Aturan yang sama dengan
+  Pembelian & Konsinyasi di "Aturan cakupan outlet".
+- **Route Handler, bukan Server Action.** Yang diminta adalah BERKAS, dan
+  `Content-Disposition` cuma bisa dikirim dari sana. Lewat Server Action seluruh
+  riwayat harus menumpuk di RAM ponsel dulu sebelum satu baris pun tersimpan.
+- **CSV diawali BOM UTF-8.** Tanpa itu Excel di Windows membacanya sebagai ANSI
+  dan setiap huruf beraksen tampil sebagai simbol acak — pemilik toko
+  menyimpulkan backup-nya rusak.
+
+Impor pelanggan dan transaksi sengaja TIDAK disediakan, dan alasannya disebut di
+layar: nomor nota, stok, dan poin semuanya lahir dari transaksi yang benar-benar
+terjadi.
+
+## Konsistensi UI: dua cacat yang berlaku di seluruh aplikasi
+
+Ditemukan saat sapuan 13 Agu. Keduanya kecil per layar dan besar karena
+berulang di mana-mana.
+
+**Tombol "Batal" rata KIRI di sebelah tombol simpan yang rata TENGAH.** Setiap
+kaki drawer mengatur tombolnya lewat `style` inline, dan polanya disalin persis
+sama salahnya ke semua drawer: yang kanan diberi `justifyContent: 'center'`,
+yang kiri tidak. Dua tombol sebesar sama persis, bersebelahan, dengan tulisan
+yang tidak sejajar. Sekarang aturannya di CSS (`.drawer-foot .btn` dan
+`.btn-pair .btn`), jadi drawer berikutnya tidak bisa lupa. Inline stylenya
+dibuang dari 13 komponen.
+
+**Pesan "berhasil" berwarna merah.** `.empty-note` bawaannya coral karena
+penggunaan pertamanya adalah pesan error. Sebagian pemanggil menimpanya inline
+jadi hijau, sebagian lupa — jadi "Stok berhasil disesuaikan", "Transfer
+tersimpan", dan "Nota terkirim" tampil dengan latar merah muda dan centang hijau
+yang saling membantah. Sekarang ada `.empty-note.is-ok` dan `.empty-note.is-warn`,
+dan override inline yang tidak kondisional sudah diganti kelas.
+
+## Sisa pekerjaan sebelum dijual
+
+Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan, bukan soal fitur.
+
+**Wajib, tidak bisa dilewati:**
+1. **Ganti sandi Super Admin.** Menunya sudah ada di `/admin/pengaturan`.
+2. **Kebijakan Privasi & Syarat Ketentuan.** Aplikasi ini menyimpan nama dan
+   nomor HP pelanggan milik klien, jadi klien adalah pengendali data dan kita
+   pemroses — UU PDP 27/2022 mengharuskan keduanya punya dasar tertulis. Belum
+   ada halamannya sama sekali. Sebaiknya ditulis/ditinjau orang yang paham
+   hukumnya, bukan digenerate.
+3. **Backup database.** Supabase plan gratis TIDAK punya point-in-time recovery.
+   Sekali tabel terhapus, tidak ada jalan kembali untuk seluruh klien sekaligus.
+   Ini risiko terbesar yang tersisa di project ini.
+4. **Penyedia email** (`RESEND_API_KEY` + `EMAIL_FROM`), sekaligus dipasang
+   sebagai Custom SMTP di Supabase. Tanpa itu reset sandi dan konfirmasi
+   pendaftaran dibatasi beberapa email per jam — tidak cukup untuk produksi.
+
+**Sangat dianjurkan:**
+5. **Pemantauan error.** Tidak ada Sentry atau sejenisnya; satu-satunya jejak
+   kegagalan adalah `digest` di layar error yang harus dibacakan klien lewat
+   telepon.
+6. **Payment gateway.** Perubahan paket masih dikerjakan tangan lewat Super
+   Admin. Sanggup untuk sepuluh klien pertama, tidak untuk seratus.
+7. **Content-Security-Policy.** Header dasar sudah dipasang di `next.config.ts`
+   (nosniff, SAMEORIGIN, referrer policy). CSP butuh nonce untuk script inline
+   Next dan harus diuji per halaman; dipasang asal-asalan, layar kasir berhenti
+   bekerja tanpa pesan.
+8. **`maintenance_mode` tidak dibaca apa pun.** Kolomnya ada sejak migrasi 0002.
+   Sengaja tidak dibuka di halaman pengaturan platform: sakelar yang tidak
+   melakukan apa-apa lebih berbahaya daripada tidak ada sakelar, karena ia akan
+   dipercaya justru saat keadaan darurat.
+9. **`createAdminClient()` tidak dipakai di mana pun.** Boleh dibiarkan, tapi
+   `SUPABASE_SERVICE_ROLE_KEY` karena itu tidak perlu ada di env produksi Vercel
+   sama sekali — dan kunci yang tidak ada tidak bisa bocor.
+10. **Onboarding klien baru masih kosong.** Toko yang baru daftar mendarat di
+    beranda tanpa produk, tanpa panduan. Jalur tercepatnya sekarang sudah ada
+    (impor CSV), tapi tidak ada yang menunjukkannya.
 
 ## Deploy "tidak responsif" — SUDAH DIPERBAIKI (11 Agu)
 
@@ -1360,6 +1584,10 @@ Next.js 16 (App Router) · TypeScript · Tailwind v4 + CSS variables · Supabase
 ada perubahan API pada yang dipakai project ini. `barcode-detector` dipakai
 sebagai ponyfill kamera dan diimpor dinamis.
 
+`next.config.ts` memasang tiga header keamanan dasar (nosniff, X-Frame-Options
+SAMEORIGIN, referrer policy). SAMEORIGIN, bukan DENY: pengujian 390px di sini
+memuat aplikasi di dalam iframe same-origin.
+
 Next **16**, bukan 15: Next 15 punya 3 kerentanan *high* lewat postcss & sharp.
 Konsekuensinya `middleware.ts` diganti konvensi `proxy.ts`.
 
@@ -1518,22 +1746,25 @@ app/
                    produk/{,[id],opname,transfer}, pembelian/{,konsinyasi},
                    pelanggan,
                    pengaturan/{toko,outlet,tim,kategori,printer,sinkronisasi,
-                               langganan},
+                               langganan,data},
                    profil
-  (platform)/admin klien/[id], paket, pengaturan platform
+  (platform)/admin klien/[id] (+ /ekspor), paket, pengaturan platform
+  error.tsx        penangkap error + global-error.tsx + not-found.tsx
   about/  setup/   halaman publik & status koneksi
 components/
   layout/          AppShell, Sidebar (memuat brand), Topbar, BottomNav,
                    OutletSwitcher (toko + outlet), ImpersonationBanner
   ui/icons.tsx     registry ikon dari wireframe
   pos/             PosClient + turunannya, CartBar (bar bayar mobile), Receipt (58mm),
-                   BarcodeScanner (kamera, ponyfill barcode-detector)
+                   BarcodeScanner (kamera, ponyfill barcode-detector),
+                   CustomerPicker + PointRedeem (tukar poin saat bayar)
   charts/          DailyRevenueChart, RankedBars, PaymentSplit
   overlay/Drawer   panel geser untuk semua form
   data/IconAction  tombol aksi baris, konfirmasi dua langkah
   layout/SectionTabs  baris tab bersama untuk bagian yang bercabang
   domain/          AuthPanel, ForgotPasswordForm, NewPasswordForm, QuotaBars,
-                   OpnameSheet, TransactionRowActions,
+                   OpnameSheet, TransactionRowActions, ImportProducts,
+                   ChangePasswordCard, PlatformSettingsForm,
                    ProdukTabs / LaporanTabs / PembelianTabs / SettingsNav,
                    LogoUploader, DeviceTable, SettingsNav, WhatsAppButton,
                    CustomerManager, SendReceiptButton,
@@ -1548,6 +1779,8 @@ lib/
   navigation.ts    SATU daftar menu, disaring izin modul
   offline/         db (Dexie v3, stempel tenant + outlet, deviceKey per outlet),
                    outbox, catalog, device, sequence, connection
+  csv.ts           baca-tulis CSV (deteksi pemisah, BOM UTF-8) — tanpa dependensi
+  exports.ts       SATU penyusun berkas backup, dipakai jalur toko & Super Admin
   phone.ts         normalkan nomor HP ke 62… + hpLokal() untuk menampilkannya
   plan.ts          SATU pembaca plans.features — kolom kosong = kemampuan penuh
   subscription.ts  keadaan langganan sisi toko — harus sama dengan org_lapsed_at()
@@ -1555,7 +1788,7 @@ lib/
 scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  38 file, Postgres 17
+supabase/migrations/  40 file, Postgres 17
 ```
 
 ## RPC yang penting
@@ -1566,7 +1799,8 @@ supabase/migrations/  38 file, Postgres 17
 `provision_organization` (dicabut dari `authenticated`, hanya lewat `register_store`) ·
 `create_purchase` · `record_consignment_intake` / `record_consignment_return` /
 `settle_consignment` / `end_consignment` · `create_outlet` / `set_primary_outlet` /
-`transfer_stock` · `bulk_adjust_stock` (opname satu sesi, atomik).
+`transfer_stock` · `bulk_adjust_stock` (opname satu sesi, atomik) · `import_products` (impor CSV,
+atomik, kuota tetap ditegakkan trigger).
 
 `_apply_customer_effects` (dicabut dari `authenticated`, hanya dipanggil dari
 dalam `_apply_transaction`) memegang seluruh aturan poin loyalty.

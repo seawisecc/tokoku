@@ -5,7 +5,18 @@ import { Icon } from '@/components/ui/icons'
 import { createClient } from '@/lib/supabase/client'
 import { hpLokal, normalkanHp } from '@/lib/phone'
 
-export type PickedCustomer = { id: string; name: string; phone: string | null }
+export type PickedCustomer = {
+  id: string
+  name: string
+  phone: string | null
+  /**
+   * Saldo poin saat pelanggan ini dipilih. Ikut diambil di pencarian yang
+   * memang sudah berjalan, bukan lewat permintaan kedua: kasir memilih
+   * pelanggan tepat saat pembeli sudah menyodorkan uang, dan satu putaran
+   * jaringan tambahan di sana terasa sebagai layar yang menggantung.
+   */
+  points: number
+}
 
 /**
  * Pilih pelanggan saat membayar.
@@ -69,7 +80,7 @@ export function CustomerPicker({
         const hp = normalkanHp(q)
         const { data, error } = await supabase
           .from('customers')
-          .select('id, name, phone')
+          .select('id, name, phone, points')
           .eq('organization_id', organizationId)
           .is('deleted_at', null)
           .or(`name.ilike.%${q}%${hp ? `,phone.ilike.%${hp}%` : ''}`)
@@ -106,7 +117,7 @@ export function CustomerPicker({
       const { data, error } = await supabase
         .from('customers')
         .insert({ organization_id: organizationId, name: nama, phone: hp })
-        .select('id, name, phone')
+        .select('id, name, phone, points')
         .single()
       if (error) {
         setError(
@@ -191,11 +202,10 @@ export function CustomerPicker({
             </button>
           ))}
 
-          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <div className="btn-pair" style={{ marginTop: 10 }}>
             <button
               type="button"
               className="btn btn-ghost btn-sm"
-              style={{ flex: 1 }}
               onClick={() => setBuka(false)}
             >
               Batal
@@ -203,7 +213,6 @@ export function CustomerPicker({
             <button
               type="button"
               className="btn btn-dark btn-sm"
-              style={{ flex: 1, justifyContent: 'center' }}
               onClick={() => {
                 // Apa yang sudah diketik dibawa ke form: kasir mengetik nama,
                 // tidak ketemu, lalu harus mengetik nama yang sama lagi.
@@ -240,11 +249,10 @@ export function CustomerPicker({
             />
             <div className="field-hint">Opsional, tapi ini yang dipakai mengirim nota.</div>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="btn-pair">
             <button
               type="button"
               className="btn btn-ghost btn-sm"
-              style={{ flex: 1 }}
               onClick={() => setBuatBaru(false)}
             >
               Kembali
@@ -252,7 +260,6 @@ export function CustomerPicker({
             <button
               type="button"
               className="btn btn-dark btn-sm"
-              style={{ flex: 1, justifyContent: 'center' }}
               disabled={simpan}
               onClick={simpanBaru}
             >

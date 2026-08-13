@@ -10,6 +10,8 @@ import {
   OUTLET_COOKIE,
   getSessionContext,
 } from '@/lib/auth'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { supabaseAnonKey, supabaseUrl } from '@/lib/env'
 import { homeFor } from '@/lib/navigation'
 import { createClient } from '@/lib/supabase/server'
 
@@ -195,6 +197,102 @@ async function clearContextCookies() {
   jar.delete(IMPERSONATION_COOKIE)
   jar.delete(ORG_COOKIE)
   jar.delete(OUTLET_COOKIE)
+}
+
+export type ChangePasswordState = { error?: string; notice?: string }
+
+/**
+ * Ganti kata sandi dari dalam aplikasi.
+ *
+ * Beda tajam dengan `updatePassword` di atas, dan keduanya memang harus ada:
+ * yang itu dipakai orang yang LUPA sandinya dan datang lewat tautan email; yang
+ * ini dipakai orang yang masih ingat sandinya dan sedang login.
+ *
+ * **Sandi lama wajib, bukan formalitas.** Layar kasir sering ditinggal terbuka
+ * di meja — itu memang sifat pekerjaannya. Tanpa memintanya, siapa pun yang
+ * lewat bisa mengunci pemilik toko keluar dari usahanya sendiri dalam sepuluh
+ * detik, dan pemulihannya butuh akses ke email yang mungkin ada di HP yang
+ * sedang tidak dipegang.
+ *
+ * **Sesinya TIDAK ditutup setelah berhasil.** Jalur reset lewat email memang
+ * menutupnya — di sana sesinya datang dari tautan dan perangkatnya belum tentu
+ * milik user. Di sini kebalikannya: orangnya sudah membuktikan diri dua kali
+ * (sesi hidup + sandi lama), dan menendang kasir keluar di tengah shift berarti
+ * antrean berhenti karena sesuatu yang tidak ada hubungannya dengan penjualan.
+ */
+export async function changePassword(
+  _prev: ChangePasswordState,
+  formData: FormData,
+): Promise<ChangePasswordState> {
+  const current = String(formData.get('current') ?? '')
+  const password = String(formData.get('password') ?? '')
+  const confirm = String(formData.get('confirm') ?? '')
+
+  if (!current) return { error: 'Isi dulu kata sandi yang sekarang.' }
+  if (password.length < 8) return { error: 'Kata sandi baru minimal 8 karakter.' }
+  if (password !== confirm) {
+    return { error: 'Ketikan kata sandi baru belum sama. Periksa lagi keduanya.' }
+  }
+  if (password === current) {
+    return { error: 'Kata sandi barunya masih sama dengan yang lama. Pakai yang berbeda.' }
+  }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user?.email) return { error: 'Sesi Anda sudah berakhir. Masuk lagi, lalu coba ulang.' }
+
+  /**
+   * Sandi lama diperiksa lewat klien SEKALI PAKAI yang tidak menyimpan sesi.
+   *
+   * `signInWithPassword` pada klien server biasa akan MENIMPA cookie sesi yang
+   * sedang berjalan. Untuk user yang sama itu tidak berbahaya, tapi Super Admin
+   * yang sedang "Lihat sebagai Klien" akan kehilangan konteksnya di tengah
+   * jalan — dan itu jenis kegagalan yang tidak pernah terpikir untuk diuji.
+   *
+   * `persistSession: false` membuat sesi hasil pemeriksaan ini hidup hanya di
+   * dalam memori pemanggilan ini lalu ikut terbuang. Sengaja TIDAK memanggil
+   * `signOut()` di atasnya: bawaan `signOut` berlingkup GLOBAL, dan itu akan
+   * menutup sesi user di semua perangkatnya — termasuk mesin kasir lain yang
+   * sedang melayani antrean.
+   */
+  const probe = createSupabaseClient(supabaseUrl(), supabaseAnonKey(), {
+    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+  })
+  const { error: wrong } = await probe.auth.signInWithPassword({
+    email: user.email,
+    password: current,
+  })
+
+  if (wrong) {
+    const m = wrong.message.toLowerCase()
+    if (m.includes('rate limit') || m.includes('too many') || m.includes('for security')) {
+      return { error: 'Terlalu banyak percobaan. Tunggu beberapa menit, lalu coba lagi.' }
+    }
+    return { error: 'Kata sandi yang sekarang salah.' }
+  }
+
+  const { error } = await supabase.auth.updateUser({ password })
+
+  if (error) {
+    const m = error.message.toLowerCase()
+    return {
+      error:
+        m.includes('weak password') || m.includes('password should')
+          ? 'Kata sandi terlalu lemah. Campur huruf besar, huruf kecil, dan angka.'
+          : m.includes('should be different') || m.includes('same as the old')
+            ? 'Kata sandi barunya masih sama dengan yang lama. Pakai yang berbeda.'
+            : 'Kata sandi gagal disimpan. Coba lagi sebentar lagi.',
+    }
+  }
+
+  return {
+    notice:
+      'Kata sandi sudah diganti. Pakai yang baru saat masuk berikutnya. ' +
+      'Anda tidak perlu keluar sekarang.',
+  }
 }
 
 export async function signOut() {

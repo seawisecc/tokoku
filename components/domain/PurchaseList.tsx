@@ -73,7 +73,7 @@ export function PurchaseList({
 
       {canUseSupplier && outstanding.length > 0 && (
         <div
-          className="empty-note"
+          className="empty-note is-ok"
           style={{
             marginBottom: 16,
             background: 'var(--color-amber-soft)',
@@ -226,7 +226,6 @@ export function PurchaseList({
             <>
               <button
                 className="btn btn-ghost"
-                style={{ flex: 1 }}
                 type="button"
                 onClick={() => setSupplierForm(false)}
               >
@@ -234,7 +233,6 @@ export function PurchaseList({
               </button>
               <button
                 className="btn btn-primary"
-                style={{ flex: 1, justifyContent: 'center' }}
                 type="button"
                 disabled={pending}
                 onClick={() =>

@@ -47,7 +47,7 @@ export function SettingsForm({
       )}
       {result?.ok && result.message && (
         <div
-          className="empty-note"
+          className="empty-note is-ok"
           style={{ marginTop: 14, background: 'var(--color-success-soft)', color: 'var(--color-success)' }}
           role="status"
         >

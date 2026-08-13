@@ -30,7 +30,7 @@ export default async function DetailTransaksiPage({
   const { data: trx } = await supabase
     .from('transactions')
     .select(
-      'id, code, total, subtotal, discount_total, tax_total, paid_amount, change_amount, payment_method, status, origin, client_created_at, void_reason, profiles:cashier_id(full_name), outlets:outlet_id(name, receipt_settings), organizations:organization_id(name, address, phone, logo_url), customers:customer_id(name, phone)',
+      'id, code, total, subtotal, discount_total, tax_total, paid_amount, change_amount, payment_method, status, origin, client_created_at, void_reason, points_earned, points_redeemed, profiles:cashier_id(full_name), outlets:outlet_id(name, receipt_settings), organizations:organization_id(name, address, phone, logo_url), customers:customer_id(name, phone)',
     )
     .eq('id', id)
     .maybeSingle()
@@ -56,6 +56,15 @@ export default async function DetailTransaksiPage({
   } | null
   const cashier = (trx.profiles as unknown as { full_name: string } | null)?.full_name ?? 'Kasir'
   const pembeli = trx.customers as unknown as { name: string; phone: string | null } | null
+  /**
+   * Sebutan potongannya. Hanya menyebut poin kalau memang ada poin yang
+   * ditukar — `discount_total` juga menampung diskon per baris, dan menamainya
+   * "tukar poin" pada nota tanpa poin sama saja dengan mengarang.
+   */
+  const poinLabel =
+    trx.points_redeemed > 0
+      ? `Tukar ${trx.points_redeemed.toLocaleString('id-ID')} poin`
+      : null
 
   return (
     <>
@@ -113,10 +122,35 @@ export default async function DetailTransaksiPage({
               <span>{rupiah(it.line_total)}</span>
             </div>
           ))}
+          {trx.discount_total > 0 && (
+            <div className="kv">
+              <span>{poinLabel ?? 'Potongan'}</span>
+              <span style={{ color: 'var(--color-forest)' }}>-{rupiah(trx.discount_total)}</span>
+            </div>
+          )}
           <div className="kv" style={{ fontSize: 15 }}>
             <span>Total</span>
             <span>{rupiah(trx.total)}</span>
           </div>
+
+          {/* Poin yang lahir dari nota ini. Disebut walau tidak ada penukaran:
+              pemilik toko yang membuka detail transaksi karena pembeli
+              mempersoalkan poinnya harus menemukan jawabannya di sini, bukan
+              menghitung sendiri dari total belanja. */}
+          {pembeli && (trx.points_earned > 0 || trx.points_redeemed > 0) && (
+            <div className="kv">
+              <span>Poin {pembeli.name}</span>
+              <span>
+                {trx.points_redeemed > 0
+                  ? `-${trx.points_redeemed.toLocaleString('id-ID')} ditukar`
+                  : ''}
+                {trx.points_redeemed > 0 && trx.points_earned > 0 ? ' · ' : ''}
+                {trx.points_earned > 0
+                  ? `+${trx.points_earned.toLocaleString('id-ID')} didapat`
+                  : ''}
+              </span>
+            </div>
+          )}
 
           <div style={{ marginTop: 16, display: 'grid', gap: 8 }}>
             {/* Datang dari tombol Cetak di daftar transaksi. Struk batal tidak
@@ -147,6 +181,7 @@ export default async function DetailTransaksiPage({
                   })),
                   subtotal: trx.subtotal,
                   discount: trx.discount_total,
+                  discountLabel: poinLabel ?? undefined,
                   total: trx.total,
                   paid: trx.paid_amount,
                   change: trx.change_amount,
@@ -182,6 +217,7 @@ export default async function DetailTransaksiPage({
               })),
               subtotal: trx.subtotal,
               discount: trx.discount_total,
+              discountLabel: poinLabel ?? undefined,
               tax: trx.tax_total,
               total: trx.total,
               paid: trx.paid_amount,

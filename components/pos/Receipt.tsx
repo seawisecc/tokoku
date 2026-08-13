@@ -18,6 +18,13 @@ export type ReceiptData = {
   items: { name: string; qty: number; unitPrice: number; lineTotal: number }[]
   subtotal: number
   discount?: number
+  /**
+   * Sebutan potongannya. Bawaannya "Diskon", tapi potongan poin harus menyebut
+   * jumlah poin yang terpakai — pembeli menyimpan struk ini justru untuk
+   * memeriksa poinnya, dan angka tanpa keterangan tidak bisa dicocokkan dengan
+   * saldo yang tersisa.
+   */
+  discountLabel?: string
   tax?: number
   total: number
   paid: number
@@ -122,7 +129,7 @@ export function Receipt({ data }: { data: ReceiptData }) {
       </div>
       {!!data.discount && (
         <div className="r-row">
-          <span>Diskon</span>
+          <span>{data.discountLabel || 'Diskon'}</span>
           <span>-{rupiah(data.discount)}</span>
         </div>
       )}

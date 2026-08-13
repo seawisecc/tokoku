@@ -294,7 +294,7 @@ export default async function LaporanPage({
       </div>
 
       {totals.offline > 0 && (
-        <div className="empty-note" style={{ marginBottom: 16, background: 'var(--color-amber-soft)', color: 'var(--color-amber-ink)' }}>
+        <div className="empty-note is-warn" style={{ marginBottom: 16 }}>
           <Icon name="wifiOff" size={16} style={{ marginTop: 1 }} />
           <div style={{ flex: 1 }}>
             {totals.offline} transaksi dibuat saat perangkat offline. Semuanya sudah masuk

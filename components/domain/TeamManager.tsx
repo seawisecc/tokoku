@@ -119,7 +119,7 @@ export function TeamManager({
           folder spam tanpa ada yang tahu. */}
       {invited && (
         <div
-          className="empty-note"
+          className="empty-note is-ok"
           style={{
             marginBottom: 16,
             background:
@@ -235,10 +235,10 @@ export function TeamManager({
           onClose={() => setInviting(false)}
           footer={
             <>
-              <button className="btn btn-ghost" style={{ flex: 1 }} type="button" onClick={() => setInviting(false)}>
+              <button className="btn btn-ghost" type="button" onClick={() => setInviting(false)}>
                 Batal
               </button>
-              <button className="btn btn-dark" style={{ flex: 1, justifyContent: 'center' }} type="submit" form="invite-form" disabled={pending}>
+              <button className="btn btn-dark" type="submit" form="invite-form" disabled={pending}>
                 {pending ? 'Mengirim…' : 'Buat Undangan'}
               </button>
             </>
@@ -294,10 +294,10 @@ export function TeamManager({
           onClose={() => setEditing(null)}
           footer={
             <>
-              <button className="btn btn-ghost" style={{ flex: 1 }} type="button" onClick={() => setEditing(null)}>
+              <button className="btn btn-ghost" type="button" onClick={() => setEditing(null)}>
                 Batal
               </button>
-              <button className="btn btn-dark" style={{ flex: 1, justifyContent: 'center' }} type="submit" form="member-form" disabled={pending}>
+              <button className="btn btn-dark" type="submit" form="member-form" disabled={pending}>
                 {pending ? 'Menyimpan…' : 'Simpan'}
               </button>
             </>

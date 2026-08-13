@@ -7,6 +7,7 @@ import {
   type ClientDetailData,
   type SubscriptionEvent,
 } from '@/components/domain/ClientDetail'
+import { Icon } from '@/components/ui/icons'
 import { requirePlatformAdmin } from '@/lib/auth'
 import { tanggal } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
@@ -115,6 +116,53 @@ export default async function KlienDetailPage({ params }: { params: Promise<{ id
         }))}
         events={subscriptionEvents}
       />
+
+      {/* Ekspor data klien.
+          Ada karena satu keadaan yang nyata: klien menelepon minta backup dan
+          tidak pernah berhasil menemukan menunya sendiri. Tanpa jalur ini,
+          satu-satunya cara menolongnya adalah membuka SQL editor lalu
+          menempelkan hasilnya ke spreadsheet dengan tangan.
+
+          Hanya BACA, dan itu disengaja: impor tetap dikerjakan klien sendiri
+          di Pengaturan → Data. Begitu admin bisa memasukkan barang atas nama
+          klien, pertanyaan "siapa yang mengubah daftar harga saya" kehilangan
+          jawaban tunggalnya. */}
+      <div className="section-title">Ekspor Data Klien</div>
+      <div className="unduh-grid">
+        {[
+          { jenis: 'produk', judul: 'Daftar Produk', jelas: 'Siap diimpor kembali oleh klien.' },
+          { jenis: 'pelanggan', judul: 'Daftar Pelanggan', jelas: 'Termasuk saldo poin.' },
+          {
+            jenis: 'transaksi',
+            judul: 'Riwayat Transaksi',
+            jelas: 'Semua cabang, satu baris per nota.',
+          },
+          {
+            jenis: 'item',
+            judul: 'Rincian Barang Terjual',
+            jelas: 'Satu baris per barang di tiap nota.',
+          },
+        ].map((x) => (
+          <a
+            key={x.jenis}
+            className="unduh-kartu"
+            href={`/admin/klien/${client.id}/ekspor?jenis=${x.jenis}&hari=3650`}
+            download
+          >
+            <div className="unduh-ikon">
+              <Icon name="layers" size={17} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="cell-name">{x.judul}</div>
+              <div className="cell-sub">{x.jelas}</div>
+            </div>
+          </a>
+        ))}
+      </div>
+      <p className="field-hint" style={{ marginTop: 10 }}>
+        Hanya membaca. Untuk memasukkan data, arahkan klien ke Pengaturan → Impor &amp; Backup
+        di aplikasinya sendiri supaya perubahannya tercatat atas namanya.
+      </p>
 
       {(sessions ?? []).length > 0 && (
         <>

@@ -111,7 +111,6 @@ export function TransactionRowActions({
               <button
                 type="button"
                 className="btn btn-ghost"
-                style={{ flex: 1 }}
                 onClick={() => setOpen(false)}
               >
                 Jangan jadi

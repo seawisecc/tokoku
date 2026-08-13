@@ -31,6 +31,7 @@ import { PaymentModal } from './PaymentModal'
 import { ProductGrid } from './ProductGrid'
 import { SuccessModal, type StoreInfo } from './SuccessModal'
 import { CustomerPicker, type PickedCustomer } from './CustomerPicker'
+import { PointRedeem } from './PointRedeem'
 import { SyncStatusChip } from './SyncStatusChip'
 import { BarcodeScanner } from './BarcodeScanner'
 
@@ -42,6 +43,13 @@ export type PosClientProps = {
   cashierName: string
   supabaseUrl: string
   allowNegativeStock: boolean
+  /**
+   * Aturan poin toko ini. `enabled` sudah menggabungkan sakelar toko DAN
+   * gerbang paket — layar kasir tidak perlu tahu mana yang mematikannya, dan
+   * menggabungkannya di server berarti kasir tidak pernah melihat tombol tukar
+   * poin yang lalu ditolak diam-diam.
+   */
+  loyalty: { enabled: boolean; pointValue: number }
   store: StoreInfo
   initialProducts: (Omit<LocalProduct, 'organization_id'> & { stock: number })[]
   initialCategories: Omit<LocalCategory, 'organization_id'>[]
@@ -60,6 +68,7 @@ export function PosClient(props: PosClientProps) {
   const [scanNotice, setScanNotice] = useState<string | null>(null)
   const [scannerOpen, setScannerOpen] = useState(false)
   const [customer, setCustomer] = useState<PickedCustomer | null>(null)
+  const [redeem, setRedeem] = useState(0)
   const [online, setOnline] = useState(true)
   const [pending, setPending] = useState(0)
   const [lastSync, setLastSync] = useState<string | null>(null)
@@ -235,6 +244,24 @@ export function PosClient(props: PosClientProps) {
     return () => clearTimeout(t)
   }, [scanNotice])
 
+  // ---------- penukaran poin ----------
+  /**
+   * Poin yang benar-benar berlaku untuk keranjang saat ini, beserta rupiahnya.
+   *
+   * Dihitung ulang di sini dan bukan disimpan sebagai state, karena tiga hal
+   * yang menentukannya bisa berubah kapan saja: isi keranjang, pelanggan yang
+   * dipilih, dan angka yang diketik kasir. Menyimpan hasilnya berarti suatu
+   * saat potongannya lebih besar daripada belanjaannya — dan tidak ada yang
+   * memberi tahu sampai totalnya tercetak minus di struk.
+   */
+  const redeemInfo = useMemo(() => {
+    const kosong = { poin: 0, potongan: 0 }
+    if (!props.loyalty.enabled || !customer || props.loyalty.pointValue <= 0) return kosong
+    const muat = Math.floor(cart.total() / props.loyalty.pointValue)
+    const poin = Math.max(Math.min(redeem, customer.points, muat), 0)
+    return { poin, potongan: poin * props.loyalty.pointValue }
+  }, [cart, customer, redeem, props.loyalty])
+
   // ---------- pembayaran ----------
   async function handlePay(method: 'cash' | 'qris', paid: number) {
     // Dulu kondisi ini `return` diam-diam, sehingga tombol tersangkut di
@@ -259,7 +286,13 @@ export function PosClient(props: PosClientProps) {
 
     const now = new Date()
     const seq = await nextSequence(device.id)
-    const total = cart.total()
+    const bruto = cart.total()
+    // Dijepit ulang di sini, bukan dipercaya dari state layar: keranjang bisa
+    // berubah setelah poin diketik (mis. satu barang dibatalkan), dan potongan
+    // yang lebih besar dari belanjaannya akan membuat totalnya minus.
+    const poin = redeemInfo.poin
+    const potongan = redeemInfo.potongan
+    const total = Math.max(bruto - potongan, 0)
 
     const trx: OutboxTransaction = {
       id: newTransactionId(),
@@ -275,6 +308,8 @@ export function PosClient(props: PosClientProps) {
       client_created_at: now.toISOString(),
       payment_method: method,
       paid_amount: method === 'cash' ? paid : total,
+      points_redeemed: poin,
+      points_value: potongan,
       total,
       // Perangkat yang menentukan asal transaksi, bukan server.
       origin: online ? 'online' : 'offline',
@@ -309,6 +344,17 @@ export function PosClient(props: PosClientProps) {
     }
 
     cart.clear()
+    /**
+     * Pelanggan DILEPAS setelah transaksi selesai.
+     *
+     * Sebelum ini pilihannya menempel sampai kasir melepasnya sendiri, dan
+     * tidak ada apa pun di layar bayar yang mengingatkan. Akibatnya pembeli
+     * berikutnya yang tidak terdaftar tetap tercatat atas nama pembeli
+     * sebelumnya: belanjanya bertambah, kunjungannya bertambah, dan poinnya
+     * ikut lahir. Satu antrean pagi cukup untuk mengacaukan seluruh data CRM.
+     */
+    setCustomer(null)
+    setRedeem(0)
     setLastReceipt(trx)
     setModal('success')
     await refreshLocal()
@@ -347,12 +393,8 @@ export function PosClient(props: PosClientProps) {
 
       {!online && (
         <div
-          className="empty-note"
-          style={{
-            marginBottom: 14,
-            background: 'var(--color-amber-soft)',
-            color: 'var(--color-amber-ink)',
-          }}
+          className="empty-note is-warn"
+          style={{ marginBottom: 14 }}
         >
           <Icon name="wifiOff" size={16} style={{ marginTop: 1 }} />
           <div style={{ flex: 1 }}>
@@ -472,6 +514,8 @@ export function PosClient(props: PosClientProps) {
       {modal === 'pay' && (
         <PaymentModal
           total={total}
+          discount={redeemInfo.potongan}
+          discountLabel={`Tukar ${redeemInfo.poin.toLocaleString('id-ID')} poin`}
           onClose={() => setModal(null)}
           onConfirm={handlePay}
           customerSlot={
@@ -479,8 +523,26 @@ export function PosClient(props: PosClientProps) {
               organizationId={props.organizationId}
               online={online}
               value={customer}
-              onChange={setCustomer}
+              onChange={(c) => {
+                setCustomer(c)
+                // Poin milik pelanggan sebelumnya. Dibawa ke pelanggan baru, ia
+                // akan terjepit ke saldo yang ada — tapi angka di kotaknya
+                // sudah terlanjur dibacakan kasir ke pembeli.
+                setRedeem(0)
+              }}
             />
+          }
+          redeemSlot={
+            props.loyalty.enabled && customer ? (
+              <PointRedeem
+                customerName={customer.name}
+                saldo={customer.points}
+                pointValue={props.loyalty.pointValue}
+                maxRupiah={total}
+                value={redeemInfo.poin}
+                onChange={setRedeem}
+              />
+            ) : null
           }
         />
       )}
