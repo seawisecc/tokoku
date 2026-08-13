@@ -121,13 +121,11 @@ pekerjaan sebelum dijual".
 1. **Backup database.** Naik ke Supabase Pro, atau `pg_dump` harian ke tempat
    lain. Satu-satunya risiko yang tidak bisa diperbaiki setelah terjadi.
 2. **Tinjauan hukum atas halaman legal**, terutama transfer data ke Singapura.
-3. **Nyalakan Sentry** — tinggal isi `NEXT_PUBLIC_SENTRY_DSN` di Vercel lalu
-   redeploy. Belum diisi per 13 Agu.
-4. **Payment gateway.** Perubahan paket masih dikerjakan tangan lewat Super
+3. **Payment gateway.** Perubahan paket masih dikerjakan tangan lewat Super
    Admin. Sanggup untuk sepuluh klien pertama, tidak untuk seratus.
 5. `features` jsonb sisa: `multi_outlet`, `api`, `support` belum dipakai —
    barangnya memang belum ada. `purchasing`, `reports`, `crm` sudah ditegakkan.
-6. **Penukaran poin sudah jalan penuh** (13 Agu) — butir ini dulu ada di sini,
+5. **Penukaran poin sudah jalan penuh** (13 Agu) — butir ini dulu ada di sini,
    sekarang selesai. Lihat "Penukaran poin di Kasir".
 
 Seluruh modul yang disepakati sudah jadi — Konsinyasi yang terakhir, selesai
@@ -326,9 +324,9 @@ Diperbarui 13 Agu. Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan.
    Indonesia terpasang.
 
 **Sangat dianjurkan:**
-5. **Nyalakan Sentry** — kodenya sudah siap dan build sudah diuji dengan maupun
-   tanpa DSN. Tinggal isi `NEXT_PUBLIC_SENTRY_DSN` di Vercel lalu redeploy.
-   Belum diisi.
+5. ~~Nyalakan Sentry~~ ✅ **selesai** 13 Agu. Diverifikasi dari bundel produksi:
+   `sentry-trace` di HTML, DSN di bundel klien, `tracesSampleRate: 0.1`,
+   `replaysSessionSampleRate: 0`, `sendDefaultPii: false`.
 6. **Payment gateway.** Perubahan paket masih tangan lewat Super Admin.
 7. **Content-Security-Policy.** Header dasar sudah ada di `next.config.ts`
    (nosniff, SAMEORIGIN, referrer policy). CSP butuh nonce untuk script inline
@@ -1779,6 +1777,15 @@ Dua keputusan privasi yang jangan diubah:
   memindahkan data pribadi milik klien ke pihak ketiga, dan itu bertentangan
   dengan Kebijakan Privasi yang kita tulis sendiri.
 
+**Sudah menyala di produksi** (13 Agu). Diverifikasi bukan dari daftar env
+Vercel melainkan dari BUNDEL yang benar-benar dikirim ke browser — untuk
+`NEXT_PUBLIC_*`, nilainya di-inline saat build, jadi variabel yang ada di
+dashboard tapi deployment-nya lebih tua dari itu tetap tidak berpengaruh.
+Yang diperiksa: meta `sentry-trace` di HTML (berarti sisi server hidup), DSN
+`ingest.sentry.io` di bundel klien, rute tunnel `/monitoring`, dan ketiga nilai
+privasinya — `replaysSessionSampleRate: 0`, `replaysOnErrorSampleRate: 0`,
+`sendDefaultPii: false`, `tracesSampleRate: 0.1`.
+
 Tiga jalur penangkapan, dan ketiganya perlu: `onRequestError` (render server),
 `app/error.tsx` (render klien), `app/global-error.tsx` (root layout gagal).
 `tunnelRoute: '/monitoring'` supaya laporan tidak diblokir pemblokir iklan.
@@ -2264,12 +2271,13 @@ lewat `/pengaturan/sinkronisasi` kecuali yang punya transaksi.
 | **Vercel** `sin1` | ✅ produksi | `tokoku.seawise.id` |
 | **Resend** | ✅ jalan | domain `send.seawise.id`, MX + SPF + DKIM + DMARC hijau |
 | **Supabase Custom SMTP** | ✅ jalan | memakai kunci Resend yang sama; template Indonesia sudah dipasang |
-| **Sentry** | ⏸ tidur | kode siap, `NEXT_PUBLIC_SENTRY_DSN` belum diisi di Vercel |
+| **Sentry** | ✅ jalan | `NEXT_PUBLIC_SENTRY_DSN` terpasang 13 Agu; diverifikasi dari bundel produksi |
 
 Env produksi yang terpasang: `NEXT_PUBLIC_SUPABASE_URL`,
 `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (tidak dipakai kode
 mana pun — boleh dihapus), `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME`,
-`NEXT_PUBLIC_BRAND_TAGLINE`, `RESEND_API_KEY`, `EMAIL_FROM`.
+`NEXT_PUBLIC_BRAND_TAGLINE`, `RESEND_API_KEY`, `EMAIL_FROM`,
+`NEXT_PUBLIC_SENTRY_DSN`.
 
 **URL Configuration Supabase sudah benar** (Site URL + Redirect URLs menunjuk
 `tokoku.seawise.id`). Jangan diubah tanpa membaca "Reset kata sandi" — salah di
