@@ -102,6 +102,8 @@ pekerjaan sebelum dijual".
   outlet" di bawah
 - **Mobile 390px sudah ditelusuri langsung** (10 Agu) — beranda, kasir, produk,
   laporan, tim. Empat masalah ditemukan dan diperbaiki; lihat "Mobile" di bawah.
+- **Tabel perbandingan `/fitur` diperbaiki 13 Agu** — tiga cacat tampilan, semua
+  ditemukan lewat pengukuran DOM, bukan tebakan; lihat "Halaman fitur"
 - **Sapuan konsistensi UI 13 Agu** — dua cacat yang berlaku di SELURUH aplikasi
   ditemukan & diperbaiki (tombol drawer tidak sejajar, pesan sukses berwarna
   merah); lihat "Konsistensi UI" di bawah
@@ -112,6 +114,8 @@ pekerjaan sebelum dijual".
   toko), diskon pelanggan; lihat "Diskon: tiga lapis" di bawah
 - **Produk jasa** — pilihan Barang/Jasa di drawer produk; lihat "Produk jasa"
 - **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — terbit
+- **Halaman pemasaran** (`/`, `/fitur`) — rincian per paket, tabel perbandingan,
+  FAQ; lihat "Halaman fitur" di bawah
 - **Panduan awal toko baru** di beranda; lihat "Panduan awal toko baru"
 - **Pemantauan error** (Sentry) terpasang tapi TIDUR sampai DSN diisi
 - **Email sungguhan jalan** — Resend + Custom SMTP Supabase, template Indonesia
@@ -1749,6 +1753,34 @@ berikutnya. Ditautkan dari kaki halaman auth, bukan cuma dari halaman publiknya
 sendiri: orang menilai apakah mau menyerahkan data pelanggannya TEPAT saat
 diminta mendaftar.
 
+## Halaman fitur
+
+`/fitur` — satu-satunya halaman tempat calon klien membandingkan paket sebelum
+mendaftar, jadi cacat tampilan di sini berbiaya lebih besar daripada di dalam
+aplikasi: yang melihatnya belum punya alasan apa pun untuk memaafkan.
+
+Tabel perbandingannya (`.mk-cmp`) sudah tiga kali menggigit, dan ketiganya
+sekarang jadi aturan umum di "Jebakan yang sudah pernah menggigit":
+
+- **centang tidak rata** dengan tanda `-` di kolom yang sama, karena preflight
+  Tailwind menyetel `svg { display: block }` dan elemen block mengabaikan
+  `text-align: center`. Terukur meleset 43px. Obatnya `margin-inline: auto`
+- **judul kelompok hilang** saat tabel digeser ke samping di ponsel: selnya
+  ber-`colSpan` penuh, dan `position: sticky` tidak punya ruang bergeser pada
+  sel yang sudah selebar wadahnya. Yang menempel sekarang `<span>` di dalamnya
+- **kepala tabel yang menempel ke atas memotong baris** di belakangnya, karena
+  tingginya ~90px (nama paket + harga). Sudah DICABUT; yang menempel tinggal ke
+  arah samping. Jangan dipasang lagi tanpa memikirkan tinggi kepalanya
+
+Yang tersisa menempel dan memang perlu di 390px: kolom kemampuan dan judul
+kelompok, keduanya ke KIRI. `border-collapse` harus `separate` — dengan
+`collapse`, garisnya tertinggal di posisi lama saat digeser.
+
+Diuji di 390px lewat iframe (alat resize browser masih tidak bekerja di sini,
+lihat "Mobile") dan di 1280px: nol baris tertutup, tujuh judul kelompok tetap
+terbaca saat digeser penuh ke kanan, tabel muat penuh 1072px di desktop tanpa
+geser sama sekali.
+
 ## Panduan awal toko baru
 
 `OnboardingChecklist` di beranda. Toko yang baru mendaftar dulu mendarat di
@@ -2175,6 +2207,8 @@ app/
   (platform)/admin klien/[id] (+ /ekspor), paket, pengaturan platform
   error.tsx        penangkap error + global-error.tsx + not-found.tsx
   (publik)/        kebijakan-privasi, syarat-ketentuan (tanpa AppShell)
+  page.tsx         halaman depan (pemasaran) — di luar semua route group
+  fitur/           rincian per paket, tabel perbandingan, FAQ (+ opengraph-image)
   about/  setup/   halaman publik & status koneksi
 components/
   layout/          AppShell, Sidebar (memuat brand), Topbar, BottomNav,
