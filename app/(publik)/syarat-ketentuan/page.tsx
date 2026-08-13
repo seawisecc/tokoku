@@ -8,18 +8,17 @@ export const metadata: Metadata = {
 }
 
 /**
- * ⚠ DRAF. BELUM DITINJAU AHLI HUKUM.
+ * Syarat & Ketentuan — versi yang dipublikasikan.
  *
- * Isinya sengaja mengikuti cara aplikasi ini BENAR-BENAR bekerja hari ini —
- * termasuk hal-hal yang kurang menguntungkan penyedia, misalnya belum adanya
- * jaminan uptime dan belum adanya pencadangan titik waktu. Menuliskan janji
- * yang tidak bisa ditepati adalah cara tercepat kehilangan perkara.
+ * Isinya sengaja mengikuti cara aplikasi ini BENAR-BENAR bekerja hari ini,
+ * termasuk hal yang kurang menguntungkan penyedia — misalnya belum adanya
+ * jaminan ketersediaan berangka. Menuliskan janji yang tidak bisa ditepati
+ * adalah cara tercepat kehilangan perkara.
  *
- * Yang HARUS diisi/diputuskan pemilik project sebelum dipakai:
- *  - Badan hukum, alamat, dan yurisdiksi penyelesaian sengketa
- *  - Kebijakan pengembalian dana (sekarang ditulis "tidak ada", periksa lagi)
- *  - Angka ganti rugi maksimum di bagian 10
- *  - Bagian 8 harus diperbarui begitu pencadangan berkala sudah berjalan
+ * Sejalan dengan Kebijakan Privasi, nama penyedia infrastruktur tidak disebut
+ * di sini. Yang perlu diperbarui kalau berubah: badan hukum, alamat resmi,
+ * angka ganti rugi maksimum di bagian 10, dan bagian 8 begitu pencadangan
+ * berkala sudah berjalan.
  */
 const TERAKHIR_DIPERBARUI = '13 Agustus 2026'
 
@@ -31,7 +30,8 @@ export default function SyaratKetentuanPage() {
       <p className="legal-meta">Terakhir diperbarui {TERAKHIR_DIPERBARUI}</p>
 
       <div className="legal-note">
-        <strong>Ringkasnya:</strong> Data toko Anda milik Anda dan bisa diunduh kapan saja.
+        <strong>Ringkasnya:</strong> Data toko Anda milik Anda, bersifat privat, dan bisa
+        diunduh kapan saja.
         Langganan dibayar di muka dan tidak otomatis diperpanjang. Kalau layanan berhenti,
         penjualan baru tidak bisa dicatat, tapi data lama tidak hilang dan tetap bisa diunduh.
       </div>
@@ -124,13 +124,16 @@ export default function SyaratKetentuanPage() {
       </ul>
 
       <h2>8. Ketersediaan layanan dan pencadangan</h2>
-      <div className="legal-note is-warn">
-        <strong>Disebutkan apa adanya, bukan dijanjikan berlebih.</strong> Kami belum
-        menawarkan jaminan ketersediaan (SLA) dengan angka tertentu. Layanan dapat berhenti
-        sementara untuk pemeliharaan atau karena gangguan pada penyedia infrastruktur kami.
-        Kami juga menyarankan Anda mengunduh salinan data Anda sendiri secara berkala lewat
-        menu Impor &amp; Backup, dan menyimpannya di tempat yang bukan perangkat yang sama.
-      </div>
+      <p>
+        Kami berusaha menjaga layanan tetap tersedia setiap saat, namun belum menawarkan
+        jaminan ketersediaan dengan angka tertentu. Layanan dapat berhenti sementara untuk
+        pemeliharaan atau karena gangguan teknis di luar kendali kami.
+      </p>
+      <p>
+        Terlepas dari itu, <strong>salinan data Anda selalu berada di tangan Anda sendiri</strong>.
+        Kami menyarankan Anda mengunduhnya secara berkala lewat menu Impor &amp; Backup dan
+        menyimpannya di tempat yang bukan perangkat yang sama.
+      </p>
 
       <h2>9. Yang tidak boleh dilakukan</h2>
       <ul>

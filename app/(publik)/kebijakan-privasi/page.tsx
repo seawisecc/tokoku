@@ -3,23 +3,26 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Kebijakan Privasi | TokoKu',
   description:
-    'Data apa yang disimpan TokoKu, untuk apa, disimpan di mana, dan bagaimana cara menghapusnya.',
+    'Data toko Anda bersifat privat. Apa yang disimpan TokoKu, untuk apa, siapa yang bisa melihatnya, dan bagaimana cara menghapusnya.',
 }
 
 /**
- * ⚠ DRAF. BELUM DITINJAU AHLI HUKUM.
+ * Kebijakan Privasi — versi yang dipublikasikan.
  *
  * Isinya disusun dari kolom yang BENAR-BENAR ada di skema database ini, bukan
- * dari templat umum — jadi setiap jenis data yang disebut di bawah memang
- * tersimpan, dan tidak ada yang tersimpan tanpa disebut. Itu yang membuat
- * dokumen ini berguna untuk ditinjau: yang meninjau tidak perlu membongkar
- * kodenya sendiri.
+ * dari templat umum: setiap jenis data yang disebut memang tersimpan, dan
+ * tidak ada yang tersimpan tanpa disebut. Kalau skemanya berubah, dokumen ini
+ * ikut diperbarui — itu satu-satunya cara menjaganya tetap jujur.
  *
- * Yang HARUS diisi/diperiksa pemilik project sebelum dipakai:
- *  - Nama badan usaha dan alamat resminya (sekarang masih "Seawise Studio")
- *  - Email & nomor kontak privasi yang benar-benar dibaca
- *  - Keputusan soal transfer data ke luar negeri (lihat bagian 6) — ini poin
- *    yang paling mungkin bermasalah dan tidak bisa diputuskan agen
+ * **Nama penyedia infrastruktur sengaja TIDAK disebut.** Keputusan pemilik
+ * project (13 Agu), setelah risikonya disampaikan: UU PDP mewajibkan
+ * pengungkapan ke mana data pribadi dikirim, terutama lintas negara. Jalan
+ * tengah yang dipakai — nama vendor dihapus, FAKTA penyimpanan di luar negeri
+ * dipertahankan dalam satu kalimat netral di bagian 6. Jangan menghapus
+ * kalimat itu tanpa membicarakannya lagi dengan pemilik project.
+ *
+ * Yang masih perlu diperbarui kalau berubah: nama badan usaha, alamat resmi,
+ * dan alamat kontak privasi.
  */
 const TERAKHIR_DIPERBARUI = '13 Agustus 2026'
 
@@ -31,10 +34,11 @@ export default function KebijakanPrivasiPage() {
       <p className="legal-meta">Terakhir diperbarui {TERAKHIR_DIPERBARUI}</p>
 
       <div className="legal-note">
-        <strong>Ringkasnya:</strong> TokoKu menyimpan data toko Anda dan data pelanggan yang
-        Anda catat sendiri, di server Singapura, selama Anda masih berlangganan. Kami tidak
-        menjual data siapa pun, tidak memakainya untuk iklan, dan tidak melihat isinya kecuali
-        Anda meminta bantuan. Semua akses kami ke toko Anda tercatat dan bisa Anda lihat.
+        <strong>Ringkasnya:</strong> data toko Anda bersifat privat. Hanya Anda dan orang yang
+        Anda beri akses yang dapat melihatnya. Kami tidak menjual data siapa pun, tidak
+        memakainya untuk iklan, dan tidak membukanya kecuali Anda meminta pendampingan atau ada
+        gangguan yang harus diperbaiki. Setiap kali kami mengaksesnya, waktunya dan alasannya
+        tercatat permanen dan bisa Anda periksa sendiri.
       </div>
 
       <h2>1. Siapa kami</h2>
@@ -102,7 +106,7 @@ export default function KebijakanPrivasiPage() {
       <ul>
         <li>Perangkat kasir yang terdaftar dan waktu sinkronisasi terakhirnya</li>
         <li>Catatan kegagalan sinkronisasi, untuk menelusuri penjualan yang gagal masuk</li>
-        <li>Log server dari penyedia hosting, berisi alamat IP dan waktu akses</li>
+        <li>Log server teknis berisi alamat IP dan waktu akses, dipakai untuk menelusuri gangguan</li>
       </ul>
       <p>
         Kami <strong>tidak</strong> memakai cookie pelacak, tidak memasang pixel iklan, dan
@@ -124,52 +128,60 @@ export default function KebijakanPrivasiPage() {
       </p>
 
       <h2>5. Siapa yang bisa melihat data Anda</h2>
+      <p>
+        <strong>Data toko Anda bersifat privat.</strong> Ia tidak dapat dilihat oleh pemilik
+        toko lain, tidak dipertukarkan antar akun, dan tidak pernah digabungkan dengan data
+        toko mana pun. Pemisahan ini ditegakkan di lapisan basis data, bukan sekadar di
+        tampilan — artinya tetap berlaku sekalipun terjadi kesalahan pemrograman di sisi
+        antarmuka.
+      </p>
       <ul>
         <li>
-          <strong>Anda dan tim yang Anda undang</strong>, sebatas izin modul yang Anda berikan.
+          <strong>Anda, sebagai pemilik akun.</strong> Akses penuh ke seluruh data toko Anda.
         </li>
         <li>
-          <strong>Kami, hanya bila perlu.</strong> Untuk menangani keluhan atau memperbaiki
-          masalah, tim kami dapat membuka toko Anda dalam mode lihat-saja. Setiap kali itu
-          terjadi, waktunya dan alasannya tercatat permanen dan{' '}
-          <strong>bisa Anda lihat sendiri</strong> di halaman detail toko. Mode ini tidak bisa
-          mengubah data apa pun.
+          <strong>Orang yang Anda undang</strong>, sebatas izin modul yang Anda tentukan
+          sendiri. Anda dapat mencabutnya kapan saja.
         </li>
         <li>
-          <strong>Penyedia infrastruktur</strong> yang kami pakai, sebatas menyimpan dan
-          mengantarkan data. Daftarnya ada di bagian 6.
+          <strong>Tim kami, hanya bila dibutuhkan.</strong> Kami membuka data toko Anda semata
+          untuk memberikan pendampingan yang Anda minta atau memperbaiki gangguan pada
+          aplikasi. Di luar dua keadaan itu, kami tidak membukanya.
         </li>
       </ul>
       <p>
-        Kami akan menyerahkan data hanya bila diwajibkan hukum yang berlaku, dan akan memberi
-        tahu Anda lebih dulu sepanjang itu tidak dilarang.
+        Akses kami dibatasi dan diawasi dengan tiga cara sekaligus:
+      </p>
+      <ul>
+        <li>
+          <strong>Hanya baca.</strong> Mode pendampingan tidak dapat mengubah, menambah, atau
+          menghapus data apa pun di toko Anda.
+        </li>
+        <li>
+          <strong>Selalu tercatat.</strong> Setiap akses menyimpan siapa yang membuka, kapan,
+          dan untuk alasan apa.
+        </li>
+        <li>
+          <strong>Terbuka untuk Anda.</strong> Catatan itu bukan catatan internal kami — Anda
+          dapat melihatnya sendiri di halaman detail toko Anda.
+        </li>
+      </ul>
+      <p>
+        Kami akan menyerahkan data hanya bila diwajibkan oleh hukum yang berlaku, dan akan
+        memberi tahu Anda lebih dulu sepanjang hal itu tidak dilarang.
       </p>
 
-      <h2>6. Di mana data disimpan</h2>
+      <h2>6. Keamanan dan penyimpanan</h2>
       <p>
-        Data TokoKu disimpan dan diproses di <strong>Singapura</strong>, memakai penyedia
-        berikut:
+        Data Anda disimpan pada layanan pusat data profesional dengan standar keamanan
+        industri, dan seluruh pengiriman data antara perangkat Anda dan server dilindungi
+        enkripsi. Untuk menjaga kecepatan aplikasi bagi pengguna di Indonesia, servernya
+        berada di kawasan Asia Tenggara.
       </p>
-      <ul>
-        <li>
-          <strong>Supabase</strong> — basis data, autentikasi, dan penyimpanan berkas
-          (wilayah <span className="mono">ap-southeast-1</span>)
-        </li>
-        <li>
-          <strong>Vercel</strong> — menjalankan aplikasinya (wilayah{' '}
-          <span className="mono">sin1</span>)
-        </li>
-        <li>
-          <strong>Resend</strong> — pengiriman email akun
-        </li>
-      </ul>
-      <div className="legal-note is-warn">
-        <strong>Perlu ditinjau sebelum dokumen ini dipakai.</strong> Karena data diproses di
-        luar wilayah Indonesia, UU No. 27 Tahun 2022 tentang Pelindungan Data Pribadi
-        mensyaratkan dasar hukum khusus untuk transfer keluar negeri. Bagian ini perlu
-        ditinjau ahli hukum dan mungkin perlu ditambahi rumusan persetujuan yang tepat, atau
-        dipindahkan ke penyedia berwilayah Indonesia.
-      </div>
+      <p>
+        Kami tidak menempatkan data Anda pada layanan periklanan, tidak membagikannya kepada
+        mitra pemasaran, dan tidak memakainya untuk melatih model kecerdasan buatan.
+      </p>
 
       <h2>7. Berapa lama disimpan</h2>
       <ul>
@@ -211,20 +223,36 @@ export default function KebijakanPrivasiPage() {
       </p>
 
       <h2>9. Keamanan</h2>
+      <p>
+        Keamanan data Anda kami perlakukan sebagai syarat layanan, bukan fitur tambahan.
+      </p>
       <ul>
-        <li>Seluruh sambungan memakai HTTPS</li>
         <li>
-          Pemisahan antar toko ditegakkan di lapisan basis data, bukan hanya di tampilan.
-          Artinya toko lain tidak bisa membaca data Anda bahkan bila terjadi kesalahan
-          pemrograman di sisi tampilan
+          <strong>Terenkripsi saat dikirim.</strong> Seluruh sambungan antara perangkat Anda
+          dan server memakai HTTPS.
         </li>
-        <li>Kata sandi disimpan teracak satu arah</li>
-        <li>Setiap akses tim kami ke toko klien tercatat</li>
+        <li>
+          <strong>Terpisah antar toko di lapisan basis data.</strong> Pemisahan ini bekerja di
+          tingkat penyimpanan, bukan hanya di tampilan — sehingga data toko Anda tetap tidak
+          dapat dijangkau toko lain sekalipun terjadi kesalahan pemrograman pada antarmuka.
+        </li>
+        <li>
+          <strong>Kata sandi tidak dapat dibaca siapa pun.</strong> Disimpan dalam bentuk
+          teracak satu arah, termasuk tidak dapat dibaca oleh tim kami.
+        </li>
+        <li>
+          <strong>Akses tim kami selalu tercatat</strong> dan dapat Anda periksa sendiri.
+        </li>
+        <li>
+          <strong>Salinan data selalu di tangan Anda.</strong> Anda dapat mengunduh seluruh
+          data toko kapan saja dalam bentuk CSV, tanpa perlu meminta kepada kami.
+        </li>
       </ul>
       <p>
-        Tidak ada sistem yang sepenuhnya kebal. Bila terjadi kebocoran data pribadi, kami akan
-        memberi tahu Anda dan pihak berwenang paling lambat 3x24 jam sejak diketahui,
-        sebagaimana diatur UU PDP.
+        Tidak ada sistem yang sepenuhnya kebal, dan kami tidak akan berpura-pura sebaliknya.
+        Bila terjadi kebocoran data pribadi, kami akan memberi tahu Anda dan pihak berwenang
+        paling lambat 3x24 jam sejak diketahui, sebagaimana diatur UU No. 27 Tahun 2022 tentang
+        Pelindungan Data Pribadi.
       </p>
 
       <h2>10. Anak-anak</h2>

@@ -34,8 +34,9 @@ pekerjaan sebelum dijual".
 2. **Backup database belum ada.** Supabase paket gratis tanpa point-in-time
    recovery. Ini satu-satunya risiko tersisa yang tidak bisa diperbaiki setelah
    terjadi — hati-hati dengan migrasi dan skrip yang menulis.
-3. **Halaman legal masih DRAF**, belum ditinjau ahli hukum. Lihat "Halaman
-   legal".
+3. **Halaman legal sudah dipublikasikan** dan nada isinya sudah disetujui
+   pemilik project. Nama penyedia infrastruktur sengaja tidak disebut — baca
+   "Halaman legal" sebelum mengubah apa pun di sana.
 
 **Sudah jalan:**
 - Auth split-panel dengan animasi clip-path · pendaftaran toko mandiri ·
@@ -110,7 +111,7 @@ pekerjaan sebelum dijual".
 - **Diskon tiga lapis** — promo produk, diskon nota manual (dijepit batas
   toko), diskon pelanggan; lihat "Diskon: tiga lapis" di bawah
 - **Produk jasa** — pilihan Barang/Jasa di drawer produk; lihat "Produk jasa"
-- **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — DRAF
+- **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — terbit
 - **Panduan awal toko baru** di beranda; lihat "Panduan awal toko baru"
 - **Pemantauan error** (Sentry) terpasang tapi TIDUR sampai DSN diisi
 - **Email sungguhan jalan** — Resend + Custom SMTP Supabase, template Indonesia
@@ -318,8 +319,10 @@ Diperbarui 13 Agu. Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan.
 2. **Backup database.** Supabase gratis TIDAK punya point-in-time recovery.
    Sekali tabel terhapus, tidak ada jalan kembali untuk seluruh klien sekaligus.
    **Satu-satunya risiko tersisa yang tidak bisa diperbaiki setelah terjadi.**
-3. **Tinjauan hukum atas halaman legal.** Halamannya sudah ada tapi DRAF; tiga
-   hal ditandai kotak amber di dalamnya, terutama transfer data ke Singapura.
+3. **Tinjauan hukum atas halaman legal.** Isinya sudah dikomunikasikan pemilik
+   project dan nadanya final, tapi belum ditinjau ahli hukum. Titik yang paling
+   mungkin dipersoalkan: penyedia infrastruktur tidak disebut, sementara UU PDP
+   mewajibkan pengungkapan tujuan pengiriman data lintas negara.
 4. ~~Penyedia email~~ ✅ **selesai** — Resend + Custom SMTP Supabase, template
    Indonesia terpasang.
 
@@ -1708,34 +1711,43 @@ sesuai yang salah, dan orangnya baru sadar besok pagi.
 
 `/kebijakan-privasi` dan `/syarat-ketentuan`, di route group `(publik)` dengan
 layoutnya sendiri — bukan AppShell, karena keduanya harus bisa dibaca TANPA
-akun. Calon klien menilainya sebelum mendaftar, dan pelanggan warung yang
-mempersoalkan datanya belum tentu punya akun di sini.
+akun. Calon klien menilainya sebelum mendaftar.
 
-**MASIH DRAF. Belum ditinjau ahli hukum.** Isinya disusun dari kolom yang
-BENAR-BENAR ada di skema ini, bukan dari templat umum: setiap jenis data yang
-disebut memang tersimpan, dan tidak ada yang tersimpan tanpa disebut. Itu yang
-membuatnya berguna untuk ditinjau — yang meninjau tidak perlu membongkar
-kodenya sendiri.
+Isinya disusun dari kolom yang BENAR-BENAR ada di skema ini, bukan dari templat
+umum: setiap jenis data yang disebut memang tersimpan, dan tidak ada yang
+tersimpan tanpa disebut. **Kalau skemanya berubah, dokumen ini ikut diperbarui**
+— itu satu-satunya cara menjaganya tetap jujur.
 
-Tiga hal yang HARUS diputuskan pemilik project, ditandai kotak amber di
-halamannya sendiri supaya tidak terlewat:
-1. **Transfer data ke luar negeri.** Supabase di `ap-southeast-1` dan Vercel di
-   `sin1` — keduanya Singapura. UU PDP 27/2022 mensyaratkan dasar hukum khusus
-   untuk itu. Ini yang paling mungkin bermasalah.
-2. **Badan hukum, alamat resmi, dan yurisdiksi sengketa** — sekarang masih
-   "Seawise Studio" apa adanya.
-3. **Ketersediaan layanan.** Sengaja ditulis apa adanya bahwa belum ada SLA dan
-   belum ada pencadangan berkala. Menuliskan janji yang tidak bisa ditepati
-   adalah cara tercepat kehilangan perkara — perbarui bagian 8 Syarat &
-   Ketentuan begitu pencadangan sudah berjalan.
+**Nama penyedia infrastruktur sengaja TIDAK disebut** (keputusan pemilik
+project, 13 Agu). Risikonya sudah disampaikan lebih dulu: UU PDP 27/2022
+mewajibkan pengungkapan ke mana data pribadi dikirim, terutama lintas negara,
+dan ketiadaannya bisa dipersoalkan kalau ada sengketa. Jalan tengah yang
+dipakai:
+
+- nama vendor dihapus dari kedua dokumen
+- **FAKTA penyimpanan di luar negeri dipertahankan** — satu kalimat netral di
+  bagian 6 Kebijakan Privasi ("servernya berada di kawasan Asia Tenggara").
+  **Jangan menghapus kalimat itu tanpa membicarakannya lagi dengan pemilik
+  project** — itu bagian yang paling berisiko kalau hilang.
+
+Nada dokumennya berpusat pada satu janji: **data toko bersifat privat, hanya
+pemilik akun dan orang yang dia beri akses yang bisa melihatnya.** Akses tim
+platform disebut apa adanya — hanya untuk pendampingan yang diminta atau
+perbaikan gangguan — dan dijelaskan dibatasi tiga cara sekaligus: hanya baca,
+selalu tercatat, dan catatannya terbuka untuk kliennya sendiri. Ketiganya bukan
+janji kosong; semuanya memang sudah berlaku di kode (`impersonation_sessions`
+dan mode lihat-saja).
+
+Yang masih perlu diperbarui kalau berubah: badan hukum, alamat resmi, alamat
+kontak privasi, dan angka ganti rugi maksimum di bagian 10 Syarat & Ketentuan.
+Bagian 8 Syarat & Ketentuan menyebut belum ada jaminan ketersediaan berangka —
+perbarui begitu pencadangan berkala berjalan.
 
 Lebarnya 720px, bukan 1240px seperti halaman aplikasi: ini teks yang dibaca
 baris demi baris, dan di atas ~80 karakter per baris mata kehilangan awal baris
-berikutnya. Alasannya sama dengan `.form-narrow`.
-
-Ditautkan dari kaki halaman auth, bukan cuma dari halaman publiknya sendiri:
-orang menilai apakah mau menyerahkan data pelanggannya TEPAT saat diminta
-mendaftar.
+berikutnya. Ditautkan dari kaki halaman auth, bukan cuma dari halaman publiknya
+sendiri: orang menilai apakah mau menyerahkan data pelanggannya TEPAT saat
+diminta mendaftar.
 
 ## Panduan awal toko baru
 
