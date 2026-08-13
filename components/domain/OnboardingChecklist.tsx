@@ -7,7 +7,8 @@ export type OnboardingState = {
   adaProduk: boolean
   adaTransaksi: boolean
   adaTim: boolean
-  strukDiatur: boolean
+  /** Info toko sudah dilengkapi — alamatnya terisi. Lihat catatan di bawah. */
+  infoLengkap: boolean
 }
 
 /**
@@ -15,58 +16,56 @@ export type OnboardingState = {
  *
  * Sebelum ini toko yang baru mendaftar mendarat di beranda berisi "Rp 0" dan
  * empat kartu bernilai nol, tanpa satu pun petunjuk apa yang harus dikerjakan
- * lebih dulu. Jalur tercepatnya sudah ada sejak impor CSV dibuat — tapi tidak
- * ada apa pun di layar yang menunjukkannya, dan orang yang baru mendaftar
- * tidak akan menemukan menu Pengaturan → Impor & Backup sendiri.
+ * lebih dulu.
  *
  * **Hilang total begitu ada transaksi pertama.** Bukan disembunyikan lewat
  * tombol "jangan tampilkan lagi": daftar yang harus ditutup manual akan
- * menetap di layar orang yang sudah lama memakai aplikasi, dan tiap piksel di
- * beranda seharusnya milik angka hari ini. Transaksi pertama adalah penanda
- * paling jujur bahwa tokonya sudah benar-benar jalan.
- *
- * Langkah yang sudah selesai tetap ditampilkan dan dicoret, tidak dibuang dari
- * daftar: yang membuat orang mau menyelesaikan daftar adalah melihat bagian
- * yang sudah beres bertambah.
+ * menetap di layar orang yang sudah lama memakai aplikasi. Transaksi pertama
+ * adalah penanda paling jujur bahwa tokonya sudah benar-benar jalan.
  */
 export function OnboardingChecklist({ state }: { state: OnboardingState }) {
-  // Toko yang sudah berjualan tidak butuh panduan memulai.
   if (state.adaTransaksi) return null
 
+  /**
+   * Tiga langkah yang bisa DICENTANG, masing-masing punya penanda yang benar-
+   * benar bisa diperiksa dari data.
+   *
+   * "Buka layar Kasir" sengaja TIDAK ada di daftar ini. Dulu ia jadi butir
+   * keempat berpenanda centang yang tidak pernah bisa selesai, sehingga
+   * daftarnya menampilkan empat baris sementara hitungannya menyebut tiga —
+   * dan orang menghitung ulang mencari langkah mana yang tidak dihitung.
+   * Sekarang ia berdiri sendiri di bawah sebagai ajakan penutup.
+   */
   const langkah: {
     selesai: boolean
     judul: string
     jelas: string
-    href: Route
-    aksi: string
+    aksi: { href: Route; label: string }[]
   }[] = [
     {
       selesai: state.adaProduk,
       judul: 'Masukkan barang dagangan',
-      jelas: 'Punya daftar di Excel? Impor sekaligus lewat CSV, tidak perlu diketik satu-satu.',
-      href: (state.adaProduk ? '/produk' : '/pengaturan/data') as Route,
-      aksi: state.adaProduk ? 'Lihat produk' : 'Impor dari CSV',
+      jelas: 'Ketik satu per satu, atau impor sekaligus kalau daftarnya sudah ada di Excel.',
+      // Dua pintu, dan yang MANUAL didahulukan. Toko kecil yang barangnya
+      // belasan tidak punya berkas Excel apa pun, dan menawarinya impor CSV
+      // lebih dulu terbaca seperti aplikasi ini menuntut sesuatu yang tidak
+      // dia punya sebelum boleh mulai.
+      aksi: [
+        { href: '/produk' as Route, label: 'Tambah manual' },
+        { href: '/pengaturan/data' as Route, label: 'Impor CSV' },
+      ],
     },
     {
-      selesai: state.strukDiatur,
-      judul: 'Atur struk dan printer',
-      jelas: 'Pasang logo dan catatan kaki, lalu lihat pratinjaunya sebelum dicetak.',
-      href: '/pengaturan/printer' as Route,
-      aksi: 'Atur struk',
+      selesai: state.infoLengkap,
+      judul: 'Lengkapi info toko',
+      jelas: 'Alamat dan nomor telepon ikut tercetak di struk pembeli.',
+      aksi: [{ href: '/pengaturan/toko' as Route, label: 'Lengkapi' }],
     },
     {
       selesai: state.adaTim,
       judul: 'Undang kasir Anda',
       jelas: 'Tiap orang dapat akun sendiri, jadi laporan tahu siapa yang melayani.',
-      href: '/pengaturan/tim' as Route,
-      aksi: 'Undang tim',
-    },
-    {
-      selesai: false,
-      judul: 'Buka layar Kasir',
-      jelas: 'Coba satu transaksi. Kasir tetap jalan walau internet mati.',
-      href: '/kasir' as Route,
-      aksi: 'Mulai jualan',
+      aksi: [{ href: '/pengaturan/tim' as Route, label: 'Undang tim' }],
     },
   ]
 
@@ -75,12 +74,10 @@ export function OnboardingChecklist({ state }: { state: OnboardingState }) {
   return (
     <div className="onb">
       <div className="onb-head">
-        <div>
-          <div className="onb-title">Siapkan toko Anda</div>
-          <div className="cell-sub">
-            {beres} dari {langkah.length - 1} langkah persiapan selesai. Panduan ini hilang
-            sendiri setelah transaksi pertama.
-          </div>
+        <div className="onb-title">Siapkan toko Anda</div>
+        <div className="cell-sub">
+          {beres} dari {langkah.length} langkah selesai. Panduan ini hilang sendiri setelah
+          transaksi pertama.
         </div>
       </div>
 
@@ -94,12 +91,26 @@ export function OnboardingChecklist({ state }: { state: OnboardingState }) {
               <div className="onb-item-title">{l.judul}</div>
               <div className="cell-sub">{l.jelas}</div>
             </div>
-            <Link href={l.href} className="btn btn-ghost btn-sm">
-              {l.aksi}
-            </Link>
+            <div className="onb-aksi">
+              {l.aksi.map((a, i) => (
+                <Link
+                  key={a.href}
+                  href={a.href}
+                  className={cn('btn btn-sm', i === 0 ? 'btn-dark' : 'btn-ghost')}
+                >
+                  {a.label}
+                </Link>
+              ))}
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Ajakan penutup, di luar daftar centang. Selalu tersedia — kasir bisa
+          dicoba kapan saja, bahkan sebelum satu langkah pun selesai. */}
+      <Link href={'/kasir' as Route} className="btn btn-primary btn-block onb-mulai">
+        <Icon name="cart" size={15} /> Coba layar Kasir
+      </Link>
     </div>
   )
 }

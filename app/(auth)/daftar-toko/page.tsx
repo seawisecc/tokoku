@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { FinishRegistration } from '@/components/domain/FinishRegistration'
+import { Icon } from '@/components/ui/icons'
 import { getSessionContext } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
@@ -20,7 +21,12 @@ export const dynamic = 'force-dynamic'
  * ada yang perlu diselesaikan"). Sejak satu akun boleh punya beberapa toko,
  * pengalihan itu justru menutup satu-satunya pintu untuk menambah.
  */
-export default async function DaftarTokoPage() {
+export default async function DaftarTokoPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ konfirmasi?: string }>
+}) {
+  const { konfirmasi } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -39,8 +45,25 @@ export default async function DaftarTokoPage() {
   }
 
   return (
-    <div className="auth-shell">
-      <div className="card" style={{ padding: 26 }}>
+    /* `.auth-single` (430px), bukan `.auth-shell` (880px). Halaman ini cuma
+       berisi dua isian dan dua tombol; di 880px kartunya merentang dua kali
+       lebih lebar daripada isinya dan terbaca seperti tata letak yang belum
+       jadi. Lebar yang sama dipakai semua halaman auth satu langkah — Masuk,
+       Lupa Sandi, Atur Sandi, Undangan. */
+    <div className="auth-single">
+      <div className="auth-container">
+        {/* Konfirmasi email berhasil. Tanpa penanda ini orang mendarat di
+            halaman "Daftarkan Toko" begitu saja setelah menekan tautan di
+            email, tanpa satu pun kalimat yang mengatakan konfirmasinya
+            berhasil — dan tidak ada cara membedakannya dari tautan yang gagal. */}
+        {konfirmasi === '1' && !existing && (
+          <div className="empty-note is-ok" style={{ marginBottom: 16 }} role="status">
+            <Icon name="check" size={16} style={{ marginTop: 1 }} />
+            <div style={{ flex: 1 }}>
+              Email Anda sudah terkonfirmasi. Tinggal satu langkah lagi.
+            </div>
+          </div>
+        )}
         <p className="auth-eyebrow">{existing ? 'Toko baru' : 'Satu langkah lagi'}</p>
         <h1 className="auth-title">Daftarkan Toko Anda</h1>
         <p className="auth-sub">

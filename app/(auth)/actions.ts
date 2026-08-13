@@ -436,7 +436,18 @@ export async function signUp(_prev: SignUpState, formData: FormData): Promise<Si
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName, pending_store_name: storeName, pending_store_city: city } },
+    options: {
+      data: { full_name: fullName, pending_store_name: storeName, pending_store_city: city },
+      /**
+       * Tautan konfirmasi mendarat di `/daftar-toko` dengan penanda, bukan di
+       * Site URL bawaan Supabase. Dua sebabnya: orang yang baru mengkonfirmasi
+       * memang belum punya toko sehingga halaman itulah tujuan yang benar, dan
+       * penanda `konfirmasi=1` yang membuat halaman bisa mengatakan
+       * "email Anda sudah terkonfirmasi" — tanpa itu tidak ada apa pun di layar
+       * yang membedakan konfirmasi berhasil dari tautan yang gagal.
+       */
+      emailRedirectTo: `${await siteOrigin()}/auth/konfirmasi?next=${encodeURIComponent('/daftar-toko?konfirmasi=1')}`,
+    },
   })
 
   if (error) {

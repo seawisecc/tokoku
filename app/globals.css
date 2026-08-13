@@ -1027,12 +1027,13 @@ tbody tr:hover { background: var(--color-paper); }
   justify-content: center; color: #fff;
 }
 .onb-item.is-done .onb-check { background: var(--color-success); border-color: var(--color-success); }
-.onb-item .btn { flex: 0 0 auto; }
+.onb-aksi { display: flex; gap: 6px; flex: 0 0 auto; }
+.onb-mulai { margin-top: 14px; }
 @media (max-width: 560px) {
   /* Tombol turun ke barisnya sendiri, rata kiri — ibu jari memegang sisi itu.
      Pola yang sama dengan aksi baris transaksi. */
   .onb-item { flex-wrap: wrap; }
-  .onb-item .btn { margin-left: 32px; }
+  .onb-aksi { margin-left: 32px; }
 }
 
 /* ── Halaman dokumen publik (privasi, syarat) ─────────────────────────────── */

@@ -26,7 +26,7 @@ export default async function BerandaPage() {
     { count: teamCount },
     { data: dueSoon },
     { count: trxLifetime },
-    { data: outletStruk },
+    { data: orgInfo },
   ] = await Promise.all([
       // Disaring per OUTLET, dan `maybeSingle()` dibuang.
       //
@@ -92,10 +92,14 @@ export default async function BerandaPage() {
         .from('transactions')
         .select('id', { count: 'exact', head: true })
         .eq('organization_id', orgId),
+      // Info toko dipakai panduan awal. `address` yang diperiksa, bukan
+      // pengaturan struk: `receipt_settings` punya DEFAULT catatan kaki
+      // "Terima kasih telah berbelanja" sejak barisnya lahir, jadi langkah
+      // "atur struk" tercoret sebelum pemilik toko menyentuh apa pun.
       supabase
-        .from('outlets')
-        .select('receipt_settings')
-        .eq('id', session.outletId!)
+        .from('organizations')
+        .select('address, phone')
+        .eq('id', orgId)
         .maybeSingle(),
     ])
 
@@ -113,17 +117,17 @@ export default async function BerandaPage() {
   /**
    * Keadaan persiapan toko, dipakai `OnboardingChecklist`.
    *
-   * "Struk sudah diatur" ditandai dari catatan kaki yang sudah diisi — bukan
-   * dari logo, karena banyak warung memang tidak punya logo dan langkah itu
-   * akan mustahil diselesaikan.
+   * "Info lengkap" ditandai dari ALAMAT, bukan dari pengaturan struk maupun
+   * logo. Pengaturan struk punya nilai bawaan sejak barisnya lahir sehingga
+   * langkahnya tercoret sebelum disentuh, dan logo mustahil diselesaikan
+   * banyak warung yang memang tidak punya. Alamat terisi manual, berguna
+   * (tercetak di struk), dan bisa diperiksa.
    */
   const onboarding = {
     adaProduk: (productCount ?? 0) > 0,
     adaTransaksi: (trxLifetime ?? 0) > 0,
     adaTim: (teamCount ?? 0) > 1,
-    strukDiatur: Boolean(
-      (outletStruk?.receipt_settings as { footer?: string } | null)?.footer?.trim(),
-    ),
+    infoLengkap: Boolean(orgInfo?.address?.trim()),
   }
 
   const lowStock = alerts ?? []
