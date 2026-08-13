@@ -2022,6 +2022,14 @@ ruang untuk bergeser, jadi ia hanyut apa adanya. Judul kelompok di tabel
 `/fitur` (`colSpan` penuh) karena itu hilang total begitu tabelnya digeser di
 ponsel. Yang benar: bungkus teksnya dalam `<span>` dan sticky-kan SPAN-nya.
 
+**Kepala tabel yang menempel ke ATAS memotong baris di belakangnya.** Sempat
+dipasang di tabel `/fitur` supaya nama paket tetap terlihat saat menggulir, dan
+langsung dilaporkan sebagai cacat: kepalanya setinggi ~90px (nama paket +
+harga), jadi tiap kali menggulir ada satu baris yang terpotong separuh di
+belakangnya dan terbaca seperti tulisan rusak. Menempel ke SAMPING tidak punya
+masalah ini — kolom yang membeku terlihat utuh. Sebelum membuat kepala tabel
+menempel vertikal, timbang dulu tinggi kepalanya terhadap tinggi layar.
+
 **Sel sticky butuh `z-index` yang ditata, bukan dibiarkan.** Tanpa itu sel yang
 datang belakangan di DOM menimpa yang sudah menempel. Di `/fitur`, baris judul
 kelompok berlatar putih sempat menutupi seluruh nama paket di kepala tabel.

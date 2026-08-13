@@ -2075,18 +2075,24 @@ tbody tr:hover { background: var(--color-paper); }
 }
 
 /* ── Kolom & baris yang MENEMPEL saat tabel digeser ──────────────────────────
-   Tiga hal menempel sekaligus, dan ketiganya perlu di layar 390px tempat
-   hanya satu setengah kolom paket muat sekaligus:
+   Yang menempel HANYA ke arah KIRI, saat tabelnya digeser ke samping:
 
-   1. kepala tabel (nama paket)  → menempel ke ATAS saat menggulir turun
-   2. kolom kemampuan            → menempel ke KIRI saat menggeser samping
-   3. judul kelompok             → menempel ke KIRI juga
+   1. kolom kemampuan  → nama kemampuannya tetap terbaca
+   2. judul kelompok   → tetap terbaca
 
-   Yang ketiga yang paling sering terlupa, dan itu cacat yang dilaporkan:
+   Yang kedua yang paling sering terlupa, dan itu cacat yang dilaporkan:
    judul "KASIR & PENJUALAN" dan "PRODUK & STOK" HILANG TOTAL begitu tabelnya
    digeser ke kanan, karena selnya membentang penuh dan ikut hanyut. Yang
    tersisa cuma deretan centang tanpa satu pun keterangan — persis pertanyaan
    yang seharusnya dijawab tabel ini.
+
+   **Kepala tabel sengaja TIDAK menempel ke atas.** Sempat dibuat begitu supaya
+   nama paket tetap terlihat saat menggulir turun, dan hasilnya dilaporkan
+   sebagai cacat: kepala tabel di sini setinggi ~90px (nama paket + harganya di
+   bawahnya), jadi tiap kali menggulir ada satu baris kemampuan yang terpotong
+   separuh di belakangnya — terbaca seperti tulisan yang rusak, bukan seperti
+   kepala tabel yang membeku. Judul kelompok tiap beberapa baris sudah cukup
+   memberi tahu orang sedang membaca bagian apa.
 
    `border-collapse: separate` WAJIB. Dengan `collapse`, border tidak ikut
    menempel bersama sel sticky dan garisnya tertinggal di posisi lama saat
@@ -2095,21 +2101,14 @@ tbody tr:hover { background: var(--color-paper); }
 .mk-cmp thead th {
   text-align: center; padding: 12px 14px; vertical-align: bottom;
   font-family: var(--font-display); font-weight: 800; font-size: 15px;
-  /* Menempel tepat di bawah navbar. Angkanya HARUS sama dengan tinggi
-     `.mk-nav` (61px di ponsel maupun desktop) — kurang sedikit saja,
-     sebaris isi tabel mengintip di celah antara navbar dan kepala tabel. */
-  position: sticky; top: 61px; z-index: 5;
   background: var(--color-card);
   box-shadow: inset 0 -1px 0 var(--color-line);
 }
-/* Sudut kiri-atas menempel ke DUA arah sekaligus, jadi ia harus berada di atas
-   keduanya — kalau tidak, kolom yang lewat menutupi judul "Kemampuan". */
-/* Sudut kiri-atas menempel ke DUA arah sekaligus, jadi ia harus berada di atas
-   semuanya. Kepala tabel juga HARUS di atas sel tbody yang menempel: pernah
-   sebaliknya, dan baris judul kelompok yang berlatar putih menutupi seluruh
-   nama paket begitu tabelnya digeser. */
+/* Sudut kiri-atas ikut menempel ke kiri bersama kolom kemampuan di bawahnya,
+   dan harus berada di atas kolom paket yang lewat — kalau tidak, kolom yang
+   lewat menutupi judul "Kemampuan". */
 .mk-cmp thead th:first-child {
-  text-align: left; left: 0; z-index: 6;
+  text-align: left; position: sticky; left: 0; z-index: 6;
 }
 .mk-cmp thead th span {
   display: block; font-family: var(--font-sans); font-weight: 500;
