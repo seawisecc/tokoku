@@ -145,10 +145,15 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
     const targetOrg = jar.get(IMPERSONATION_COOKIE)?.value
 
     if (targetOrg) {
+      // Toko yang sudah dihapus tidak bisa dimasuki, bahkan oleh Super Admin
+      // lewat cookie impersonasi yang basi. Alasannya sama dengan penyaringan
+      // di pemilih toko di bawah: seluruh halaman akan dirender untuk toko yang
+      // menurut sistem sudah tidak ada.
       const { data: org } = await supabase
         .from('organizations')
         .select('id, name, city, status, trial_ends_at, subscription_ends_at, logo_url')
         .eq('id', targetOrg)
+        .is('deleted_at', null)
         .maybeSingle()
 
       if (org) {
@@ -214,16 +219,35 @@ export const getSessionContext = cache(async (): Promise<SessionContext | null> 
   const { data: memberships } = await supabase
     .from('organization_members')
     .select(
-      'id, role, permissions, default_outlet_id, organization_id, organizations(id, name, city, status, trial_ends_at, subscription_ends_at, logo_url)',
+      'id, role, permissions, default_outlet_id, organization_id, organizations(id, name, city, status, trial_ends_at, subscription_ends_at, logo_url, deleted_at)',
     )
     .eq('user_id', userId)
     .eq('status', 'active')
     .order('joined_at')
 
-  const all = memberships ?? []
+  /**
+   * Toko yang sudah di-SOFT DELETE dibuang di sini.
+   *
+   * Keanggotaannya sengaja TIDAK ikut dihapus saat toko dihapus — jejaknya
+   * masih dibutuhkan kalau suatu saat tokonya dipulihkan. Akibatnya baris
+   * keanggotaan itu tetap terbaca di sini, dan sebelum penyaringan ini toko
+   * yang sudah lenyap dari Super Admin masih tampil di pemilih toko pemiliknya.
+   * Lebih buruk lagi: masih bisa DIMASUKI, dan seluruh halaman dirender untuk
+   * toko yang menurut sistem sudah tidak ada.
+   *
+   * Ketahuan 13 Agu setelah tenant demo dipensiunkan: Super Admin menampilkan
+   * 1 toko, pemilih toko menampilkan 4. Disaring di sini, bukan lewat filter
+   * PostgREST pada relasi tertanam, karena filter itu butuh `!inner` dan
+   * diam-diam ikut membuang baris induknya kalau relasinya null.
+   */
+  const all = (memberships ?? []).filter(
+    (m) =>
+      (m.organizations as unknown as { deleted_at: string | null } | null)?.deleted_at == null,
+  )
 
-  // Login berhasil tapi belum jadi anggota organisasi mana pun — mis. undangan
-  // belum diterima, atau keanggotaannya dinonaktifkan.
+  // Login berhasil tapi belum jadi anggota organisasi mana pun yang masih
+  // hidup — mis. undangan belum diterima, keanggotaannya dicabut, atau
+  // semua tokonya sudah dihapus.
   if (all.length === 0) return null
 
   const jar = await cookies()

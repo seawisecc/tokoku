@@ -1414,6 +1414,18 @@ mentah-mentah membuat seluruh halaman dirender dengan `organization_id` yang
 bukan milik user — RLS memang mengembalikan kosong dan setiap tulis ditolak, tapi
 hasilnya aplikasi yang tampak rusak tanpa sebab, bukan penolakan yang bisa dibaca.
 
+**Toko yang di-SOFT DELETE harus disaring di `getSessionContext()`.** Ketahuan
+13 Agu setelah tenant demo dipensiunkan: Super Admin menampilkan 1 toko,
+sementara pemilih toko pemiliknya menampilkan 4 — Warung Rina dan dua sisa
+"Uji Trial Bersama" yang semuanya sudah dihapus. Penyebabnya keanggotaan
+sengaja TIDAK ikut dihapus saat toko dihapus (jejaknya masih dibutuhkan kalau
+tokonya dipulihkan), jadi barisnya tetap terbaca. Akibatnya bukan cuma kotor:
+toko itu masih bisa DIMASUKI, dan seluruh halaman dirender untuk toko yang
+menurut sistem sudah tidak ada. Disaring di JS setelah query, bukan lewat
+filter PostgREST pada relasi tertanam — filter itu butuh `!inner` dan diam-diam
+ikut membuang baris induk kalau relasinya null. Cookie impersonasi Super Admin
+ikut ditutup dengan `.is('deleted_at', null)`.
+
 **Berpindah toko membuang cookie outlet.** Isinya outlet milik toko lama.
 `pickOutlet()` memang sudah menolak outlet asing, jadi ini bukan soal keamanan —
 melainkan supaya toko tujuan mendarat di outlet utamanya sendiri alih-alih
