@@ -5,6 +5,7 @@ import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { signUpForInvitation, type InviteSignUpState } from '@/app/(auth)/actions'
 import { Icon } from '@/components/ui/icons'
+import { PasswordField } from '@/components/ui/PasswordField'
 
 function Submit() {
   const { pending } = useFormStatus()
@@ -59,17 +60,12 @@ export function InvitationSignUp({
 
   return (
     <>
-      <h1 style={{ fontSize: 18, fontWeight: 700, margin: '0 0 6px' }}>
-        Bergabung dengan {storeName}
-      </h1>
-      <p
-        style={{
-          fontSize: 13,
-          color: 'var(--color-ink-soft)',
-          margin: '0 0 16px',
-          lineHeight: 1.6,
-        }}
-      >
+      {/* Judulnya memakai kelas auth yang sama dengan Masuk dan Lupa Sandi.
+          Dulu ukurannya ditulis inline dan lebih kecil, jadi halaman undangan
+          terbaca seperti bagian dari halaman lain, bukan langkah tersendiri. */}
+      <p className="auth-eyebrow">Undangan</p>
+      <h1 className="auth-title">Bergabung dengan {storeName}</h1>
+      <p className="auth-sub">
         Anda diundang sebagai <strong style={{ color: 'var(--color-ink)' }}>{roleLabel}</strong>{' '}
         untuk <strong style={{ color: 'var(--color-ink)' }}>{email}</strong>.
       </p>
@@ -116,20 +112,17 @@ export function InvitationSignUp({
             />
           </div>
 
-          <div className="field">
-            <label htmlFor="invSandi">Buat Kata Sandi</label>
-            <input
-              id="invSandi"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Minimal 8 karakter"
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+          <PasswordField
+            id="invSandi"
+            name="password"
+            label="Buat Kata Sandi"
+            autoComplete="new-password"
+            placeholder="Minimal 8 karakter"
+            minLength={8}
+            value={password}
+            onChange={setPassword}
+            required
+          />
 
           {state.error && (
             <div className="empty-note" style={{ marginBottom: 14 }} role="alert">

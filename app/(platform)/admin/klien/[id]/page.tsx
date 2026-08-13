@@ -35,7 +35,7 @@ export default async function KlienDetailPage({ params }: { params: Promise<{ id
       .maybeSingle(),
     supabase
       .from('organizations')
-      .select('plan_id, status, trial_ends_at, status_changed_at')
+      .select('plan_id, status, trial_ends_at, subscription_ends_at, status_changed_at')
       .eq('id', id)
       .maybeSingle(),
     supabase.from('plans').select('id, name, code, price_monthly').eq('is_active', true).order('sort_order'),
@@ -79,6 +79,9 @@ export default async function KlienDetailPage({ params }: { params: Promise<{ id
         }
       : null,
     trialEndsAt: org?.trial_ends_at ? org.trial_ends_at.slice(0, 10) : null,
+    subscriptionEndsAt: org?.subscription_ends_at
+      ? org.subscription_ends_at.slice(0, 10)
+      : null,
     // Dihitung di sini, bukan lewat org_is_active(): fungsi itu sengaja tidak
     // bisa dipanggil dari luar (lihat migrasi 0019 & 0021).
     lapsed:
@@ -86,7 +89,13 @@ export default async function KlienDetailPage({ params }: { params: Promise<{ id
       org?.status === 'inactive' ||
       (org?.status === 'trial' &&
         !!org?.trial_ends_at &&
-        new Date(org.trial_ends_at) <= new Date()),
+        new Date(org.trial_ends_at) <= new Date()) ||
+      // Sejak migrasi 0041 langganan berbayar juga punya tanggal akhir.
+      // Aturannya harus sama dengan org_lapsed_at(): statusnya yang
+      // menentukan kolom mana yang berlaku.
+      (org?.status === 'active' &&
+        !!org?.subscription_ends_at &&
+        new Date(org.subscription_ends_at) <= new Date()),
   }
 
   const subscriptionEvents: SubscriptionEvent[] = (events ?? []).map((e) => ({

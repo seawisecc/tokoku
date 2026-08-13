@@ -43,7 +43,7 @@ export default async function LanggananPage() {
   const [{ data: org }, { data: quota }, { data: events }] = await Promise.all([
     supabase
       .from('organizations')
-      .select('name, status, trial_ends_at, plans:plan_id(name, code, price_monthly)')
+      .select('name, status, trial_ends_at, subscription_ends_at, plans:plan_id(name, code, price_monthly)')
       .eq('id', orgId)
       .maybeSingle(),
     // `v_client_quota` menyaring sendiri berdasarkan keanggotaan pemanggil
@@ -66,8 +66,24 @@ export default async function LanggananPage() {
 
   const status = STATUS[org?.status ?? 'trial'] ?? STATUS.trial
   const state = subscriptionState(session.org)
-  const trialEnds = org?.status === 'trial' ? (org.trial_ends_at ?? null) : null
-  const sisa = trialEnds ? sisaHari(trialEnds) : null
+
+  /**
+   * Tanggal berakhirnya masa aktif — trial MAUPUN berbayar.
+   *
+   * Statusnya yang menentukan kolom mana yang berlaku, persis seperti
+   * `org_lapsed_at()` dan `lib/subscription.ts`. Sebelum migrasi 0041 kolom
+   * berbayarnya tidak ada sama sekali, jadi toko yang sudah membayar melihat
+   * halaman ini tanpa satu pun tanggal — tidak ada yang bisa dipakai
+   * merencanakan kapan harus memperpanjang.
+   */
+  const aktifSampai =
+    org?.status === 'trial'
+      ? (org.trial_ends_at ?? null)
+      : org?.status === 'active'
+        ? (org.subscription_ends_at ?? null)
+        : null
+  const berbayar = org?.status === 'active'
+  const sisa = aktifSampai ? sisaHari(aktifSampai) : null
 
   const kuota: Quota | null = quota
     ? {
@@ -105,47 +121,58 @@ export default async function LanggananPage() {
           <span className={cn('badge', status.badge)}>{status.label}</span>
         </div>
 
-        {/* Sisa trial disebut dengan angka DAN tanggal. Angkanya yang menempel
-            di kepala ("tinggal 5 hari"), tanggalnya yang dipakai merencanakan. */}
+        {/* Sisa masa aktif disebut dengan angka DAN tanggal. Angkanya yang
+            menempel di kepala ("tinggal 5 hari"), tanggalnya yang dipakai
+            merencanakan pembayaran. */}
         {sisa !== null && (
           <div
-            className="empty-note"
-            style={
-              state.kind === 'lapsed'
-                ? { marginTop: 16 }
-                : state.kind === 'ending'
-                  ? {
-                      marginTop: 16,
-                      background: 'var(--color-amber-soft)',
-                      color: 'var(--color-amber-ink)',
-                    }
-                  : {
-                      marginTop: 16,
-                      background: 'var(--color-success-soft)',
-                      color: 'var(--color-success)',
-                    }
-            }
+            className={cn(
+              'empty-note',
+              state.kind === 'lapsed' ? '' : state.kind === 'ending' ? 'is-warn' : 'is-ok',
+            )}
+            style={{ marginTop: 16 }}
           >
-            <Icon name={state.kind === 'ok' ? 'check' : 'alert'} size={16} style={{ marginTop: 1 }} />
+            <Icon
+              name={state.kind === 'ok' ? 'check' : 'alert'}
+              size={16}
+              style={{ marginTop: 1 }}
+            />
             <div style={{ flex: 1 }}>
               {sisa > 0 ? (
                 <>
-                  Masa coba gratis tinggal <b>{sisa} hari</b>, sampai{' '}
-                  <b>{tanggal(trialEnds!)}</b>. Setelah itu kasir tidak bisa mencatat penjualan
-                  baru.
+                  {berbayar ? 'Langganan' : 'Masa coba gratis'} aktif{' '}
+                  <b>
+                    {sisa} hari lagi, sampai {tanggal(aktifSampai!)}
+                  </b>
+                  . {berbayar ? 'Perpanjang' : 'Berlangganan'} sebelum tanggal itu supaya kasir
+                  tidak berhenti mencatat penjualan.
                 </>
               ) : sisa === 0 ? (
                 <>
-                  Masa coba gratis berakhir <b>hari ini</b>. Hubungi admin TokoKu hari ini juga
-                  supaya kasir tidak berhenti besok pagi.
+                  {berbayar ? 'Langganan' : 'Masa coba gratis'} berakhir <b>hari ini</b>. Hubungi
+                  admin TokoKu hari ini juga supaya kasir tidak berhenti besok pagi.
                 </>
               ) : (
                 <>
-                  Masa coba gratis sudah berakhir <b>{tanggal(trialEnds!)}</b>. Kasir tidak bisa
-                  mencatat penjualan baru dan data baru tidak bisa ditambah. Semua data lama
-                  tetap aman dan bisa dilihat.
+                  {berbayar ? 'Langganan' : 'Masa coba gratis'} sudah berakhir{' '}
+                  <b>{tanggal(aktifSampai!)}</b>. Kasir tidak bisa mencatat penjualan baru dan
+                  data baru tidak bisa ditambah. Semua data lama tetap aman dan bisa dilihat.
                 </>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Berbayar tapi tanpa tanggal akhir. Bukan kesalahan — NULL memang
+            berarti tanpa batas (lihat migrasi 0041) — tapi kalau didiamkan,
+            halaman ini tidak menjawab pertanyaan yang paling sering ditanyakan
+            di sini. */}
+        {berbayar && !aktifSampai && (
+          <div className="empty-note is-ok" style={{ marginTop: 16 }}>
+            <Icon name="check" size={16} style={{ marginTop: 1 }} />
+            <div style={{ flex: 1 }}>
+              Langganan aktif tanpa batas waktu. Belum ada tanggal perpanjangan yang ditetapkan
+              admin TokoKu untuk toko ini.
             </div>
           </div>
         )}

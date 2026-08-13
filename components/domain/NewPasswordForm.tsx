@@ -5,6 +5,7 @@ import { useActionState, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { updatePassword, type NewPasswordState } from '@/app/(auth)/actions'
 import { Icon } from '@/components/ui/icons'
+import { PasswordField } from '@/components/ui/PasswordField'
 
 function Submit() {
   const { pending } = useFormStatus()
@@ -61,34 +62,28 @@ export function NewPasswordForm({ valid, email }: { valid: boolean; email: strin
       </p>
 
       <form action={action}>
-        <div className="field">
-          <label htmlFor="newPassword">Kata Sandi Baru</label>
-          <input
-            id="newPassword"
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Minimal 8 karakter"
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
+        <PasswordField
+          id="newPassword"
+          name="password"
+          label="Kata Sandi Baru"
+          autoComplete="new-password"
+          placeholder="Minimal 8 karakter"
+          minLength={8}
+          value={password}
+          onChange={setPassword}
+          required
+        />
 
-        <div className="field">
-          <label htmlFor="confirmPassword">Ulangi Kata Sandi</label>
-          <input
-            id="confirmPassword"
-            name="confirm"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Ketik ulang sandi yang sama"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-          />
-        </div>
+        <PasswordField
+          id="confirmPassword"
+          name="confirm"
+          label="Ulangi Kata Sandi"
+          autoComplete="new-password"
+          placeholder="Ketik ulang sandi yang sama"
+          value={confirm}
+          onChange={setConfirm}
+          required
+        />
 
         {state.error && (
           <div className="empty-note" style={{ marginBottom: 14 }} role="alert">

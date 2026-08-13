@@ -1,4 +1,5 @@
 import type { SessionContext } from '@/lib/auth'
+import { getNotifications } from '@/lib/notifications'
 import { visibleNav } from '@/lib/navigation'
 import { BottomNav } from './BottomNav'
 import { ImpersonationBanner } from './ImpersonationBanner'
@@ -18,7 +19,7 @@ import { subscriptionState } from '@/lib/subscription'
  * Di mobile kolom itu hilang sama sekali dan brand pindah ke topbar, karena
  * navigasi ditangani bottom nav.
  */
-export function AppShell({
+export async function AppShell({
   session,
   context,
   children,
@@ -30,6 +31,9 @@ export function AppShell({
 }) {
   const items = visibleNav(session.role, session.permissions)
   const subscription = subscriptionState(session.org)
+  // Dihitung di server, sekali per render halaman. Lihat catatan "tidak
+  // dipoll" di NotificationBell.
+  const notices = await getNotifications(session)
 
   return (
     <div className="app">
@@ -47,6 +51,7 @@ export function AppShell({
           activeStoreId={session.org?.id ?? null}
           storeName={session.org?.name ?? null}
           logoUrl={session.org?.logoUrl}
+          notices={notices}
         />
         <SubscriptionBanner state={subscription} />
         <main className="content">{children}</main>

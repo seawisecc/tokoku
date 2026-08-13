@@ -107,10 +107,10 @@ databasenya juga; lihat "Deploy tidak responsif" di bawah.
    riwayat langganannya sendiri di `/pengaturan/langganan`, dan menghubungi
    admin lewat WhatsApp. Yang belum ada cuma payment gateway-nya: perubahan
    paket masih dikerjakan tangan lewat Super Admin.
-4. **Sandi Super Admin `admin123` masih berlaku di produksi.** Satu akun itu
-   bisa membaca data SELURUH toko klien. Sekarang sudah ADA menunya
-   (`/admin/pengaturan` → Keamanan Akun), jadi tinggal dikerjakan pemilik
-   project sendiri; bukan sesuatu yang boleh dikerjakan agen.
+4. ~~Sandi Super Admin `admin123`~~ **SUDAH DIGANTI pemilik project** (13 Agu,
+   terbukti saat `admin123` ditolak halaman masuk). Sandinya tidak ada di repo
+   ini dan tidak boleh diminta; agen tidak bisa lagi masuk sebagai Super Admin,
+   jadi pengujian apa pun di `/admin/*` harus dikerjakan pemilik project.
 5. **Belum ada Kebijakan Privasi & Syarat Ketentuan.** Aplikasi ini menyimpan
    nama dan nomor HP pelanggan milik klien, jadi UU PDP 27/2022 berlaku. Lihat
    "Sisa pekerjaan sebelum dijual" di bawah.
@@ -1576,6 +1576,95 @@ diwarnai putih untuk latar gelap, sementara `BrandMark` memakai warna tinta
 bawaan yang tak terbaca di sana. Halaman auth tidak boleh memasang brand
 sendiri.
 
+## Lonceng notifikasi
+
+Tombolnya ada di topbar sejak wireframe dan **tidak pernah disambungkan**:
+`<button>` tanpa `onClick`, tanpa panel, tanpa apa pun. Untuk aplikasi yang
+dijual, tombol yang tidak melakukan apa-apa lebih buruk daripada tidak ada
+tombol — orang menekannya berulang kali lalu menyimpulkan aplikasinya rusak.
+
+Isinya dihitung server di `lib/notifications.ts`, dipanggil AppShell sekali per
+render halaman. Yang masuk hanya hal yang **bisa ditindaklanjuti hari ini**:
+
+| butir | warna | tujuan |
+|---|---|---|
+| langganan berakhir / mau berakhir | merah / amber | `/pengaturan/langganan` |
+| transaksi gagal masuk (`sync_rejections`) | merah | `/pengaturan/sinkronisasi` |
+| nota jatuh tempo ≤7 hari | amber | `/pembelian` |
+| stok menipis | hijau | `/produk` |
+
+Yang disengaja:
+- **Disaring izin modul.** Kasir tidak diberi tahu soal nota jatuh tempo: dia
+  tidak bisa membukanya, tidak bisa membayarnya, dan tidak bisa berbuat apa pun
+  selain cemas. Aturannya sama dengan navigasi.
+- **Langganan TIDAK disaring izin.** Kalau langganan berakhir, kasir pun
+  berhenti bisa menerima uang — dia berhak tahu sebelum antreannya mengular.
+- **Penolakan sinkronisasi paling atas dan selalu merah**, walau cuma satu.
+  Tiap penolakan adalah penjualan yang sudah terjadi tapi tidak pernah sampai
+  ke pembukuan. Stok menipis bisa menunggu besok; ini tidak.
+- **Tidak ada tanda "sudah dibaca".** Semua yang muncul adalah keadaan yang
+  MASIH berlangsung, bukan peristiwa yang lewat. Stok tidak berhenti menipis
+  karena loncengnya dibuka; menandainya terbaca cuma menyembunyikan masalah
+  yang belum selesai. Butirnya hilang sendiri saat keadaannya beres.
+- **Tidak dipoll.** Seluruh halaman toko sudah `force-dynamic`, jadi angkanya
+  ikut disegarkan tiap perpindahan halaman. Denyut tambahan cuma membebani
+  jaringan warung untuk angka yang berubah beberapa kali sehari.
+- Semua querynya `head: true` — yang dibutuhkan jumlahnya, bukan isinya. Ini
+  dibayar di SETIAP halaman, jadi biayanya harus tetap kecil.
+
+## Masa langganan berbayar
+
+Sampai migrasi 0041, toko yang SUDAH BAYAR tidak punya tanggal berakhir di mana
+pun: `organizations` cuma menyimpan `trial_ends_at`. Begitu statusnya jadi
+`active`, tidak ada satu pun kolom yang menjawab "berlaku sampai kapan" — jadi
+pemilik toko tidak tahu kapan harus memperpanjang dan pemilik platform tidak
+punya daftar siapa yang harus ditagih bulan ini.
+
+`organizations.subscription_ends_at`. Aturannya:
+- **NULL = tanpa batas**, sama seperti kuota dan trial. Semua toko yang sudah
+  ada tetap NULL, jadi migrasinya tidak mengubah akses siapa pun.
+- **STATUS yang menentukan kolom mana yang berlaku**: `trial` membaca
+  `trial_ends_at`, `active` membaca `subscription_ends_at`. Digabung jadi satu
+  kolom, toko yang naik dari trial ke berbayar akan membawa tanggal trial
+  lamanya dan langsung terkunci.
+- **Ditegakkan, bukan sekadar ditampilkan** (`org_lapsed_at`). Angka "berakhir
+  3 hari lalu" yang tidak mengubah apa pun akan mengajari semua orang
+  mengabaikannya — dan begitu itu terjadi, peringatan sungguhan ikut tidak
+  dipercaya.
+- **Ikut dikunci trigger penjaga.** Tanpa itu pemilik toko bisa memperpanjang
+  langganannya sendiri lewat satu panggilan REST — persis lubang yang ditambal
+  0036 untuk `plan_id`/`status`/`trial_ends_at`.
+- Fungsi penjaganya bernama `tg_guard_org_commercial`, dan namanya HARUS itu:
+  trigger `trg_org_commercial_guard` menunjuk nama tersebut, jadi fungsi
+  bernama lain akan lolos tanpa pernah dipanggil.
+- **Akhir hari, bukan tengah malam** (`23:59:59`), alasan sama dengan trial:
+  langganan yang "habis 20 Agustus" harus bisa dipakai sepanjang tanggal 20.
+
+Diatur Super Admin di `/admin/klien/[id]` → "Masa Langganan Berbayar", terpisah
+dari kotak Masa Trial. Pemilik toko melihatnya di `/pengaturan/langganan`
+sebagai sisa hari + tanggal.
+
+## Isian kata sandi
+
+`components/ui/PasswordField.tsx`, dipakai SEMUA isian sandi: masuk, daftar
+toko, undangan, atur sandi baru, dan ganti sandi.
+
+Tombol matanya bukan kenyamanan. Sandi yang tersensor total membuat orang tidak
+punya cara memeriksa apa yang barusan diketiknya, dan di aplikasi ini akibatnya
+menumpuk: pemilik warung mengetik di ponsel dengan papan ketik yang gemar
+mengoreksi sendiri, lalu ditolak "email atau kata sandi salah" tanpa tahu huruf
+mana yang meleset. Pada layar BUAT sandi lebih mahal lagi — sandinya tersimpan
+sesuai yang salah, dan orangnya baru sadar besok pagi.
+
+- **Bawaannya tetap tersembunyi.** Yang berubah cuma: ADA jalan memeriksa, dan
+  keputusannya di tangan orang yang sedang mengetik.
+- **Tombolnya `tabIndex={-1}`.** Orang yang mengetik sandi lalu menekan Tab
+  hampir selalu menuju isian berikutnya atau tombol simpan; tombol ini menyela
+  di tengah dan membuat Enter menekan hal yang salah.
+- **Bisa terkendali maupun tidak.** `AuthPanel` merender kedua panelnya
+  bersamaan untuk animasi geser dan mengandalkan isian tak terkendali; sisanya
+  terkendali state. Jangan mencampur keduanya di satu isian.
+
 ## Reset kata sandi
 
 Alurnya: `/lupa-sandi` → Supabase kirim email → `/auth/konfirmasi` (Route
@@ -1811,8 +1900,10 @@ app/
   about/  setup/   halaman publik & status koneksi
 components/
   layout/          AppShell, Sidebar (memuat brand), Topbar, BottomNav,
-                   OutletSwitcher (toko + outlet), ImpersonationBanner
-  ui/icons.tsx     registry ikon dari wireframe
+                   OutletSwitcher (toko + outlet), ImpersonationBanner,
+                   NotificationBell (isinya dari lib/notifications.ts)
+  ui/icons.tsx     registry ikon dari wireframe (+ whatsapp, star, eye/eyeOff)
+  ui/PasswordField isian sandi + tombol lihat/sembunyi
   pos/             PosClient + turunannya, CartBar (bar bayar mobile), Receipt (58mm),
                    BarcodeScanner (kamera, ponyfill barcode-detector),
                    CustomerPicker + PointRedeem (tukar poin saat bayar)
@@ -1835,6 +1926,7 @@ lib/
   auth.ts          konteks sesi + requireSession/requirePermission/requireWrite
   email.ts         pengirim email (Resend lewat fetch) — OPSIONAL, gagal ≠ batal
   navigation.ts    SATU daftar menu, disaring izin modul
+  notifications.ts isi lonceng topbar — hanya yang bisa ditindaklanjuti
   offline/         db (Dexie v3, stempel tenant + outlet, deviceKey per outlet),
                    outbox, catalog, device, sequence, connection
   csv.ts           baca-tulis CSV (deteksi pemisah, BOM UTF-8) — tanpa dependensi
@@ -1846,7 +1938,7 @@ lib/
 scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  40 file, Postgres 17
+supabase/migrations/  41 file, Postgres 17
 ```
 
 ## RPC yang penting

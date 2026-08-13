@@ -5,6 +5,7 @@ import { useActionState, useEffect, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { signIn, signUp, type LoginState, type SignUpState } from '@/app/(auth)/actions'
 import { Icon } from '@/components/ui/icons'
+import { PasswordField } from '@/components/ui/PasswordField'
 import { cn } from '@/lib/format'
 
 function Submit({ label, busyLabel }: { label: string; busyLabel: string }) {
@@ -87,18 +88,15 @@ export function AuthPanel({
                   required
                 />
               </div>
-              <div className="field">
-                <label htmlFor="password">Kata Sandi</label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  tabIndex={isRegister ? -1 : 0}
-                  required
-                />
-              </div>
+              <PasswordField
+                id="password"
+                name="password"
+                label="Kata Sandi"
+                autoComplete="current-password"
+                placeholder="••••••••"
+                tabIndex={isRegister ? -1 : 0}
+                required
+              />
 
               <p className="auth-help">
                 <Link href="/lupa-sandi" tabIndex={isRegister ? -1 : 0}>
@@ -170,19 +168,16 @@ export function AuthPanel({
                 />
               </div>
 
-              <div className="field">
-                <label htmlFor="regPassword">Kata Sandi</label>
-                <input
-                  id="regPassword"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  placeholder="Minimal 8 karakter"
-                  minLength={8}
-                  tabIndex={isRegister ? 0 : -1}
-                  required
-                />
-              </div>
+              <PasswordField
+                id="regPassword"
+                name="password"
+                label="Kata Sandi"
+                autoComplete="new-password"
+                placeholder="Minimal 8 karakter"
+                minLength={8}
+                tabIndex={isRegister ? 0 : -1}
+                required
+              />
 
               {signUpState.error && <Alert tone="bad">{signUpState.error}</Alert>}
               {signUpState.notice && <Alert tone="ok">{signUpState.notice}</Alert>}

@@ -215,6 +215,59 @@ export async function setClientTrialEnd(
   }
 }
 
+/**
+ * Atur akhir masa langganan BERBAYAR.
+ *
+ * Kembarannya `setClientTrialEnd`, dan sengaja dipisah walau isinya mirip:
+ * yang satu berlaku saat status `trial`, yang ini saat status `active`.
+ * Digabung jadi satu kolom, toko yang naik dari trial ke berbayar akan membawa
+ * tanggal trial lamanya dan langsung terkunci — dan yang membacanya
+ * (`org_lapsed_at`) memang memilih kolomnya berdasarkan status.
+ *
+ * Mengosongkan tanggal berarti TANPA BATAS, bukan berakhir. Aturan yang sama
+ * dengan kuota dan trial: jangan pernah mengunci toko karena kolomnya kosong.
+ */
+export async function setClientSubscriptionEnd(
+  organizationId: string,
+  isoDate: string | null,
+): Promise<AdminResult> {
+  await requirePlatformAdmin()
+
+  let value: string | null = null
+  if (isoDate) {
+    const d = new Date(isoDate)
+    if (Number.isNaN(d.getTime())) return { ok: false, error: 'Tanggal tidak valid.' }
+    // Akhir hari, alasan yang sama dengan trial: langganan yang "habis 20
+    // Agustus" harus tetap bisa dipakai sepanjang tanggal 20, bukan mati
+    // jam 00:00 dan menghentikan kasir di pagi hari.
+    d.setHours(23, 59, 59, 999)
+    value = d.toISOString()
+  }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('organizations')
+    .update({ subscription_ends_at: value })
+    .eq('id', organizationId)
+    .select('id')
+
+  if (error) return { ok: false, error: error.message }
+  // UPDATE yang ditolak trigger penjaga menjawab error, tapi yang ditolak RLS
+  // menjawab "berhasil" dengan NOL baris. Keduanya harus terlihat.
+  if (!data || data.length === 0) {
+    return { ok: false, error: 'Perubahan ditolak. Akun ini bukan Super Admin.' }
+  }
+
+  revalidatePath('/admin/klien')
+  revalidatePath(`/admin/klien/${organizationId}`)
+  return {
+    ok: true,
+    message: value
+      ? 'Masa langganan diperbarui.'
+      : 'Batas langganan dihapus. Akses tidak dibatasi tanggal.',
+  }
+}
+
 export async function setClientStatus(
   organizationId: string,
   status: 'active' | 'trial' | 'suspended' | 'inactive',

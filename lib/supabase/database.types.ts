@@ -915,6 +915,7 @@ export type Database = {
           slug: string
           status: Database["public"]["Enums"]["org_status"]
           status_changed_at: string
+          subscription_ends_at: string | null
           tax_enabled: boolean
           tax_inclusive: boolean
           tax_percent: number
@@ -948,6 +949,7 @@ export type Database = {
           slug: string
           status?: Database["public"]["Enums"]["org_status"]
           status_changed_at?: string
+          subscription_ends_at?: string | null
           tax_enabled?: boolean
           tax_inclusive?: boolean
           tax_percent?: number
@@ -981,6 +983,7 @@ export type Database = {
           slug?: string
           status?: Database["public"]["Enums"]["org_status"]
           status_changed_at?: string
+          subscription_ends_at?: string | null
           tax_enabled?: boolean
           tax_inclusive?: boolean
           tax_percent?: number

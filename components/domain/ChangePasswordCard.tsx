@@ -4,6 +4,7 @@ import { useActionState, useEffect, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { changePassword, type ChangePasswordState } from '@/app/(auth)/actions'
 import { Icon } from '@/components/ui/icons'
+import { PasswordField } from '@/components/ui/PasswordField'
 
 function Submit() {
   const { pending } = useFormStatus()
@@ -88,44 +89,35 @@ export function ChangePasswordCard() {
 
       {buka && (
         <form action={action} className="form-narrow">
-          <div className="field">
-            <label htmlFor="cpCurrent">Kata sandi sekarang</label>
-            <input
-              id="cpCurrent"
-              name="current"
-              type="password"
-              autoComplete="current-password"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-              required
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="cpNew">Kata sandi baru</label>
-            <input
-              id="cpNew"
-              name="password"
-              type="password"
-              autoComplete="new-password"
-              placeholder="Minimal 8 karakter"
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="cpConfirm">Ulangi kata sandi baru</label>
-            <input
-              id="cpConfirm"
-              name="confirm"
-              type="password"
-              autoComplete="new-password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-            />
-          </div>
+          <PasswordField
+            id="cpCurrent"
+            name="current"
+            label="Kata sandi sekarang"
+            autoComplete="current-password"
+            value={current}
+            onChange={setCurrent}
+            required
+          />
+          <PasswordField
+            id="cpNew"
+            name="password"
+            label="Kata sandi baru"
+            autoComplete="new-password"
+            placeholder="Minimal 8 karakter"
+            minLength={8}
+            value={password}
+            onChange={setPassword}
+            required
+          />
+          <PasswordField
+            id="cpConfirm"
+            name="confirm"
+            label="Ulangi kata sandi baru"
+            autoComplete="new-password"
+            value={confirm}
+            onChange={setConfirm}
+            required
+          />
 
           {state.error && (
             <div className="empty-note" style={{ marginBottom: 14 }} role="alert">

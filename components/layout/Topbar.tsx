@@ -1,5 +1,6 @@
-import { Icon } from '@/components/ui/icons'
+import type { Notice } from '@/lib/notifications'
 import { BrandMark } from './BrandMark'
+import { NotificationBell } from './NotificationBell'
 import { OutletSwitcher, type OutletOption, type StoreOption } from './OutletSwitcher'
 import { SignOutButton } from './SignOutButton'
 
@@ -20,6 +21,7 @@ export function Topbar({
   activeStoreId,
   storeName,
   logoUrl,
+  notices,
 }: {
   context: string
   initials: string
@@ -29,6 +31,7 @@ export function Topbar({
   activeStoreId: string | null
   storeName: string | null
   logoUrl?: string | null
+  notices: Notice[]
 }) {
   // Penanda untuk CSS: di layar sempit, brand + pemilih outlet + tiga tombol
   // tidak muat bersamaan. Toko satu outlet (mayoritas warung) tidak terpengaruh
@@ -48,9 +51,7 @@ export function Topbar({
           activeStoreId={activeStoreId}
           storeName={storeName}
         />
-        <button className="icon-btn" type="button" aria-label="Notifikasi">
-          <Icon name="bell" size={16} />
-        </button>
+        <NotificationBell notices={notices} />
         <div className="avatar" title={initials}>
           {initials}
         </div>

@@ -6,6 +6,7 @@ import {
   setClientPlan,
   setClientStatus,
   setClientTrialEnd,
+  setClientSubscriptionEnd,
   startImpersonation,
 } from '@/app/(platform)/admin/actions'
 import { Drawer } from '@/components/overlay/Drawer'
@@ -26,6 +27,7 @@ export type ClientDetailData = {
   quota: Quota | null
   /** yyyy-mm-dd untuk <input type="date">, null kalau tanpa batas. */
   trialEndsAt: string | null
+  subscriptionEndsAt: string | null
   /** true kalau akses toko ini sedang tertutup (ditangguhkan / trial lewat). */
   lapsed: boolean
 }
@@ -73,6 +75,7 @@ export function ClientDetail({
   const alerting = client.quota ? quotaLines(client.quota).filter(isAlerting) : []
   // Terkendali state — lihat jebakan reset <form> React 19 di CLAUDE.md.
   const [trialEnd, setTrialEnd] = useState(client.trialEndsAt ?? '')
+  const [subEnd, setSubEnd] = useState(client.subscriptionEndsAt ?? '')
 
   function run(fn: () => Promise<{ ok: boolean; error?: string; message?: string }>) {
     startTransition(async () => {
@@ -226,6 +229,52 @@ export function ClientDetail({
           <strong> Trial</strong>, toko tidak bisa membuat transaksi baru atau menambah data.
           Transaksi yang dibuat sebelum tanggal itu tetap bisa tersinkron dari perangkat offline.
           Kosongkan untuk tanpa batas waktu.
+        </p>
+      </div>
+
+      {/* Masa langganan berbayar. Dipisah dari trial, bukan digabung: yang
+          berlaku ditentukan STATUS toko, dan `org_lapsed_at()` memilih
+          kolomnya dengan aturan yang sama. Digabung, toko yang naik dari trial
+          ke berbayar akan membawa tanggal trial lamanya dan langsung terkunci. */}
+      <div className="section-title">Masa Langganan Berbayar</div>
+      <div className="card">
+        <div className="field" style={{ marginBottom: 10, maxWidth: 260 }}>
+          <label htmlFor="subEnd">Langganan berakhir</label>
+          <input
+            id="subEnd"
+            type="date"
+            value={subEnd}
+            onChange={(e) => setSubEnd(e.target.value)}
+          />
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            className="btn btn-dark btn-sm"
+            type="button"
+            disabled={pending}
+            onClick={() => run(() => setClientSubscriptionEnd(client.id, subEnd || null))}
+          >
+            Simpan Tanggal
+          </button>
+          {client.subscriptionEndsAt && (
+            <button
+              className="btn btn-ghost btn-sm"
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                setSubEnd('')
+                run(() => setClientSubscriptionEnd(client.id, null))
+              }}
+            >
+              Hapus batas
+            </button>
+          )}
+        </div>
+        <p className="field-hint" style={{ marginTop: 10 }}>
+          Isi setelah klien membayar, misalnya sebulan ke depan. Berlaku sampai akhir hari yang
+          dipilih, dan hanya menggigit selama status <strong>Aktif</strong>. Tanggal ini yang
+          dilihat pemilik toko di halaman Langganan sebagai sisa masa aktif. Kosongkan untuk
+          tanpa batas waktu.
         </p>
       </div>
 
