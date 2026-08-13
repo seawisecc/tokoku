@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { OnboardingChecklist } from '@/components/domain/OnboardingChecklist'
 import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
 import { jam, rupiah } from '@/lib/format'
@@ -24,6 +25,8 @@ export default async function BerandaPage() {
     { data: recent },
     { count: teamCount },
     { data: dueSoon },
+    { count: trxLifetime },
+    { data: outletStruk },
   ] = await Promise.all([
       // Disaring per OUTLET, dan `maybeSingle()` dibuang.
       //
@@ -82,6 +85,18 @@ export default async function BerandaPage() {
         .lte('due_date', new Date(Date.now() + 14 * 864e5).toLocaleDateString('en-CA'))
         .order('due_date')
         .limit(5),
+      // Panduan awal butuh tahu apakah toko ini SUDAH PERNAH berjualan sama
+      // sekali — bukan hari ini saja. `head: true` karena yang dibutuhkan cuma
+      // ada/tidaknya, dan ini dibayar tiap kali beranda dibuka.
+      supabase
+        .from('transactions')
+        .select('id', { count: 'exact', head: true })
+        .eq('organization_id', orgId),
+      supabase
+        .from('outlets')
+        .select('receipt_settings')
+        .eq('id', session.outletId!)
+        .maybeSingle(),
     ])
 
   // Hanya disebut kalau memang ada lebih dari satu cabang — toko satu outlet
@@ -95,6 +110,22 @@ export default async function BerandaPage() {
   const revenue = today0?.revenue ?? 0
   const trxCount = today0?.transaction_count ?? 0
   const qrisShare = trxCount ? Math.round(((today0?.qris_count ?? 0) / trxCount) * 100) : 0
+  /**
+   * Keadaan persiapan toko, dipakai `OnboardingChecklist`.
+   *
+   * "Struk sudah diatur" ditandai dari catatan kaki yang sudah diisi — bukan
+   * dari logo, karena banyak warung memang tidak punya logo dan langkah itu
+   * akan mustahil diselesaikan.
+   */
+  const onboarding = {
+    adaProduk: (productCount ?? 0) > 0,
+    adaTransaksi: (trxLifetime ?? 0) > 0,
+    adaTim: (teamCount ?? 0) > 1,
+    strukDiatur: Boolean(
+      (outletStruk?.receipt_settings as { footer?: string } | null)?.footer?.trim(),
+    ),
+  }
+
   const lowStock = alerts ?? []
   const bills = dueSoon ?? []
   const owed = bills.reduce((n, b) => n + Number(b.total ?? 0), 0)
@@ -125,6 +156,11 @@ export default async function BerandaPage() {
             : 'Ringkasan performa toko hari ini.'
         }
       />
+
+      {/* Ditaruh DI ATAS hero, bukan di bawahnya. Toko yang belum punya apa-apa
+          tidak butuh melihat "Rp 0" lebih dulu — yang dia butuhkan adalah tahu
+          harus mulai dari mana. */}
+      <OnboardingChecklist state={onboarding} />
 
       <div className="hero">
         <div className="hero-label">Omset Hari Ini</div>

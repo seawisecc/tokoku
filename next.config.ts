@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import { withSentryConfig } from '@sentry/nextjs'
 
 /**
  * Header keamanan dasar.
@@ -32,4 +33,30 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default nextConfig
+/**
+ * Sentry dibungkuskan HANYA kalau DSN-nya ada.
+ *
+ * Tanpa penjagaan ini, `withSentryConfig` tetap ikut di setiap build — termasuk
+ * di mesin pengembang dan di instalasi yang tidak memakai pemantauan sama
+ * sekali — lalu mencoba mengunggah source map tanpa kredensial dan membuat
+ * build gagal karena sesuatu yang tidak ada hubungannya dengan aplikasinya.
+ * Polanya sama dengan email di `lib/email.ts`: opsional secara sengaja, dan
+ * ketiadaannya bukan kegagalan.
+ *
+ * Unggah source map hanya menyala kalau `SENTRY_AUTH_TOKEN` ikut ada. Tanpa
+ * itu errornya tetap terkirim, cuma nomor barisnya menunjuk kode terkompilasi.
+ */
+export default process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: { disable: !process.env.SENTRY_AUTH_TOKEN },
+      silent: true,
+      // Rute penerus supaya laporan error tidak diblokir pemblokir iklan —
+      // tanpa ini sebagian besar error dari browser pengguna tidak pernah
+      // sampai, dan yang tersisa justru bukan gambaran sebenarnya.
+      tunnelRoute: '/monitoring',
+      disableLogger: true,
+    })
+  : nextConfig

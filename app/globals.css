@@ -984,6 +984,94 @@ tbody tr:hover { background: var(--color-paper); }
    class supaya keduanya tidak pelan-pelan berbeda. */
 .btn-pair { display: flex; gap: 8px; }
 .btn-pair .btn { flex: 1 1 0; justify-content: center; }
+/* ── Panduan awal toko baru ───────────────────────────────────────────────── */
+.onb {
+  background: var(--color-card); border: 1px solid var(--color-line);
+  border-radius: var(--radius-md); padding: 16px 18px; margin-bottom: 18px;
+}
+.onb-head { margin-bottom: 12px; }
+.onb-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; }
+.onb-list { display: grid; gap: 2px; }
+.onb-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-top: 1px solid var(--color-line);
+}
+/* Langkah yang beres diredupkan DAN dicoret, tidak dibuang dari daftar: yang
+   membuat orang mau menyelesaikan daftar adalah melihat bagian yang sudah
+   selesai bertambah. */
+.onb-item.is-done .onb-item-title { text-decoration: line-through; color: var(--color-ink-faint); }
+.onb-item.is-done .cell-sub { opacity: .6; }
+.onb-item-title { font-size: 13.5px; font-weight: 700; }
+.onb-check {
+  flex: 0 0 auto; width: 20px; height: 20px; border-radius: 50%;
+  border: 1.5px solid var(--color-line); display: flex; align-items: center;
+  justify-content: center; color: #fff;
+}
+.onb-item.is-done .onb-check { background: var(--color-success); border-color: var(--color-success); }
+.onb-item .btn { flex: 0 0 auto; }
+@media (max-width: 560px) {
+  /* Tombol turun ke barisnya sendiri, rata kiri — ibu jari memegang sisi itu.
+     Pola yang sama dengan aksi baris transaksi. */
+  .onb-item { flex-wrap: wrap; }
+  .onb-item .btn { margin-left: 32px; }
+}
+
+/* ── Halaman dokumen publik (privasi, syarat) ─────────────────────────────── */
+.legal-page { min-height: 100vh; background: var(--color-paper); }
+.legal-top {
+  display: flex; align-items: center; padding: 18px 24px;
+  border-bottom: 1px solid var(--color-line); background: var(--color-card);
+}
+/* 720px, bukan 1240px seperti halaman aplikasi. Ini teks yang dibaca baris demi
+   baris; di atas ~80 karakter per baris mata kehilangan awal baris berikutnya
+   saat kembali ke kiri. Alasannya sama dengan `.form-narrow`. */
+.legal-body { max-width: 720px; margin: 0 auto; padding: 40px 24px 8px; }
+.legal-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--color-ink-faint); margin: 0 0 6px;
+}
+.legal-meta { font-size: 12.5px; color: var(--color-ink-faint); margin: 0 0 28px; }
+.legal-prose h1 {
+  font-family: var(--font-display); font-size: clamp(26px, 5vw, 34px); font-weight: 800;
+  letter-spacing: -.02em; margin: 0 0 4px;
+}
+.legal-prose h2 {
+  font-family: var(--font-display); font-size: 17px; font-weight: 700;
+  margin: 34px 0 10px; padding-top: 22px; border-top: 1px solid var(--color-line);
+}
+.legal-prose h3 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; }
+.legal-prose p { font-size: 14px; line-height: 1.75; color: var(--color-ink-soft); margin: 0 0 14px; }
+/* `list-style` ditulis eksplisit: reset Tailwind mematikan penanda daftar, dan
+   tanpa bullet, daftar sepuluh butir di dokumen legal terbaca sebagai satu
+   paragraf panjang yang menjorok. */
+.legal-prose ul { margin: 0 0 16px; padding-left: 22px; list-style: disc; }
+.legal-prose li::marker { color: var(--color-ink-faint); }
+.legal-prose li {
+  font-size: 14px; line-height: 1.7; color: var(--color-ink-soft); margin-bottom: 8px;
+}
+.legal-prose strong { color: var(--color-ink); font-weight: 700; }
+.legal-prose a { color: var(--color-success); font-weight: 600; }
+
+/* Kotak ringkasan di kepala dokumen, dan peringatan di tengahnya. Yang kedua
+   berwarna amber karena isinya hal yang MASIH harus diputuskan pemilik project,
+   bukan janji yang sudah berlaku. */
+.legal-note {
+  background: var(--color-success-soft); border-radius: var(--radius-md);
+  padding: 16px 18px; margin: 0 0 30px;
+  font-size: 13.5px; line-height: 1.7; color: var(--color-ink-soft);
+}
+.legal-note.is-warn { background: var(--color-amber-soft); margin: 4px 0 18px; }
+.legal-note strong { color: var(--color-ink); }
+
+.legal-foot {
+  max-width: 720px; margin: 0 auto; padding: 32px 24px 48px;
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  font-size: 12.5px; color: var(--color-ink-faint);
+}
+.legal-foot a { color: var(--color-ink-soft); font-weight: 600; text-decoration: none; }
+.legal-foot a:hover { color: var(--color-forest); text-decoration: underline; }
+.legal-foot p { flex-basis: 100%; margin: 8px 0 0; }
+
 /* ── Lonceng notifikasi ───────────────────────────────────────────────────── */
 .notif-wrap { position: relative; }
 /* Lencana angka menempel di sudut tombol. `min-width` + `border-radius` besar

@@ -111,9 +111,12 @@ databasenya juga; lihat "Deploy tidak responsif" di bawah.
    terbukti saat `admin123` ditolak halaman masuk). Sandinya tidak ada di repo
    ini dan tidak boleh diminta; agen tidak bisa lagi masuk sebagai Super Admin,
    jadi pengujian apa pun di `/admin/*` harus dikerjakan pemilik project.
-5. **Belum ada Kebijakan Privasi & Syarat Ketentuan.** Aplikasi ini menyimpan
-   nama dan nomor HP pelanggan milik klien, jadi UU PDP 27/2022 berlaku. Lihat
-   "Sisa pekerjaan sebelum dijual" di bawah.
+5. **Kebijakan Privasi & Syarat Ketentuan sudah ADA tapi masih DRAF.** Belum
+   ditinjau ahli hukum, dan ada tiga hal yang harus diputuskan pemilik project
+   sendiri — terutama transfer data ke luar negeri. Lihat "Halaman legal".
+6. **Backup database masih belum ada.** Supabase gratis tanpa point-in-time
+   recovery. Ini satu-satunya risiko tersisa yang tidak bisa diperbaiki setelah
+   terjadi.
 
 Seluruh modul yang disepakati sudah jadi — Konsinyasi yang terakhir, selesai
 10 Agu 2026. Sisa daftar di atas adalah pengembangan lanjutan, bukan ruang
@@ -1665,6 +1668,108 @@ sesuai yang salah, dan orangnya baru sadar besok pagi.
   bersamaan untuk animasi geser dan mengandalkan isian tak terkendali; sisanya
   terkendali state. Jangan mencampur keduanya di satu isian.
 
+## Halaman legal
+
+`/kebijakan-privasi` dan `/syarat-ketentuan`, di route group `(publik)` dengan
+layoutnya sendiri — bukan AppShell, karena keduanya harus bisa dibaca TANPA
+akun. Calon klien menilainya sebelum mendaftar, dan pelanggan warung yang
+mempersoalkan datanya belum tentu punya akun di sini.
+
+**MASIH DRAF. Belum ditinjau ahli hukum.** Isinya disusun dari kolom yang
+BENAR-BENAR ada di skema ini, bukan dari templat umum: setiap jenis data yang
+disebut memang tersimpan, dan tidak ada yang tersimpan tanpa disebut. Itu yang
+membuatnya berguna untuk ditinjau — yang meninjau tidak perlu membongkar
+kodenya sendiri.
+
+Tiga hal yang HARUS diputuskan pemilik project, ditandai kotak amber di
+halamannya sendiri supaya tidak terlewat:
+1. **Transfer data ke luar negeri.** Supabase di `ap-southeast-1` dan Vercel di
+   `sin1` — keduanya Singapura. UU PDP 27/2022 mensyaratkan dasar hukum khusus
+   untuk itu. Ini yang paling mungkin bermasalah.
+2. **Badan hukum, alamat resmi, dan yurisdiksi sengketa** — sekarang masih
+   "Seawise Studio" apa adanya.
+3. **Ketersediaan layanan.** Sengaja ditulis apa adanya bahwa belum ada SLA dan
+   belum ada pencadangan berkala. Menuliskan janji yang tidak bisa ditepati
+   adalah cara tercepat kehilangan perkara — perbarui bagian 8 Syarat &
+   Ketentuan begitu pencadangan sudah berjalan.
+
+Lebarnya 720px, bukan 1240px seperti halaman aplikasi: ini teks yang dibaca
+baris demi baris, dan di atas ~80 karakter per baris mata kehilangan awal baris
+berikutnya. Alasannya sama dengan `.form-narrow`.
+
+Ditautkan dari kaki halaman auth, bukan cuma dari halaman publiknya sendiri:
+orang menilai apakah mau menyerahkan data pelanggannya TEPAT saat diminta
+mendaftar.
+
+## Panduan awal toko baru
+
+`OnboardingChecklist` di beranda. Toko yang baru mendaftar dulu mendarat di
+"Rp 0" dan empat kartu bernilai nol, tanpa satu pun petunjuk harus mulai dari
+mana. Jalur tercepatnya sudah ada sejak impor CSV dibuat — tapi orang yang baru
+mendaftar tidak akan menemukan Pengaturan → Impor & Backup sendiri.
+
+- **Hilang total begitu ada transaksi pertama**, bukan lewat tombol "jangan
+  tampilkan lagi". Daftar yang harus ditutup manual akan menetap di layar orang
+  yang sudah lama memakai aplikasi, dan tiap piksel beranda seharusnya milik
+  angka hari ini. Transaksi pertama adalah penanda paling jujur bahwa tokonya
+  sudah jalan.
+- **Langkah yang beres dicoret, tidak dibuang** dari daftar: yang membuat orang
+  mau menyelesaikan daftar adalah melihat bagian yang sudah selesai bertambah.
+- **"Struk sudah diatur" ditandai dari catatan kaki, bukan logo.** Banyak
+  warung memang tidak punya logo, dan langkah yang mustahil diselesaikan lebih
+  buruk daripada tidak ada langkahnya.
+- Ditaruh DI ATAS hero: toko yang belum punya apa-apa tidak butuh melihat
+  "Rp 0" lebih dulu.
+
+## Pemantauan error
+
+`@sentry/nextjs`, dan **OPSIONAL SECARA SENGAJA** — pola yang sama persis
+dengan `lib/email.ts`. Tanpa `NEXT_PUBLIC_SENTRY_DSN`:
+- `Sentry.init()` tidak pernah dipanggil di ketiga config
+- `next.config.ts` TIDAK membungkus dengan `withSentryConfig` sama sekali
+
+Yang kedua penting: dibungkus tanpa syarat, build di mesin pengembang mencoba
+mengunggah source map tanpa kredensial dan gagal karena sesuatu yang tidak ada
+hubungannya dengan aplikasinya. **Sudah diuji build dua-duanya** (13 Agu):
+dengan DSN palsu dan tanpa DSN, keduanya kompilasi bersih.
+
+Dua keputusan privasi yang jangan diubah:
+- **`sendDefaultPii: false`.** Body request di aplikasi ini memuat nama
+  pelanggan, nomor HP, dan rincian penjualan milik klien.
+- **Session replay MATI total** (`replaysSessionSampleRate: 0`). Layar kasir
+  menampilkan nama pelanggan dan seluruh isi keranjang; merekamnya berarti
+  memindahkan data pribadi milik klien ke pihak ketiga, dan itu bertentangan
+  dengan Kebijakan Privasi yang kita tulis sendiri.
+
+Tiga jalur penangkapan, dan ketiganya perlu: `onRequestError` (render server),
+`app/error.tsx` (render klien), `app/global-error.tsx` (root layout gagal).
+`tunnelRoute: '/monitoring'` supaya laporan tidak diblokir pemblokir iklan.
+
+## Pensiun tenant demo
+
+`scripts/retire-demo.mjs`. Data demo tinggal di database yang SAMA dengan tempat
+klien asli nanti. Yang berbahaya bukan tokonya, melainkan **sandi bersama yang
+tertulis apa adanya di repo** (`TokoKu123!`) dan berlaku di produksi — sudah
+dibuktikan 13 Agu, login ke produksi menjawab 200.
+
+Efek kedua yang lebih senyap: dashboard Super Admin MENJUMLAHKAN omset seluruh
+klien, jadi selama toko demo terhitung, angka bisnis pemilik platform sendiri
+tercampur data karangan.
+
+Penjagaan di dalam skripnya, dan semuanya ada karena alasan:
+- **Kering secara bawaan.** Butuh `--confirm` untuk mengerjakan.
+- **Salinan JSON ditulis lebih dulu**, sebelum satu baris pun berubah. Tanpa
+  point-in-time recovery, itu satu-satunya jalan pulang.
+- **SOFT delete**, bukan DELETE sungguhan — DELETE meng-cascade ke transaksi,
+  stok, dan ledger.
+- **Super Admin tidak pernah disentuh**, diperiksa terhadap `platform_admins`.
+- **Akun yang juga anggota toko non-demo dilewati** — tapi toko yang sudah
+  di-soft-delete TIDAK dihitung sebagai toko asli. Dua bug ketahuan saat uji
+  kering: relasi PostgREST terbaca sebagai array (jadi semua akun dikira punya
+  toko asli dan tidak satu sandi pun diacak), dan sisa "Uji Trial Bersama" yang
+  sudah dihapus membuat pemilik Toko Dewi ikut dilewati. Keduanya gagal ke arah
+  yang TAMPAK aman, dan itu yang paling berbahaya di skrip seperti ini.
+
 ## Reset kata sandi
 
 Alurnya: `/lupa-sandi` → Supabase kirim email → `/auth/konfirmasi` (Route
@@ -1719,6 +1824,8 @@ npm run db:types     # regenerasi lib/supabase/database.types.ts — WAJIB setel
 node scripts/seed-demo.mjs              # data demo (aman diulang)
 node scripts/grant-platform-admin.mjs <email>   # jadikan Super Admin
 node scripts/recovery-link.mjs <email>          # tautan reset sandi, TANPA kirim email
+node scripts/retire-demo.mjs                    # lapor saja (kering)
+node scripts/retire-demo.mjs --confirm          # pensiunkan tenant demo sungguhan
 ```
 
 ## Stack
@@ -1897,6 +2004,7 @@ app/
                    profil
   (platform)/admin klien/[id] (+ /ekspor), paket, pengaturan platform
   error.tsx        penangkap error + global-error.tsx + not-found.tsx
+  (publik)/        kebijakan-privasi, syarat-ketentuan (tanpa AppShell)
   about/  setup/   halaman publik & status koneksi
 components/
   layout/          AppShell, Sidebar (memuat brand), Topbar, BottomNav,
@@ -1916,6 +2024,7 @@ components/
                    ChangePasswordCard, PlatformSettingsForm,
                    ProdukTabs / LaporanTabs / PembelianTabs / SettingsNav,
                    LogoUploader, DeviceTable, SettingsNav, WhatsAppButton,
+                   OnboardingChecklist (panduan awal toko baru),
                    CustomerManager, SendReceiptButton,
                    ProductTable/Drawer, StockDrawer, TeamManager,
                    CategoryManager, PlanManager, ClientDetail, ShiftCard,
@@ -1935,7 +2044,8 @@ lib/
   plan.ts          SATU pembaca plans.features — kolom kosong = kemampuan penuh
   subscription.ts  keadaan langganan sisi toko — harus sama dengan org_lapsed_at()
   supabase/        client (RLS) · server (RLS) · admin (LEWAT RLS, server-only)
-scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs
+scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs,
+                   retire-demo.mjs (pensiunkan tenant demo — kering by default)
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
 supabase/migrations/  41 file, Postgres 17

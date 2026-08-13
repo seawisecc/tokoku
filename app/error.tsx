@@ -1,5 +1,8 @@
 'use client'
 
+import { useEffect } from 'react'
+import * as Sentry from '@sentry/nextjs'
+
 /**
  * Penangkap error untuk seluruh aplikasi.
  *
@@ -21,6 +24,18 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  /**
+   * Kirim errornya ke pemantauan.
+   *
+   * `error.tsx` menangkap error render di SISI KLIEN; `onRequestError` di
+   * instrumentation.ts menangkap yang di server. Tanpa keduanya, separuh
+   * kegagalan tidak pernah terlihat — dan yang paling sering dikeluhkan kasir
+   * justru yang di browser. Tidak melakukan apa-apa kalau DSN belum dipasang.
+   */
+  useEffect(() => {
+    Sentry.captureException(error)
+  }, [error])
+
   return (
     <main className="pesan-layar">
       <div className="pesan-kartu">
