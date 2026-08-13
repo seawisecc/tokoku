@@ -13,6 +13,31 @@ export type CatalogEntry = LocalProduct & {
   category_name: string | null
   color_key: string | null
   stock: number
+  /** Harga yang benar-benar dipakai hari ini — promo sudah diperhitungkan. */
+  effective_price: number
+  /** true kalau `effective_price` datang dari promo, bukan harga normal. */
+  on_promo: boolean
+}
+
+/**
+ * Harga yang berlaku HARI INI untuk satu produk.
+ *
+ * Dihitung saat DIBACA, bukan disimpan sebagai harga jadi. Perangkat kasir bisa
+ * berhari-hari tidak tersinkron; harga jadi berarti promo yang sudah lewat
+ * tetap dipakai, atau promo yang baru mulai tidak pernah aktif — dua-duanya
+ * salah di depan pembeli dan baru ketahuan saat pembukuan dicocokkan.
+ *
+ * Tanggalnya dibandingkan sebagai teks `YYYY-MM-DD` menurut jam PERANGKAT.
+ * Sama persis dengan cara `v_product_stock` membandingkannya di server, dan
+ * dengan alasan yang sama: promo warung dihitung per hari, bukan per jam.
+ */
+export function hargaBerlaku(p: LocalProduct): { harga: number; promo: boolean } {
+  const promo = p.promo_price
+  if (promo == null || promo < 0) return { harga: p.sell_price, promo: false }
+  const hari = new Date().toLocaleDateString('en-CA')
+  if (p.promo_starts_at && hari < p.promo_starts_at) return { harga: p.sell_price, promo: false }
+  if (p.promo_ends_at && hari > p.promo_ends_at) return { harga: p.sell_price, promo: false }
+  return { harga: promo, promo: true }
 }
 
 export type CatalogSeed = {
@@ -71,6 +96,13 @@ function stripDerived(
     track_stock: p.track_stock,
     min_stock: p.min_stock,
     is_active: p.is_active,
+    // Promo disimpan MENTAH. Kalau `effective_price` dari view ikut disimpan,
+    // ia jadi kolom turunan — dan `pull_catalog` mengirim baris tabel mentah,
+    // jadi kolom itu akan tertimpa undefined pada sinkronisasi berikutnya.
+    // Jebakan yang sama dengan category_name; lihat catatan di kepala berkas.
+    promo_price: (p.promo_price as number | null) ?? null,
+    promo_starts_at: (p.promo_starts_at as string | null) ?? null,
+    promo_ends_at: (p.promo_ends_at as string | null) ?? null,
   }
 }
 
@@ -157,11 +189,14 @@ export async function localCatalog(
     .filter((p) => p.is_active)
     .map((p) => {
       const cat = p.category_id ? catById.get(p.category_id) : undefined
+      const { harga, promo } = hargaBerlaku(p)
       return {
         ...p,
         category_name: cat?.name ?? null,
         color_key: cat?.color_key ?? null,
         stock: stockByKey.get(stockKey(p.id, outletId)) ?? 0,
+        effective_price: harga,
+        on_promo: promo,
       }
     })
     .sort((a, b) => a.name.localeCompare(b.name, 'id'))

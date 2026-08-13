@@ -40,7 +40,28 @@ const productSchema = z
     sellPrice: rupiahField,
     minStock: z.coerce.number().int().min(0).default(10),
     trackStock: z.coerce.boolean().default(true),
+    /**
+     * Promo. Kosong = tidak ada promo, dan itu keadaan yang paling lazim —
+     * jadi string kosong harus lolos jadi null, bukan ditolak sebagai "bukan
+     * angka". Tanggalnya juga boleh kosong: promo tanpa batas waktu.
+     */
+    promoPrice: z
+      .string()
+      .trim()
+      .transform((x) => x.replace(/[^\d]/g, ''))
+      .transform((x) => (x === '' ? null : Number(x)))
+      .refine((n) => n === null || (Number.isFinite(n) && n >= 0), 'Harga promo tidak benar'),
+    promoStartsAt: z.string().trim().transform((x) => x || null),
+    promoEndsAt: z.string().trim().transform((x) => x || null),
   })
+  .refine((v) => v.promoPrice === null || v.promoPrice < v.sellPrice, {
+    message: 'Harga promo harus lebih murah dari harga jual',
+    path: ['promoPrice'],
+  })
+  .refine(
+    (v) => !v.promoStartsAt || !v.promoEndsAt || v.promoStartsAt <= v.promoEndsAt,
+    { message: 'Tanggal selesai promo lebih awal dari tanggal mulai', path: ['promoEndsAt'] },
+  )
   .refine((v) => v.sellPrice >= v.costPrice, {
     message: 'Harga jual di bawah harga pokok, setiap penjualan akan rugi',
     path: ['sellPrice'],
@@ -57,6 +78,9 @@ function parse(formData: FormData) {
     sellPrice: formData.get('sellPrice'),
     minStock: formData.get('minStock') || 10,
     trackStock: formData.get('trackStock') === 'on',
+    promoPrice: formData.get('promoPrice') ?? '',
+    promoStartsAt: formData.get('promoStartsAt') ?? '',
+    promoEndsAt: formData.get('promoEndsAt') ?? '',
   })
 }
 
@@ -100,6 +124,11 @@ export async function saveProduct(
     sell_price: v.sellPrice,
     min_stock: v.minStock,
     track_stock: v.trackStock,
+    promo_price: v.promoPrice,
+    // Tanggal ikut dikosongkan saat promonya dihapus — kalau tidak, promo
+    // berikutnya akan mewarisi rentang tanggal promo yang lama tanpa terlihat.
+    promo_starts_at: v.promoPrice === null ? null : v.promoStartsAt,
+    promo_ends_at: v.promoPrice === null ? null : v.promoEndsAt,
   }
 
   const { error } = productId

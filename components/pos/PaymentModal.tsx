@@ -13,6 +13,8 @@ export function PaymentModal({
   onClose,
   onConfirm,
   customerSlot,
+  discountSlot,
+  blockedReason,
   redeemSlot,
 }: {
   /** Total belanja SEBELUM potongan. */
@@ -28,6 +30,10 @@ export function PaymentModal({
    * layarnya sama di desktop maupun ponsel.
    */
   customerSlot?: React.ReactNode
+  /** Diskon nota manual. null kalau toko belum menyalakannya. */
+  discountSlot?: React.ReactNode
+  /** true kalau ada yang menghalangi pembayaran, mis. alasan diskon kosong. */
+  blockedReason?: string | null
   /**
    * Penukaran poin. Slot terpisah dari `customerSlot` supaya urutannya di layar
    * mengikuti urutan percakapan di kasir: pilih pembelinya dulu, baru poinnya
@@ -65,7 +71,7 @@ export function PaymentModal({
     .slice(0, 4)
 
   async function confirm() {
-    if (short || busy) return
+    if (short || busy || blockedReason) return
     setBusy(true)
     setError(null)
     try {
@@ -95,6 +101,7 @@ export function PaymentModal({
 
           {customerSlot && <div style={{ margin: '10px 0 12px' }}>{customerSlot}</div>}
           {redeemSlot && <div style={{ margin: '0 0 12px' }}>{redeemSlot}</div>}
+          {discountSlot && <div style={{ margin: '0 0 12px' }}>{discountSlot}</div>}
 
           {discount > 0 && (
             <div className="pay-summary">
@@ -170,10 +177,16 @@ export function PaymentModal({
             </div>
           )}
 
+          {/* Dikunci SEBELUM ditekan, bukan ditolak sesudahnya. Pola yang sama
+              dengan tombol Bayar saat langganan tidak aktif: kasir tidak boleh
+              menekan tombol yang sudah pasti gagal di depan pembeli. */}
+          {blockedReason && (
+            <div className="field-error" style={{ marginBottom: 8 }}>{blockedReason}</div>
+          )}
           <button
             type="button"
             className="btn btn-primary btn-block"
-            disabled={short || busy}
+            disabled={short || busy || Boolean(blockedReason)}
             onClick={confirm}
           >
             {busy ? 'Menyimpan…' : 'Konfirmasi Pembayaran'}

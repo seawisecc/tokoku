@@ -30,7 +30,7 @@ export default async function DetailTransaksiPage({
   const { data: trx } = await supabase
     .from('transactions')
     .select(
-      'id, code, total, subtotal, discount_total, tax_total, paid_amount, change_amount, payment_method, status, origin, client_created_at, void_reason, points_earned, points_redeemed, profiles:cashier_id(full_name), outlets:outlet_id(name, receipt_settings), organizations:organization_id(name, address, phone, logo_url), customers:customer_id(name, phone)',
+      'id, code, total, subtotal, discount_total, tax_total, paid_amount, change_amount, payment_method, status, origin, client_created_at, void_reason, points_earned, points_redeemed, discount_manual, discount_customer, discount_reason, profiles:cashier_id(full_name), outlets:outlet_id(name, receipt_settings), organizations:organization_id(name, address, phone, logo_url), customers:customer_id(name, phone)',
     )
     .eq('id', id)
     .maybeSingle()
@@ -62,9 +62,13 @@ export default async function DetailTransaksiPage({
    * "tukar poin" pada nota tanpa poin sama saja dengan mengarang.
    */
   const poinLabel =
-    trx.points_redeemed > 0
-      ? `Tukar ${trx.points_redeemed.toLocaleString('id-ID')} poin`
-      : null
+    [
+      trx.discount_customer > 0 && 'Diskon pelanggan',
+      trx.discount_manual > 0 && 'Diskon kasir',
+      trx.points_redeemed > 0 && `${trx.points_redeemed.toLocaleString('id-ID')} poin`,
+    ]
+      .filter(Boolean)
+      .join(' + ') || null
 
   return (
     <>
@@ -126,6 +130,18 @@ export default async function DetailTransaksiPage({
             <div className="kv">
               <span>{poinLabel ?? 'Potongan'}</span>
               <span style={{ color: 'var(--color-forest)' }}>-{rupiah(trx.discount_total)}</span>
+            </div>
+          )}
+          {/* Alasan diskon ditampilkan terpisah dan selalu, bukan disembunyikan
+              di tooltip: satu-satunya gunanya menyimpan alasan adalah supaya
+              pemilik toko bisa membacanya saat memeriksa siapa memberi diskon
+              berapa. */}
+          {trx.discount_manual > 0 && (
+            <div className="kv">
+              <span>Alasan diskon</span>
+              <span style={{ fontWeight: 400, color: 'var(--color-ink-soft)' }}>
+                {trx.discount_reason || 'Tidak diisi'}
+              </span>
             </div>
           )}
           <div className="kv" style={{ fontSize: 15 }}>

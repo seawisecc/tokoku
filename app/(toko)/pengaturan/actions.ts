@@ -57,6 +57,11 @@ const storeSchema = z.object({
   loyaltyEnabled: z.coerce.boolean(),
   loyaltyEarnPer: z.coerce.number().int().min(1, 'Minimal Rp 1 belanja per poin').max(100_000_000),
   loyaltyPointValue: z.coerce.number().int().min(0).max(100_000_000),
+  maxManualDiscountPercent: z.coerce
+    .number()
+    .int()
+    .min(0, 'Batas diskon tidak boleh negatif')
+    .max(100, 'Batas diskon paling banyak 100%'),
 })
 
 export async function saveStore(formData: FormData): Promise<Result> {
@@ -73,6 +78,7 @@ export async function saveStore(formData: FormData): Promise<Result> {
     loyaltyEnabled: formData.get('loyaltyEnabled') === 'on',
     loyaltyEarnPer: formData.get('loyaltyEarnPer') || 10000,
     loyaltyPointValue: formData.get('loyaltyPointValue') || 100,
+    maxManualDiscountPercent: formData.get('maxManualDiscountPercent') || 0,
   })
   if (!parsed.success) return firstIssue(parsed.error)
   const v = parsed.data
@@ -91,6 +97,7 @@ export async function saveStore(formData: FormData): Promise<Result> {
       loyalty_enabled: v.loyaltyEnabled,
       loyalty_earn_per: v.loyaltyEarnPer,
       loyalty_point_value: v.loyaltyPointValue,
+      max_manual_discount_percent: v.maxManualDiscountPercent,
     })
     .eq('id', session.org!.id)
     .select('id')

@@ -19,7 +19,7 @@ export default async function PelangganPage() {
   const [{ data: rows }, { data: org }, features] = await Promise.all([
     supabase
       .from('customers')
-      .select('id, name, phone, email, address, note, total_spent, visit_count, last_visit_at, points')
+      .select('id, name, phone, email, address, note, total_spent, visit_count, last_visit_at, points, discount_percent')
       .eq('organization_id', orgId)
       .is('deleted_at', null)
       .order('last_visit_at', { ascending: false, nullsFirst: false })
@@ -47,6 +47,7 @@ export default async function PelangganPage() {
     email: c.email,
     address: c.address,
     note: c.note,
+    discountPercent: Number(c.discount_percent ?? 0),
     totalSpent: Number(c.total_spent ?? 0),
     visitCount: Number(c.visit_count ?? 0),
     lastVisitAt: c.last_visit_at,

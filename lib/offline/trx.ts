@@ -45,6 +45,11 @@ export function toSyncPayload(trx: OutboxTransaction) {
     // sama sekali — ia menghitung sendiri dari jumlah poinnya. Lihat 0039.
     points_redeemed: trx.points_redeemed ?? 0,
     points_value: trx.points_value ?? 0,
+    // Diskon manual dikirim sebagai PERMINTAAN. Server menghitung ulang
+    // batasnya dari max_manual_discount_percent dan menjepitnya; kalau toko
+    // belum menyalakan diskon manual, angka ini jadi 0 tanpa menolak notanya.
+    discount_manual: trx.discount_manual ?? 0,
+    discount_reason: trx.discount_reason ?? null,
     origin: trx.origin,
     items: trx.items.map((i) => ({
       product_id: i.product_id,

@@ -16,6 +16,7 @@ export type StoreValues = {
   loyaltyEnabled: boolean
   loyaltyEarnPer: number
   loyaltyPointValue: number
+  maxManualDiscountPercent: number
 }
 
 export function StoreSettingsForm({ initial }: { initial: StoreValues }) {
@@ -115,6 +116,29 @@ export function StoreSettingsForm({ initial }: { initial: StoreValues }) {
             </div>
           </div>
         )}
+
+        {/* Batas diskon kasir. Bawaannya 0 = mati, dan itu disengaja: diskon
+            yang lupa dibatasi mengeluarkan uang diam-diam, tanpa meninggalkan
+            selisih kas. Lihat kepala migrasi 0042. */}
+        <div className="field">
+          <label htmlFor="maxManualDiscountPercent">Batas diskon kasir (%)</label>
+          <input
+            id="maxManualDiscountPercent"
+            name="maxManualDiscountPercent"
+            type="number"
+            min={0}
+            max={100}
+            value={v.maxManualDiscountPercent}
+            onChange={(e) =>
+              set('maxManualDiscountPercent', Math.min(Math.max(Number(e.target.value) || 0, 0), 100))
+            }
+          />
+          <div className="field-hint">
+            {v.maxManualDiscountPercent === 0
+              ? 'Nol berarti kasir tidak bisa memberi diskon sama sekali. Tombolnya tidak muncul di layar bayar.'
+              : `Kasir boleh memberi diskon sampai ${v.maxManualDiscountPercent}% dari total belanja, dan wajib menuliskan alasannya. Batas ini ditegakkan di server, jadi tidak bisa dilewati dari perangkat.`}
+          </div>
+        </div>
 
         <ToggleRow
           name="allowNegativeStock"

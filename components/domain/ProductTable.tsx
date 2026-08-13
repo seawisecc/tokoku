@@ -27,6 +27,11 @@ export type ProductRow = {
   trackStock: boolean
   stock: number
   isLowStock: boolean
+  promoPrice: number | null
+  promoStartsAt: string | null
+  promoEndsAt: string | null
+  /** Harga yang BERLAKU hari ini — sudah memperhitungkan promo. Dari view. */
+  effectivePrice: number
 }
 
 export function ProductTable({
@@ -185,7 +190,25 @@ export function ProductTable({
                       </div>
                     </td>
                     <td>{rupiah(p.costPrice)}</td>
-                    <td style={{ fontWeight: 700 }}>{rupiah(p.sellPrice)}</td>
+                    {/* Promo yang sedang berjalan ditandai di sini, bukan cuma
+                        di kasir: pemilik toko yang membuka daftar produk perlu
+                        melihat sekaligus mana yang sedang dipromokan — kalau
+                        tidak, promo yang lupa dihentikan jalan terus berbulan-
+                        bulan tanpa ada yang menyadarinya. */}
+                    <td style={{ fontWeight: 700 }}>
+                      {p.effectivePrice < p.sellPrice ? (
+                        <>
+                          <span style={{ color: 'var(--color-coral)' }}>
+                            {rupiah(p.effectivePrice)}
+                          </span>
+                          <div className="cell-sub" style={{ textDecoration: 'line-through' }}>
+                            {rupiah(p.sellPrice)}
+                          </div>
+                        </>
+                      ) : (
+                        rupiah(p.sellPrice)
+                      )}
+                    </td>
                     <td>
                       {p.trackStock ? (
                         <span className={cn('badge', p.isLowStock ? 'badge-low' : 'badge-ok')}>
@@ -228,6 +251,9 @@ export function ProductTable({
                                 sellPrice: p.sellPrice,
                                 minStock: p.minStock,
                                 trackStock: p.trackStock,
+                                promoPrice: p.promoPrice,
+                                promoStartsAt: p.promoStartsAt,
+                                promoEndsAt: p.promoEndsAt,
                               })
                             }
                           />

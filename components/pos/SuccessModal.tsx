@@ -31,6 +31,17 @@ export function SuccessModal({
   const [showReceipt, setShowReceipt] = useState(false)
   const change = Math.max(trx.paid_amount - trx.total, 0)
 
+  const potonganTotal =
+    (trx.discount_customer ?? 0) + (trx.discount_manual ?? 0) + (trx.points_value ?? 0)
+  const potonganLabel =
+    [
+      (trx.discount_customer ?? 0) > 0 && 'Diskon pelanggan',
+      (trx.discount_manual ?? 0) > 0 && 'Diskon',
+      (trx.points_redeemed ?? 0) > 0 && `${trx.points_redeemed} poin`,
+    ]
+      .filter(Boolean)
+      .join(' + ') || undefined
+
   const receipt: ReceiptData = {
     code: trx.code,
     storeName: store.name,
@@ -48,10 +59,12 @@ export function SuccessModal({
       lineTotal: i.unit_price * i.quantity - i.discount,
     })),
     subtotal: trx.items.reduce((s, i) => s + i.unit_price * i.quantity, 0),
-    discount: trx.points_value || undefined,
-    discountLabel: trx.points_redeemed
-      ? `Tukar ${trx.points_redeemed.toLocaleString('id-ID')} poin`
-      : undefined,
+    // Ketiga lapis digabung jadi satu baris "Potongan" di struk, dengan
+    // rinciannya di label. Struk thermal 58mm cuma muat ~32 karakter per
+    // baris; tiga baris potongan mendorong TOTAL turun dan itu satu-satunya
+    // angka yang dicari pembeli.
+    discount: potonganTotal || undefined,
+    discountLabel: potonganLabel,
     total: trx.total,
     paid: trx.paid_amount,
     change,
@@ -76,6 +89,25 @@ export function SuccessModal({
             {/* Potongan poin disebut di layar sukses, bukan cuma di struk:
                 pembelinya masih berdiri di depan kasir, dan di sinilah dia
                 bertanya "poin saya jadi berapa?". */}
+            {/* Di layar sukses rinciannya DIPISAH per lapis, beda dengan
+                struk. Layar tidak terbatas 32 karakter, dan pembeli yang masih
+                berdiri di depan kasir justru menanyakan rincian itu. */}
+            {(trx.discount_customer ?? 0) > 0 && (
+              <div className="kv">
+                <span>Diskon pelanggan</span>
+                <span style={{ color: 'var(--color-forest)' }}>
+                  -{rupiah(trx.discount_customer ?? 0)}
+                </span>
+              </div>
+            )}
+            {(trx.discount_manual ?? 0) > 0 && (
+              <div className="kv">
+                <span>Diskon{trx.discount_reason ? ` · ${trx.discount_reason}` : ''}</span>
+                <span style={{ color: 'var(--color-forest)' }}>
+                  -{rupiah(trx.discount_manual ?? 0)}
+                </span>
+              </div>
+            )}
             {!!trx.points_redeemed && (
               <div className="kv">
                 <span>Tukar {trx.points_redeemed.toLocaleString('id-ID')} poin</span>

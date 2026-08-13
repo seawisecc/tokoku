@@ -14,6 +14,12 @@ const schema = z.object({
   email: z.string().trim().email('Format email tidak valid').optional().or(z.literal('')),
   address: z.string().trim().max(240).optional().or(z.literal('')),
   note: z.string().trim().max(240).optional().or(z.literal('')),
+  discountPercent: z.coerce
+    .number()
+    .int()
+    .min(0, 'Diskon tidak boleh negatif')
+    .max(100, 'Diskon paling banyak 100%')
+    .default(0),
 })
 
 export async function saveCustomer(customerId: string | null, formData: FormData): Promise<Result> {
@@ -26,6 +32,7 @@ export async function saveCustomer(customerId: string | null, formData: FormData
     email: formData.get('email') ?? '',
     address: formData.get('address') ?? '',
     note: formData.get('note') ?? '',
+    discountPercent: formData.get('discountPercent') || 0,
   })
   if (!parsed.success) {
     const i = parsed.error.issues[0]
@@ -50,6 +57,7 @@ export async function saveCustomer(customerId: string | null, formData: FormData
     email: v.email || null,
     address: v.address || null,
     note: v.note || null,
+    discount_percent: v.discountPercent,
   }
 
   const { data, error } = customerId

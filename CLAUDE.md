@@ -1770,6 +1770,84 @@ Penjagaan di dalam skripnya, dan semuanya ada karena alasan:
   sudah dihapus membuat pemilik Toko Dewi ikut dilewati. Keduanya gagal ke arah
   yang TAMPAK aman, dan itu yang paling berbahaya di skrip seperti ini.
 
+## Diskon: tiga lapis, dan kenapa dipisah
+
+Ditambahkan 13 Agu. Yang diminta pemilik project ada tiga bentuk sekaligus —
+promo toko, diskon saat bayar, dan harga khusus pelanggan — dan ketiganya
+memang berbeda kebutuhannya. Yang menyatukannya cuma satu aturan:
+
+**TIDAK ADA lapis yang boleh mempercayai angka dari perangkat kasir.**
+
+Migrasi 0039 baru saja membuat server mengabaikan `discount_total` kiriman
+perangkat, dengan alasan yang masih berlaku penuh: diskon yang bisa diketik
+bebas adalah uang yang hilang TANPA meninggalkan selisih kas — totalnya ikut
+mengecil, jadi laci tetap "cocok" saat tutup shift dan tidak ada satu pun
+laporan yang menunjukkan ada yang hilang. Itu lebih buruk daripada penjualan
+yang tidak diketik sama sekali, yang setidaknya menyisakan stok tekor.
+
+| lapis | sumber kebenaran | risiko |
+|---|---|---|
+| **A. Harga promo produk** | `products.promo_price` + rentang tanggal | nol — kasir tidak punya pilihan |
+| **B. Diskon nota manual** | angka dari kasir, **dijepit** `organizations.max_manual_discount_percent` | satu-satunya yang perlu dijaga |
+| **C. Diskon pelanggan** | `customers.discount_percent`, dibaca server | nol — tidak lewat perangkat |
+
+**Urutannya pelanggan → manual → poin, dan itu disengaja.** Yang paling tidak
+bisa dinegosiasikan didahulukan: diskon pelanggan adalah hak yang sudah melekat
+pada orangnya, diskon manual kebijakan kasir saat itu, poin milik pembeli yang
+bisa disimpan untuk lain kali. Kalau poin dihitung lebih dulu, poin pembeli
+habis menutup bagian yang sebenarnya sudah jadi haknya lewat diskon pelanggan.
+Urutan yang sama diulang di `PosClient` — kalau berbeda, layar menyebut satu
+angka dan server menyimpan angka lain, dan kasir sudah terlanjur menerima uang
+sesuai layar.
+
+Yang sudah diputuskan dan jangan diubah tanpa alasan:
+- **`max_manual_discount_percent` bawaannya 0 = MATI.** Beda dari kuota dan
+  masa langganan yang "kosong berarti tak terbatas". Bedanya disengaja: kuota
+  yang lupa diisi merugikan klien yang sudah bayar, sementara diskon yang lupa
+  dibatasi mengeluarkan uang diam-diam. Kalau ragu, gagal ke arah yang tidak
+  mengeluarkan uang.
+- **Diskon manual yang melebihi batas DIJEPIT, bukan ditolak.** Transaksi
+  offline bisa sampai berhari-hari kemudian, dan kebijakan diskonnya mungkin
+  sudah berubah — menolaknya berarti membuang penjualan yang uangnya sudah
+  diterima. Alasan yang sama dengan penukaran poin di 0039.
+- **Alasan diskon WAJIB**, dan tombol bayar dikunci sebelum ditekan. Tanpa
+  alasan, laporan cuma bisa bilang "ada diskon Rp 50.000" dan tidak ada yang
+  bisa ditindaklanjuti. `discount_manual` & `discount_customer` disimpan
+  terpisah dari `discount_total` justru supaya pertanyaan "siapa memberi diskon
+  berapa" punya jawaban.
+- **Promo disimpan MENTAH di cache offline** (harga + rentang tanggal), bukan
+  sebagai harga jadi. Perangkat bisa berhari-hari tidak tersinkron; harga jadi
+  berarti promo yang sudah lewat tetap dipakai atau promo baru tidak pernah
+  aktif. `hargaBerlaku()` di `catalog.ts` yang menghitungnya saat dibaca, dan
+  aturannya sama persis dengan `effective_price` di `v_product_stock`.
+- **`effective_price` TIDAK ikut disimpan ke Dexie.** Ia kolom turunan, dan
+  `pull_catalog` mengirim baris tabel mentah — jadi kolom itu akan tertimpa
+  undefined pada sinkronisasi berikutnya. Jebakan yang sama dengan
+  `category_name`.
+- **Diskon per NOTA, bukan per baris item.** Untuk warung sudah cukup, dan
+  per-item melipatgandakan kerumitan di struk, laporan, HPP, dan pembatalan.
+- **Struk menggabungkan ketiganya jadi satu baris**, layar sukses memisahkan.
+  Struk thermal 58mm cuma muat ~32 karakter per baris; tiga baris potongan
+  mendorong TOTAL turun, dan itu satu-satunya angka yang dicari pembeli.
+
+**Sudah diuji langsung ke database** (13 Agu, lewat `_apply_transaction` dengan
+service role): promo Rp 50.000 → Rp 40.000, subtotal 2×40.000 = 80.000, diskon
+pelanggan 5% = 4.000, diskon manual diminta 30.000 tapi **dijepit ke 8.000**
+(batas 10%), tukar 10 poin = 1.000, **total 67.000** — semuanya cocok dengan
+hitungan yang diharapkan. Uji jepit terpisah: minta Rp 999.000 pada subtotal
+Rp 40.000 tersimpan Rp 4.000. Transaksi ujinya dibatalkan dan seluruh setelan
+dikembalikan.
+
+## Produk jasa
+
+Sudah ada sejak awal lewat `products.track_stock` — yang salah cuma cara
+bertanyanya. Dulu sakelar bernama "Lacak stok" dengan keterangan kecil
+"Matikan untuk jasa": pemilik warung tidak berpikir "saya mau mematikan
+pelacakan stok", dia berpikir "yang ini jasa". Fiturnya ada tapi tidak pernah
+ditemukan. Sekarang dua pilihan tegas **Barang / Jasa**, dan ambang stok
+menipis ikut disembunyikan untuk jasa karena angkanya memang tidak pernah
+berpengaruh.
+
 ## Reset kata sandi
 
 Alurnya: `/lupa-sandi` → Supabase kirim email → `/auth/konfirmasi` (Route
@@ -2014,7 +2092,8 @@ components/
   ui/PasswordField isian sandi + tombol lihat/sembunyi
   pos/             PosClient + turunannya, CartBar (bar bayar mobile), Receipt (58mm),
                    BarcodeScanner (kamera, ponyfill barcode-detector),
-                   CustomerPicker + PointRedeem (tukar poin saat bayar)
+                   CustomerPicker + PointRedeem (tukar poin saat bayar),
+                   ManualDiscount (diskon nota, dijepit batas toko)
   charts/          DailyRevenueChart, RankedBars, PaymentSplit
   overlay/Drawer   panel geser untuk semua form
   data/IconAction  tombol aksi baris, konfirmasi dua langkah
@@ -2048,7 +2127,7 @@ scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs,
                    retire-demo.mjs (pensiunkan tenant demo — kering by default)
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  41 file, Postgres 17
+supabase/migrations/  42 file, Postgres 17
 ```
 
 ## RPC yang penting

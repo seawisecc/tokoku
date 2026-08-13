@@ -32,6 +32,7 @@ import { ProductGrid } from './ProductGrid'
 import { SuccessModal, type StoreInfo } from './SuccessModal'
 import { CustomerPicker, type PickedCustomer } from './CustomerPicker'
 import { PointRedeem } from './PointRedeem'
+import { ManualDiscount } from './ManualDiscount'
 import { SyncStatusChip } from './SyncStatusChip'
 import { BarcodeScanner } from './BarcodeScanner'
 
@@ -50,6 +51,8 @@ export type PosClientProps = {
    * poin yang lalu ditolak diam-diam.
    */
   loyalty: { enabled: boolean; pointValue: number }
+  /** 0 = kasir tidak boleh memberi diskon nota. Dari organizations. */
+  maxManualDiscountPercent: number
   store: StoreInfo
   initialProducts: (Omit<LocalProduct, 'organization_id'> & { stock: number })[]
   initialCategories: Omit<LocalCategory, 'organization_id'>[]
@@ -69,6 +72,8 @@ export function PosClient(props: PosClientProps) {
   const [scannerOpen, setScannerOpen] = useState(false)
   const [customer, setCustomer] = useState<PickedCustomer | null>(null)
   const [redeem, setRedeem] = useState(0)
+  const [discManual, setDiscManual] = useState(0)
+  const [discReason, setDiscReason] = useState('')
   const [online, setOnline] = useState(true)
   const [pending, setPending] = useState(0)
   const [lastSync, setLastSync] = useState<string | null>(null)
@@ -187,7 +192,16 @@ export function PosClient(props: PosClientProps) {
   // ---------- pindaian barcode ----------
   const tambah = useCallback(
     (p: CatalogEntry) =>
-      cart.add({ productId: p.id, name: p.name, sku: p.sku, price: p.sell_price, stock: p.stock }),
+      // Harga PROMO kalau sedang berjalan. `effective_price` dihitung
+      // `hargaBerlaku()` saat katalog dibaca, jadi promo tetap benar walau
+      // perangkatnya berhari-hari tidak tersinkron.
+      cart.add({
+        productId: p.id,
+        name: p.name,
+        sku: p.sku,
+        price: p.effective_price,
+        stock: p.stock,
+      }),
     [cart],
   )
 
@@ -254,13 +268,43 @@ export function PosClient(props: PosClientProps) {
    * saat potongannya lebih besar daripada belanjaannya — dan tidak ada yang
    * memberi tahu sampai totalnya tercetak minus di struk.
    */
-  const redeemInfo = useMemo(() => {
-    const kosong = { poin: 0, potongan: 0 }
-    if (!props.loyalty.enabled || !customer || props.loyalty.pointValue <= 0) return kosong
-    const muat = Math.floor(cart.total() / props.loyalty.pointValue)
-    const poin = Math.max(Math.min(redeem, customer.points, muat), 0)
-    return { poin, potongan: poin * props.loyalty.pointValue }
-  }, [cart, customer, redeem, props.loyalty])
+  const potongan = useMemo(() => {
+    const bruto = cart.total()
+
+    /**
+     * URUTANNYA HARUS SAMA PERSIS dengan `_apply_transaction` (migrasi 0042):
+     * pelanggan → manual → poin. Kalau berbeda, layar kasir menyebut satu angka
+     * dan server menyimpan angka lain — dan yang menanggung selisihnya adalah
+     * kasir yang sudah terlanjur menerima uang sesuai layar.
+     */
+    const pctPelanggan = customer?.discount_percent ?? 0
+    const dPelanggan = pctPelanggan > 0 ? Math.floor((bruto * pctPelanggan) / 100) : 0
+
+    const batas = Math.floor((bruto * props.maxManualDiscountPercent) / 100)
+    const dManual =
+      props.maxManualDiscountPercent > 0
+        ? Math.min(discManual, batas, Math.max(bruto - dPelanggan, 0))
+        : 0
+
+    const sisa = Math.max(bruto - dPelanggan - dManual, 0)
+    let poin = 0
+    let dPoin = 0
+    if (props.loyalty.enabled && customer && props.loyalty.pointValue > 0) {
+      const muat = Math.floor(sisa / props.loyalty.pointValue)
+      poin = Math.max(Math.min(redeem, customer.points, muat), 0)
+      dPoin = poin * props.loyalty.pointValue
+    }
+
+    return {
+      bruto,
+      pelanggan: dPelanggan,
+      manual: dManual,
+      poin,
+      poinRp: dPoin,
+      total: dPelanggan + dManual + dPoin,
+      sisaUntukPoin: sisa,
+    }
+  }, [cart, customer, redeem, discManual, props.loyalty, props.maxManualDiscountPercent])
 
   // ---------- pembayaran ----------
   async function handlePay(method: 'cash' | 'qris', paid: number) {
@@ -290,9 +334,8 @@ export function PosClient(props: PosClientProps) {
     // Dijepit ulang di sini, bukan dipercaya dari state layar: keranjang bisa
     // berubah setelah poin diketik (mis. satu barang dibatalkan), dan potongan
     // yang lebih besar dari belanjaannya akan membuat totalnya minus.
-    const poin = redeemInfo.poin
-    const potongan = redeemInfo.potongan
-    const total = Math.max(bruto - potongan, 0)
+    const poin = potongan.poin
+    const total = Math.max(bruto - potongan.total, 0)
 
     const trx: OutboxTransaction = {
       id: newTransactionId(),
@@ -309,7 +352,10 @@ export function PosClient(props: PosClientProps) {
       payment_method: method,
       paid_amount: method === 'cash' ? paid : total,
       points_redeemed: poin,
-      points_value: potongan,
+      points_value: potongan.poinRp,
+      discount_manual: potongan.manual,
+      discount_reason: potongan.manual > 0 ? discReason.trim() : null,
+      discount_customer: potongan.pelanggan,
       total,
       // Perangkat yang menentukan asal transaksi, bukan server.
       origin: online ? 'online' : 'offline',
@@ -355,6 +401,8 @@ export function PosClient(props: PosClientProps) {
      */
     setCustomer(null)
     setRedeem(0)
+    setDiscManual(0)
+    setDiscReason('')
     setLastReceipt(trx)
     setModal('success')
     await refreshLocal()
@@ -514,8 +562,33 @@ export function PosClient(props: PosClientProps) {
       {modal === 'pay' && (
         <PaymentModal
           total={total}
-          discount={redeemInfo.potongan}
-          discountLabel={`Tukar ${redeemInfo.poin.toLocaleString('id-ID')} poin`}
+          discount={potongan.total}
+          discountLabel={
+            [
+              potongan.pelanggan > 0 && `Diskon pelanggan ${customer?.discount_percent}%`,
+              potongan.manual > 0 && 'Diskon kasir',
+              potongan.poin > 0 && `Tukar ${potongan.poin.toLocaleString('id-ID')} poin`,
+            ]
+              .filter(Boolean)
+              .join(' + ') || 'Potongan'
+          }
+          blockedReason={
+            potongan.manual > 0 && !discReason.trim()
+              ? 'Isi dulu alasan diskonnya.'
+              : null
+          }
+          discountSlot={
+            <ManualDiscount
+              subtotal={total}
+              maxPercent={props.maxManualDiscountPercent}
+              value={discManual}
+              reason={discReason}
+              onChange={(rp, alasan) => {
+                setDiscManual(rp)
+                setDiscReason(alasan)
+              }}
+            />
+          }
           onClose={() => setModal(null)}
           onConfirm={handlePay}
           customerSlot={
@@ -538,8 +611,8 @@ export function PosClient(props: PosClientProps) {
                 customerName={customer.name}
                 saldo={customer.points}
                 pointValue={props.loyalty.pointValue}
-                maxRupiah={total}
-                value={redeemInfo.poin}
+                maxRupiah={potongan.sisaUntukPoin}
+                value={potongan.poin}
                 onChange={setRedeem}
               />
             ) : null

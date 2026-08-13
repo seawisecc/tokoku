@@ -33,6 +33,16 @@ export type LocalProduct = {
   track_stock: boolean
   min_stock: number
   is_active: boolean
+  /**
+   * Promo ikut disimpan MENTAH (harga + rentang tanggal), bukan sebagai harga
+   * jadi. Perangkat bisa berhari-hari tidak sinkron; menyimpan "harga yang
+   * berlaku" berarti promo yang sudah lewat tetap dipakai, atau promo yang
+   * baru mulai tidak pernah aktif. Yang menghitung berlaku/tidaknya adalah
+   * `hargaBerlaku()` di catalog.ts, saat dibaca.
+   */
+  promo_price?: number | null
+  promo_starts_at?: string | null
+  promo_ends_at?: string | null
 }
 
 export type LocalCategory = {
@@ -85,6 +95,15 @@ export type OutboxTransaction = {
   client_created_at: string
   payment_method: 'cash' | 'qris'
   paid_amount: number
+  /**
+   * Diskon nota yang diberikan kasir dengan tangan, beserta alasannya.
+   * Server MENJEPITNYA ke `max_manual_discount_percent` — angka di sini
+   * permintaan, bukan keputusan. Lihat migrasi 0042.
+   */
+  discount_manual?: number
+  discount_reason?: string | null
+  /** Potongan dari `customers.discount_percent`, dihitung ulang server. */
+  discount_customer?: number
   /**
    * Poin yang ditukar pembeli di nota ini, dan nilai rupiahnya menurut struk
    * yang sudah dicetak.

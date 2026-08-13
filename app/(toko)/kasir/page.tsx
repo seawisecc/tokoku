@@ -37,7 +37,7 @@ export default async function KasirPage() {
     supabase
       .from('v_product_stock')
       .select(
-        'id, sku, barcode, name, category_id, sell_price, cost_price, unit, track_stock, min_stock, is_active, stock',
+        'id, sku, barcode, name, category_id, sell_price, cost_price, unit, track_stock, min_stock, is_active, stock, promo_price, promo_starts_at, promo_ends_at',
       )
       .eq('organization_id', orgId)
       .eq('outlet_id', session.outletId)
@@ -52,7 +52,7 @@ export default async function KasirPage() {
     supabase
       .from('organizations')
       .select(
-        'name, address, phone, allow_negative_stock, logo_url, loyalty_enabled, loyalty_point_value',
+        'name, address, phone, allow_negative_stock, logo_url, loyalty_enabled, loyalty_point_value, max_manual_discount_percent',
       )
       .eq('id', orgId)
       .single(),
@@ -87,6 +87,9 @@ export default async function KasirPage() {
         enabled: org?.loyalty_enabled === true && features.crm === 'full',
         pointValue: Number(org?.loyalty_point_value ?? 0),
       }}
+      /* 0 = tombol diskon tidak muncul sama sekali di layar bayar. Bawaannya
+         memang 0 sampai pemilik toko menyalakannya di Pengaturan → Toko. */
+      maxManualDiscountPercent={Number(org?.max_manual_discount_percent ?? 0)}
       store={{
         name: org?.name ?? 'Toko',
         outletName: outlet?.name ?? null,

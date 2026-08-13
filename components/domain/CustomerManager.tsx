@@ -17,15 +17,30 @@ export type CustomerRow = {
   email: string | null
   address: string | null
   note: string | null
+  discountPercent: number
   totalSpent: number
   visitCount: number
   lastVisitAt: string | null
   points: number
 }
 
-type Draft = { name: string; phone: string; email: string; address: string; note: string }
+type Draft = {
+  name: string
+  phone: string
+  email: string
+  address: string
+  note: string
+  discountPercent: string
+}
 
-const kosong = (): Draft => ({ name: '', phone: '', email: '', address: '', note: '' })
+const kosong = (): Draft => ({
+  name: '',
+  phone: '',
+  email: '',
+  address: '',
+  note: '',
+  discountPercent: '0',
+})
 
 /**
  * Segmentasi pelanggan.
@@ -246,6 +261,7 @@ export function CustomerManager({
                                 email: c.email ?? '',
                                 address: c.address ?? '',
                                 note: c.note ?? '',
+                                discountPercent: String(c.discountPercent ?? 0),
                               },
                             })
                           }}
@@ -324,6 +340,38 @@ export function CustomerManager({
               {err?.field === key && <div className="field-error">{err.error}</div>}
             </div>
           ))}
+
+          {/* Diskon pelanggan. Dibaca SERVER dari baris ini setiap transaksi,
+              bukan dikirim kasir — itu yang membuatnya tidak bisa dikarang di
+              layar kasir. Lihat migrasi 0042. */}
+          <div className="field">
+            <label htmlFor="discountPercent">Diskon tetap (%)</label>
+            <input
+              id="discountPercent"
+              type="number"
+              min={0}
+              max={100}
+              value={editing.draft.discountPercent}
+              onChange={(e) =>
+                setEditing((x) =>
+                  x
+                    ? {
+                        ...x,
+                        draft: {
+                          ...x.draft,
+                          discountPercent: String(
+                            Math.min(Math.max(Number(e.target.value) || 0, 0), 100),
+                          ),
+                        },
+                      }
+                    : x,
+                )
+              }
+            />
+            <div className="field-hint">
+              Otomatis dipakai setiap pelanggan ini dipilih di kasir. Nol berarti tanpa diskon.
+            </div>
+          </div>
 
           {err && !err.field && (
             <div className="empty-note" role="alert">

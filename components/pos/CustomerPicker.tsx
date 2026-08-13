@@ -16,6 +16,8 @@ export type PickedCustomer = {
    * jaringan tambahan di sana terasa sebagai layar yang menggantung.
    */
   points: number
+  /** Potongan tetap pelanggan ini. Server yang menghitungnya lagi saat simpan. */
+  discount_percent: number
 }
 
 /**
@@ -80,7 +82,7 @@ export function CustomerPicker({
         const hp = normalkanHp(q)
         const { data, error } = await supabase
           .from('customers')
-          .select('id, name, phone, points')
+          .select('id, name, phone, points, discount_percent')
           .eq('organization_id', organizationId)
           .is('deleted_at', null)
           .or(`name.ilike.%${q}%${hp ? `,phone.ilike.%${hp}%` : ''}`)
@@ -117,7 +119,7 @@ export function CustomerPicker({
       const { data, error } = await supabase
         .from('customers')
         .insert({ organization_id: organizationId, name: nama, phone: hp })
-        .select('id, name, phone, points')
+        .select('id, name, phone, points, discount_percent')
         .single()
       if (error) {
         setError(
@@ -149,7 +151,14 @@ export function CustomerPicker({
       <div className="cust-picked">
         <Icon name="user" size={15} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="cust-nama">{value.name}</div>
+          <div className="cust-nama">
+            {value.name}
+            {value.discount_percent > 0 && (
+              <span className="badge badge-active" style={{ marginLeft: 6 }}>
+                diskon {value.discount_percent}%
+              </span>
+            )}
+          </div>
           {value.phone && <div className="cust-hp mono">{hpLokal(value.phone)}</div>}
         </div>
         <button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange(null)}>

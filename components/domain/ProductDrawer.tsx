@@ -18,6 +18,9 @@ export type ProductFormValue = {
   sellPrice: number
   minStock: number
   trackStock: boolean
+  promoPrice: number | null
+  promoStartsAt: string | null
+  promoEndsAt: string | null
 }
 
 /**
@@ -40,6 +43,9 @@ export const emptyProduct = (suggestedSku: string, defaultMinStock = 10): Produc
   sellPrice: 0,
   minStock: defaultMinStock,
   trackStock: true,
+  promoPrice: null,
+  promoStartsAt: null,
+  promoEndsAt: null,
 })
 
 type Draft = {
@@ -52,10 +58,13 @@ type Draft = {
   sellPrice: string
   minStock: string
   trackStock: boolean
+  promoPrice: string
+  promoStartsAt: string
+  promoEndsAt: string
 }
 
 /** Field yang punya slot pesan sendiri di bawah input. */
-const INLINE_FIELDS = ['name', 'sku', 'barcode', 'costPrice', 'sellPrice', 'minStock']
+const INLINE_FIELDS = ['name', 'sku', 'barcode', 'costPrice', 'sellPrice', 'minStock', 'promoPrice', 'promoEndsAt']
 
 export function ProductDrawer({
   value,
@@ -87,6 +96,9 @@ export function ProductDrawer({
     sellPrice: String(value?.sellPrice ?? 0),
     minStock: String(value?.minStock ?? 10),
     trackStock: value?.trackStock ?? true,
+    promoPrice: value?.promoPrice != null ? String(value.promoPrice) : '',
+    promoStartsAt: value?.promoStartsAt ?? '',
+    promoEndsAt: value?.promoEndsAt ?? '',
   }))
   const [result, setResult] = useState<ActionResult | null>(null)
   const [scannerOpen, setScannerOpen] = useState(false)
@@ -101,6 +113,7 @@ export function ProductDrawer({
   const cost = Number(draft.costPrice || 0)
   const sell = Number(draft.sellPrice || 0)
   const margin = sell - cost
+  const promo = Number(draft.promoPrice || 0)
   const marginPct = sell > 0 ? Math.round((margin / sell) * 100) : 0
 
   const err = result && !result.ok ? result : null
@@ -117,6 +130,9 @@ export function ProductDrawer({
     fd.set('sellPrice', draft.sellPrice)
     fd.set('minStock', draft.minStock)
     if (draft.trackStock) fd.set('trackStock', 'on')
+    fd.set('promoPrice', draft.promoPrice)
+    fd.set('promoStartsAt', draft.promoStartsAt)
+    fd.set('promoEndsAt', draft.promoEndsAt)
 
     startTransition(async () => {
       const res = await saveProduct(value!.id, fd)
@@ -229,6 +245,66 @@ export function ProductDrawer({
           <span style={{ color: margin < 0 ? 'var(--color-coral)' : 'var(--color-success)' }}>
             {rupiah(margin)} ({marginPct}%)
           </span>
+        </div>
+      )}
+
+      {/* Harga promo. Ditaruh tepat di bawah harga jual karena itu yang
+          dibandingkan orang saat mengisinya, bukan di bagian lain halaman.
+          Server yang memilih harga mana yang dipakai (lihat `effective_price`
+          di v_product_stock), jadi kasir tidak punya pilihan sama sekali —
+          itulah yang membuat lapis promo aman tanpa batas apa pun. */}
+      <div className="field">
+        <label htmlFor="promoPrice">Harga Promo (opsional)</label>
+        <input
+          id="promoPrice"
+          inputMode="numeric"
+          value={draft.promoPrice}
+          onChange={(e) => set('promoPrice', e.target.value.replace(/[^\d]/g, ''))}
+          placeholder="Kosongkan kalau tidak sedang promo"
+          aria-invalid={err?.field === 'promoPrice'}
+        />
+        {err?.field === 'promoPrice' && <div className="field-error">{err.error}</div>}
+        {promo > 0 && (
+          <div className="field-hint">
+            {rupiah(promo)}
+            {sell > 0 && promo < sell ? ` · hemat ${rupiah(sell - promo)} (${Math.round(((sell - promo) / sell) * 100)}%)` : ''}
+          </div>
+        )}
+        {promo > 0 && sell > 0 && promo >= sell && (
+          <div className="field-error">
+            Harga promo tidak lebih murah dari harga jual. Periksa lagi angkanya.
+          </div>
+        )}
+      </div>
+
+      {promo > 0 && (
+        <div className="field-row">
+          <div className="field">
+            <label htmlFor="promoStartsAt">Promo mulai</label>
+            <input
+              id="promoStartsAt"
+              type="date"
+              value={draft.promoStartsAt}
+              onChange={(e) => set('promoStartsAt', e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="promoEndsAt">Promo sampai</label>
+            <input
+              id="promoEndsAt"
+              type="date"
+              value={draft.promoEndsAt}
+              onChange={(e) => set('promoEndsAt', e.target.value)}
+              aria-invalid={err?.field === 'promoEndsAt'}
+            />
+            {err?.field === 'promoEndsAt' && <div className="field-error">{err.error}</div>}
+          </div>
+        </div>
+      )}
+      {promo > 0 && (
+        <div className="field-hint" style={{ marginTop: -8, marginBottom: 14 }}>
+          Kosongkan tanggalnya untuk promo tanpa batas waktu. Berlaku sepanjang hari
+          yang dipilih.
         </div>
       )}
 

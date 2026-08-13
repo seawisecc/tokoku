@@ -46,7 +46,13 @@ export function ProductGrid({
                 .toUpperCase()}
             </div>
             <div className="prod-name">{p.name}</div>
-            <div className="prod-price">{rupiah(p.sell_price)}</div>
+            {/* Harga lama dicoret di sebelah harga promo. Kasir menyebut harga
+                ke pembeli dari layar ini; kalau yang tampil cuma angka baru,
+                tidak ada yang bisa menjawab "katanya lagi promo?". */}
+            <div className="prod-price">
+              {rupiah(p.effective_price)}
+              {p.on_promo && <span className="prod-price-old">{rupiah(p.sell_price)}</span>}
+            </div>
             <div className="prod-stock">
               {p.track_stock ? `Stok: ${remaining}` : 'Tanpa stok'}
               {taken > 0 && <span style={{ color: 'var(--color-forest)' }}> · {taken} di keranjang</span>}

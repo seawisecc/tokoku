@@ -18,7 +18,7 @@ export default async function ProdukPage() {
     supabase
       .from('v_product_stock')
       .select(
-        'id, name, sku, barcode, category_id, category_name, color_key, unit, cost_price, sell_price, min_stock, track_stock, stock, is_low_stock',
+        'id, name, sku, barcode, category_id, category_name, color_key, unit, cost_price, sell_price, min_stock, track_stock, stock, is_low_stock, promo_price, promo_starts_at, promo_ends_at, effective_price',
       )
       .eq('organization_id', session.org!.id)
       .eq('outlet_id', session.outletId!)
@@ -51,6 +51,10 @@ export default async function ProdukPage() {
     trackStock: p.track_stock ?? true,
     stock: p.stock ?? 0,
     isLowStock: p.is_low_stock ?? false,
+    promoPrice: p.promo_price,
+    promoStartsAt: p.promo_starts_at,
+    promoEndsAt: p.promo_ends_at,
+    effectivePrice: p.effective_price ?? p.sell_price ?? 0,
   }))
 
   const lowCount = rows.filter((r) => r.trackStock && r.isLowStock).length

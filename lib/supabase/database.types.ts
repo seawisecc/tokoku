@@ -474,6 +474,7 @@ export type Database = {
           address: string | null
           created_at: string
           deleted_at: string | null
+          discount_percent: number
           email: string | null
           id: string
           last_visit_at: string | null
@@ -490,6 +491,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           deleted_at?: string | null
+          discount_percent?: number
           email?: string | null
           id?: string
           last_visit_at?: string | null
@@ -506,6 +508,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           deleted_at?: string | null
+          discount_percent?: number
           email?: string | null
           id?: string
           last_visit_at?: string | null
@@ -907,6 +910,7 @@ export type Database = {
           loyalty_earn_per: number
           loyalty_enabled: boolean
           loyalty_point_value: number
+          max_manual_discount_percent: number
           name: string
           offline_mode_enabled: boolean
           phone: string | null
@@ -941,6 +945,7 @@ export type Database = {
           loyalty_earn_per?: number
           loyalty_enabled?: boolean
           loyalty_point_value?: number
+          max_manual_discount_percent?: number
           name: string
           offline_mode_enabled?: boolean
           phone?: string | null
@@ -975,6 +980,7 @@ export type Database = {
           loyalty_earn_per?: number
           loyalty_enabled?: boolean
           loyalty_point_value?: number
+          max_manual_discount_percent?: number
           name?: string
           offline_mode_enabled?: boolean
           phone?: string | null
@@ -1300,6 +1306,9 @@ export type Database = {
           min_stock: number
           name: string
           organization_id: string
+          promo_ends_at: string | null
+          promo_price: number | null
+          promo_starts_at: string | null
           sell_price: number
           sku: string
           track_stock: boolean
@@ -1320,6 +1329,9 @@ export type Database = {
           min_stock?: number
           name: string
           organization_id: string
+          promo_ends_at?: string | null
+          promo_price?: number | null
+          promo_starts_at?: string | null
           sell_price?: number
           sku: string
           track_stock?: boolean
@@ -1340,6 +1352,9 @@ export type Database = {
           min_stock?: number
           name?: string
           organization_id?: string
+          promo_ends_at?: string | null
+          promo_price?: number | null
+          promo_starts_at?: string | null
           sell_price?: number
           sku?: string
           track_stock?: boolean
@@ -2407,6 +2422,9 @@ export type Database = {
           created_at: string
           customer_id: string | null
           device_id: string | null
+          discount_customer: number
+          discount_manual: number
+          discount_reason: string | null
           discount_total: number
           id: string
           note: string | null
@@ -2438,6 +2456,9 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           device_id?: string | null
+          discount_customer?: number
+          discount_manual?: number
+          discount_reason?: string | null
           discount_total?: number
           id?: string
           note?: string | null
@@ -2469,6 +2490,9 @@ export type Database = {
           created_at?: string
           customer_id?: string | null
           device_id?: string | null
+          discount_customer?: number
+          discount_manual?: number
+          discount_reason?: string | null
           discount_total?: number
           id?: string
           note?: string | null
@@ -2804,6 +2828,7 @@ export type Database = {
           category_name: string | null
           color_key: string | null
           cost_price: number | null
+          effective_price: number | null
           id: string | null
           image_url: string | null
           is_active: boolean | null
@@ -2813,6 +2838,9 @@ export type Database = {
           name: string | null
           organization_id: string | null
           outlet_id: string | null
+          promo_ends_at: string | null
+          promo_price: number | null
+          promo_starts_at: string | null
           sell_price: number | null
           sku: string | null
           stock: number | null
