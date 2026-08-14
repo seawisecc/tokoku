@@ -10,8 +10,16 @@ tampilan, buka file itu dulu.
 
 ## Kondisi terkini — mulai baca dari sini
 
-Terakhir dikerjakan **13 Agustus 2026**. Semua yang di bawah ini sudah dibangun
+Terakhir dikerjakan **14 Agustus 2026**. Semua yang di bawah ini sudah dibangun
 dan **46 migrasinya sudah diterapkan** ke Supabase produksi.
+
+**Yang dikerjakan 14 Agu**, semuanya sudah di produksi: modul keuangan
+(pengeluaran operasional → arus kas & laba rugi), pelunasan nota tempo yang
+punya tanggal dan catatan, ekspor tiap laporan ke CSV maupun PDF, dua cacat
+alur undangan, satu audit menyeluruh (kode, keamanan, performa, UI/UX), dan
+pemisah ribuan di lembar cetak maupun di setiap isian angka. Rencana modul
+keuangannya ada di `docs/RENCANA-KEUANGAN.md`; Fase 1 dan 2 selesai, Fase 3
+(sakelar pajak) belum.
 
 **Sudah di-deploy ke Vercel** lewat GitHub (`seawisecc/tokoku`), dan pushing ke
 `main` memicu deploy produksi otomatis di `tokoku.seawise.id`. Function berjalan
@@ -121,31 +129,51 @@ pekerjaan sebelum dijual".
   arus kas) ke **CSV atau PDF**, dengan rentang tanggal bebas; lihat "Ekspor
   laporan"
 - **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — terbit
-- **Halaman pemasaran** (`/`, `/fitur`) — rincian per paket, tabel perbandingan,
-  FAQ; lihat "Halaman fitur" di bawah
+- **Halaman pemasaran** (`/fitur`) — rincian per paket, tabel perbandingan,
+  FAQ; lihat "Halaman fitur" di bawah. **`/` BUKAN halaman pemasaran**: ia
+  cuma mengalihkan ke beranda sesuai peran, atau ke `/masuk` kalau belum login
 - **Panduan awal toko baru** di beranda; lihat "Panduan awal toko baru"
-- **Pemantauan error** (Sentry) terpasang tapi TIDUR sampai DSN diisi
+- **Pemantauan error** (Sentry) MENYALA di produksi sejak 13 Agu, dengan
+  penyaring error ekstensi peramban sejak 14 Agu; lihat "Pemantauan error"
 - **Email sungguhan jalan** — Resend + Custom SMTP Supabase, template Indonesia
   sudah dipasang; lihat `docs/EMAIL-TEMPLATES-SUPABASE.md`
 - **Tenant demo dipensiunkan** — `scripts/retire-demo.mjs`
 
 **Belum dikerjakan — urutan yang disarankan:**
 1. **Backup database.** Naik ke Supabase Pro, atau `pg_dump` harian ke tempat
-   lain. Satu-satunya risiko yang tidak bisa diperbaiki setelah terjadi.
+   lain. Satu-satunya risiko yang tidak bisa diperbaiki setelah terjadi, dan
+   taruhannya naik sejak 14 Agu: yang tersimpan sekarang termasuk dasar
+   pelaporan pajak klien, bukan cuma data penjualan.
 2. **Tinjauan hukum atas halaman legal**, terutama transfer data ke Singapura.
-3. **Payment gateway.** Perubahan paket masih dikerjakan tangan lewat Super
+3. **Fase 3 modul keuangan: sakelar pajak.** Perhitungannya SUDAH ada di
+   `_apply_transaction` sejak migrasi 0042; yang tidak ada cuma layar untuk
+   menyalakannya. Lihat `docs/RENCANA-KEUANGAN.md` — di sana juga tercatat dua
+   jebakan yang menunggu: `catalog_version` tidak naik saat setelan organisasi
+   berubah, dan cache offline tidak menyimpan `settings` sama sekali.
+4. **Payment gateway.** Perubahan paket masih dikerjakan tangan lewat Super
    Admin. Sanggup untuk sepuluh klien pertama, tidak untuk seratus.
 5. `features` jsonb sisa: `multi_outlet`, `api`, `support` belum dipakai —
    barangnya memang belum ada. `purchasing`, `reports`, `crm` sudah ditegakkan.
-5. **Penukaran poin sudah jalan penuh** (13 Agu) — butir ini dulu ada di sini,
-   sekarang selesai. Lihat "Penukaran poin di Kasir".
 
 Seluruh modul yang disepakati sudah jadi — Konsinyasi yang terakhir, selesai
-10 Agu 2026. Sisa daftar di atas adalah pengembangan lanjutan, bukan ruang
-lingkup yang masih terhutang.
+10 Agu 2026, disusul modul keuangan 14 Agu. Sisa daftar di atas adalah
+pengembangan lanjutan, bukan ruang lingkup yang masih terhutang.
 
 **Mobile:** seluruh aplikasi sudah ditelusuri di 390px, termasuk `/admin/*`.
 Tabel Super Admin tetap tabel geser di ponsel — disengaja, itu alat desktop.
+**Kecuali yang dibangun 14 Agu**: Pengeluaran, Laporan Keuangan, dan lembar
+cetak belum pernah dibuka di 390px oleh siapa pun. Ketiganya memakai kelas
+tabel yang sudah punya aturan menumpuk (`.buy-table`), jadi kemungkinan besar
+aman — tapi itu dugaan berdasar, bukan hasil pengukuran.
+
+**Batas kemampuan agen sejak sandi diganti:** tidak ada sesi, jadi tidak ada
+yang bisa membuka layar mana pun. Yang bisa dikerjakan sendiri adalah menyisir
+kode & CSS, menjalankan query halaman persis seperti yang ditulis di kode lewat
+skrip service-role, dan mengukur dari luar lewat HTTP. Tiga cacat yang lolos ke
+produksi bulan ini semuanya cacat TAMPILAN yang cuma bisa dilihat mata:
+embed yang gagal membuat daftar tampak kosong, tombol Masuk yang hilang saat
+di-hover, dan teks impor yang mepet. Tangkapan layar dari pemilik project jauh
+lebih efektif daripada tebakan agen.
 
 ## Penukaran poin di Kasir
 
@@ -346,6 +374,8 @@ Diperbarui 13 Agu. Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan.
    (nosniff, SAMEORIGIN, referrer policy). CSP butuh nonce untuk script inline
    Next dan harus diuji per halaman.
 8. ~~Onboarding klien baru~~ ✅ **selesai** — panduan awal di beranda.
+8b. ~~Ekspor laporan~~ ✅ **selesai** 14 Agu — CSV & PDF untuk kelima laporan,
+   dengan rentang tanggal bebas. Lihat "Ekspor laporan".
 
 **Bisa menunggu:**
 9. `robots.txt` / sitemap belum ada.
@@ -2588,8 +2618,10 @@ app/
                    profil
   (platform)/admin klien/[id] (+ /ekspor), paket, pengaturan platform
   error.tsx        penangkap error + global-error.tsx + not-found.tsx
+  (cetak)/         laporan/cetak — lembar cetak laporan, TANPA AppShell
   (publik)/        kebijakan-privasi, syarat-ketentuan (tanpa AppShell)
-  page.tsx         halaman depan (pemasaran) — di luar semua route group
+  page.tsx         pengalih saja: ke beranda sesuai peran, atau ke /masuk.
+                   BUKAN halaman pemasaran — yang pemasaran cuma /fitur
   fitur/           rincian per paket, tabel perbandingan, FAQ (+ opengraph-image)
   about/  setup/   halaman publik & status koneksi
 components/
@@ -2598,6 +2630,7 @@ components/
                    NotificationBell (isinya dari lib/notifications.ts)
   ui/icons.tsx     registry ikon dari wireframe (+ whatsapp, star, eye/eyeOff)
   ui/PasswordField isian sandi + tombol lihat/sembunyi
+  ui/NumberField   isian angka berpemisah ribuan (WAJIB dipakai, lihat aturan)
   pos/             PosClient + turunannya, CartBar (bar bayar mobile), Receipt (58mm),
                    BarcodeScanner (kamera, ponyfill barcode-detector),
                    CustomerPicker + PointRedeem (tukar poin saat bayar),
@@ -2609,6 +2642,8 @@ components/
   domain/          AuthPanel, ForgotPasswordForm, NewPasswordForm, QuotaBars,
                    OpnameSheet, TransactionRowActions, ImportProducts,
                    ExpenseManager (pengeluaran + drawer kategori),
+                   ExportReportButton (ikon unduh + panel CSV/PDF),
+                   DataError (query gagal ≠ data kosong),
                    ChangePasswordCard, PlatformSettingsForm,
                    ProdukTabs / LaporanTabs / PembelianTabs / SettingsNav,
                    LogoUploader, DeviceTable, SettingsNav, WhatsAppButton,
@@ -2628,11 +2663,13 @@ lib/
                    outbox, catalog, device, sequence, connection
   csv.ts           baca-tulis CSV (deteksi pemisah, BOM UTF-8) — tanpa dependensi
   exports.ts       SATU penyusun berkas backup, dipakai jalur toko & Super Admin
+  report-exports.ts SATU penyusun data laporan, dipakai unduhan CSV & lembar cetak
   phone.ts         normalkan nomor HP ke 62… + hpLokal() untuk menampilkannya
   period.ts        SATU pemotong periode bulanan halaman keuangan (jam WITA)
   plan.ts          SATU pembaca plans.features — kolom kosong = kemampuan penuh
   subscription.ts  keadaan langganan sisi toko — harus sama dengan org_lapsed_at()
   supabase/        client (RLS) · server (RLS) · admin (LEWAT RLS, server-only)
+                   public (TANPA cookie — halaman publik yang boleh di-cache)
 scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs,
                    retire-demo.mjs (pensiunkan tenant demo — kering by default)
 instrumentation.ts   register Sentry server/edge + onRequestError
@@ -2667,7 +2704,7 @@ menunya pernah muncul.
 
 Penjagaan berlapis tiga: `proxy.ts` (sesi) → layout server (`requirePermission`) → RLS.
 
-## Data di produksi (per 13 Agu)
+## Data di produksi (per 14 Agu)
 
 **Ini BUKAN lagi data demo yang bebas diutak-atik.** Toko demo lama sudah
 dipensiunkan; yang tersisa adalah dua tenant hidup di database produksi yang
@@ -2675,13 +2712,20 @@ sama dengan tempat klien asli nanti tinggal.
 
 | Toko | Status | Isi | Untuk apa |
 |---|---|---|---|
-| **Toko Dewi** (Denpasar) | active, Growth | 10 produk · 49 trx · 3 anggota · 1 pelanggan · 2 outlet (MAIN + Cabang Renon) | bahan peragaan penjualan, sengaja dipertahankan |
+| **Toko Dewi** (Denpasar) | active, Growth | 10 produk · 47 trx sah · 3 anggota · 1 pelanggan · 2 outlet (MAIN + Cabang Renon) · 6 nota pembelian · 1 pengeluaran | bahan peragaan penjualan, sengaja dipertahankan |
 | **Leuca de Perfume** (Denpasar) | trial 14 hari | 1 produk · 1 anggota · 1 outlet | dibuat pemilik project saat menguji alur pendaftaran dari awal |
 
 Setelan Toko Dewi yang sudah dinyalakan: **poin loyalty ON**, **batas diskon
 kasir 10%**, **satu produk berpromo**, dan `subscription_ends_at` disetel jauh
 ke depan. Jangan mengubahnya tanpa mengembalikan — pemilik project memakainya
 untuk memperagakan aplikasi.
+
+Satu pengeluaran nyata sudah tercatat di sana (Sewa ruko Rp 700.000, 14 Agu),
+dicatat pemilik project saat menguji modulnya. **Jangan dihapus** — itu
+satu-satunya data pengeluaran yang ada. Akibatnya Laporan Keuangan Agustus
+menunjukkan LABA BERSIH MINUS, karena sewanya lebih besar daripada laba kotor
+toko peragaan ini. Angkanya benar, bukan salah hitung: laba kotornya memang
+tipis karena HPP data contohnya disetel dekat dengan harga jual.
 
 **Sudah dipensiunkan** (soft delete, sandi akunnya diacak): Warung Rina,
 Warung Barokah, dan dua sisa "Uji Trial Bersama". Salinan JSON-nya ada di
