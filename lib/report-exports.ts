@@ -1,7 +1,6 @@
 import 'server-only'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { toCsv } from './csv'
 
 /**
  * Penyusun berkas untuk EKSPOR LAPORAN.
@@ -28,6 +27,22 @@ export const JENIS_LAPORAN: JenisLaporan[] = [
   'laba-rugi',
   'arus-kas',
 ]
+
+export type DataLaporan = {
+  /** Judul yang tercetak di lembar PDF. */
+  judul: string
+  filename: string
+  headers: string[]
+  rows: unknown[][]
+}
+
+export const JUDUL_LAPORAN: Record<JenisLaporan, string> = {
+  penjualan: 'Penjualan Harian',
+  shift: 'Laporan Shift',
+  pengeluaran: 'Pengeluaran',
+  'laba-rugi': 'Laba Rugi',
+  'arus-kas': 'Arus Kas',
+}
 
 export type LingkupLaporan = {
   /** YYYY-MM-DD, inklusif. */
@@ -60,13 +75,23 @@ const METODE: Record<string, string> = {
  */
 const seluruhToko = (outletId: string) => `outlet_id.eq.${outletId},outlet_id.is.null`
 
-export async function buildReportExport(
+/**
+ * SATU penyusun untuk CSV maupun PDF.
+ *
+ * Yang dikembalikan bukan teks CSV melainkan judul, nama berkas, kepala kolom,
+ * dan barisnya. Rute unduh menjadikannya CSV; halaman cetak menjadikannya tabel
+ * HTML lalu dicetak jadi PDF. Kalau keduanya menyusun angkanya sendiri-sendiri,
+ * suatu hari PDF dan CSV untuk periode yang sama akan berbeda isinya, dan yang
+ * membandingkan keduanya tidak punya cara tahu mana yang benar. Alasan yang
+ * sama dengan `org_usage` dan `v_consignment_summary`.
+ */
+export async function buildReportData(
   supabase: SupabaseClient,
   orgId: string,
   orgName: string,
   jenis: JenisLaporan,
   lingkup: LingkupLaporan,
-): Promise<{ filename: string; csv: string }> {
+): Promise<DataLaporan> {
   const { dari, sampai, outletId } = lingkup
   const slug = orgName.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '') || 'toko'
   const nama = (bagian: string) => `${bagian}-${slug}-${dari}-sd-${sampai}.csv`
@@ -84,10 +109,10 @@ export async function buildReportExport(
     if (error) throw error
 
     return {
+      judul: JUDUL_LAPORAN.penjualan,
       filename: nama('penjualan-harian'),
-      csv: toCsv(
-        ['tanggal', 'transaksi', 'omzet', 'hpp', 'laba_kotor', 'rata_rata_nota', 'omzet_tunai', 'transaksi_offline'],
-        (data ?? []).map((r) => [
+      headers: ['Tanggal', 'Transaksi', 'Omzet', 'HPP', 'Laba kotor', 'Rata-rata nota', 'Omzet tunai', 'Transaksi offline'],
+      rows: (data ?? []).map((r) => [
           r.sales_date,
           r.transaction_count,
           r.revenue,
@@ -96,8 +121,7 @@ export async function buildReportExport(
           r.avg_ticket,
           r.cash_revenue ?? 0,
           r.offline_count,
-        ]),
-      ),
+      ]),
     }
   }
 
@@ -114,10 +138,10 @@ export async function buildReportExport(
     if (error) throw error
 
     return {
+      judul: JUDUL_LAPORAN.shift,
       filename: nama('laporan-shift'),
-      csv: toCsv(
-        ['dibuka', 'ditutup', 'kasir', 'perangkat', 'status', 'transaksi', 'penjualan', 'penjualan_tunai', 'penjualan_non_tunai', 'kas_awal', 'kas_seharusnya', 'kas_fisik', 'selisih', 'transaksi_batal'],
-        (data ?? []).map((r) => [
+      headers: ['Dibuka', 'Ditutup', 'Kasir', 'Perangkat', 'Status', 'Transaksi', 'Penjualan', 'Penjualan tunai', 'Penjualan non-tunai', 'Kas awal', 'Kas seharusnya', 'Kas fisik', 'Selisih', 'Transaksi batal'],
+      rows: (data ?? []).map((r) => [
           r.opened_at,
           r.closed_at,
           r.cashier_name,
@@ -134,8 +158,7 @@ export async function buildReportExport(
           // kasnya memang belum dihitung, dan 0 akan terbaca sebagai "cocok".
           r.status === 'open' ? '' : r.cash_difference,
           r.void_count,
-        ]),
-      ),
+      ]),
     }
   }
 
@@ -162,10 +185,10 @@ export async function buildReportExport(
     if (error) throw error
 
     return {
+      judul: JUDUL_LAPORAN.pengeluaran,
       filename: nama('pengeluaran'),
-      csv: toCsv(
-        ['tanggal', 'kategori', 'jumlah', 'dibayar_pakai', 'dibayar_ke', 'catatan', 'cabang'],
-        (data ?? []).map((r) => [
+      headers: ['Tanggal', 'Kategori', 'Jumlah', 'Dibayar pakai', 'Dibayar ke', 'Catatan', 'Cabang'],
+      rows: (data ?? []).map((r) => [
           r.expense_date,
           (r.expense_categories as unknown as { name: string } | null)?.name ?? '',
           r.amount,
@@ -175,8 +198,7 @@ export async function buildReportExport(
           // Kosong berarti seluruh toko, dan itu ditulis apa adanya supaya yang
           // membuka berkasnya di Excel tidak mengira cabangnya lupa diisi.
           (r.outlets as unknown as { name: string } | null)?.name ?? 'Seluruh toko',
-        ]),
-      ),
+      ]),
     }
   }
 
@@ -234,7 +256,12 @@ export async function buildReportExport(
       baris.push(['Pajak terpungut (bukan omzet, untuk disetor)', pajak])
     }
 
-    return { filename: nama('laba-rugi'), csv: toCsv(['pos', 'nilai'], baris) }
+    return {
+      judul: JUDUL_LAPORAN['laba-rugi'],
+      filename: nama('laba-rugi'),
+      headers: ['Pos', 'Nilai'],
+      rows: baris,
+    }
   }
 
   // arus kas
@@ -250,17 +277,16 @@ export async function buildReportExport(
   if (error) throw error
 
   return {
+    judul: JUDUL_LAPORAN['arus-kas'],
     filename: nama('arus-kas'),
-    csv: toCsv(
-      ['tanggal', 'sumber', 'arah', 'tunai', 'jumlah', 'banyak_catatan'],
-      (data ?? []).map((r) => [
+    headers: ['Tanggal', 'Sumber', 'Arah', 'Tunai', 'Jumlah', 'Banyak catatan'],
+    rows: (data ?? []).map((r) => [
         r.flow_date,
         SUMBER[r.source as string] ?? r.source,
         r.direction === 'masuk' ? 'Masuk' : 'Keluar',
         r.is_cash ? 'Ya' : 'Tidak',
         r.amount,
-        r.entry_count,
-      ]),
-    ),
+      r.entry_count,
+    ]),
   }
 }

@@ -126,6 +126,16 @@ const PATHS = {
   minus: <path d="M5 12h14" />,
   chevronRight: <path d="M9 6l6 6-6 6" />,
   chevronDown: <path d="M6 9l6 6 6-6" />,
+  /* Digambar ulang bergaya sama dengan ikon wireframe lain (stroke 1.7,
+     viewBox 24), bukan diambil dari set pihak ketiga — aturan yang sama dengan
+     ikon `whatsapp`. */
+  download: (
+    <>
+      <path d="M12 3v12" />
+      <path d="M7 11l5 5 5-5" />
+      <path d="M4 20h16" />
+    </>
+  ),
   search: (
     <>
       <circle cx="11" cy="11" r="7" />

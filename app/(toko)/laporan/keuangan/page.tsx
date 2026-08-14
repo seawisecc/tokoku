@@ -198,6 +198,20 @@ export default async function LaporanKeuanganPage({
             ? `${scopeName} · ${PERIODE_LABEL[aktif].toLowerCase()}`
             : PERIODE_LABEL[aktif].toLowerCase()
         }
+        /* Dua pilihan dalam satu panel, bukan dua tombol. Laba rugi dan arus
+           kas adalah dua buku yang menjawab pertanyaan berbeda, tapi orang
+           mengunduh salah satunya, bukan keduanya sekaligus. */
+        action={
+          <ExportReportButton
+            pilihan={[
+              { jenis: 'laba-rugi', label: 'Laba rugi' },
+              { jenis: 'arus-kas', label: 'Arus kas' },
+            ]}
+            dari={from}
+            sampai={to}
+            outlet={scopeParam}
+          />
+        }
       />
 
       {multiOutlet && (
@@ -233,14 +247,6 @@ export default async function LaporanKeuanganPage({
             {PERIODE_LABEL[p]}
           </Link>
         ))}
-      </div>
-
-      {/* Dua berkas, bukan satu. Laba rugi dan arus kas adalah dua buku yang
-          menjawab pertanyaan berbeda; dipaksa jadi satu lembar, yang
-          menerimanya harus memisahkannya lagi sebelum bisa dipakai. */}
-      <div className="period-tabs" style={{ marginBottom: 14, justifyContent: 'flex-end' }}>
-        <ExportReportButton jenis="laba-rugi" dari={from} sampai={to} outlet={scopeParam} label="Unduh laba rugi" />
-        <ExportReportButton jenis="arus-kas" dari={from} sampai={to} outlet={scopeParam} label="Unduh arus kas" />
       </div>
 
       {/* Laba BERSIH yang jadi angka besar, bukan omzet. Omzet besar dengan

@@ -1,6 +1,7 @@
 import { getSessionContext } from '@/lib/auth'
 import { csvResponse } from '@/lib/exports'
-import { buildReportExport, JENIS_LAPORAN, type JenisLaporan } from '@/lib/report-exports'
+import { toCsv } from '@/lib/csv'
+import { buildReportData, JENIS_LAPORAN, type JenisLaporan } from '@/lib/report-exports'
 import { getPlanFeatures } from '@/lib/plan'
 import { createClient } from '@/lib/supabase/server'
 
@@ -74,14 +75,14 @@ export async function GET(request: Request) {
 
   const supabase = await createClient()
   try {
-    const { filename, csv } = await buildReportExport(
+    const { filename, headers, rows } = await buildReportData(
       supabase,
       session.org.id,
       session.org.name,
       jenis,
       { dari, sampai, outletId },
     )
-    return csvResponse(filename, csv)
+    return csvResponse(filename, toCsv(headers, rows))
   } catch {
     // Kegagalan TIDAK boleh menjadi berkas CSV kosong: yang mengunduhnya akan
     // menyimpulkan periode itu memang tidak ada datanya.

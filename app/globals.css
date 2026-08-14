@@ -203,6 +203,9 @@ h3,
 .page-title { font-size: 22px; font-weight: 700; margin: 0; letter-spacing: -.01em; }
 .page-sub { color: var(--color-ink-soft); font-size: 13px; margin-top: 4px; }
 .page-head { margin-bottom: 18px; }
+/* Judul di kiri, tindakan halaman di kanan, dan keduanya rata ATAS supaya
+   tombolnya sejajar dengan baris judul walau subjudulnya dua baris. */
+.page-head-row { display: flex; align-items: flex-start; gap: 12px; }
 
 /* ── Tab bagian (dipakai Pengaturan) ───────────────────────────────────────
    Dulu deretan `.btn.btn-sm` biasa dengan gap seadanya, jadi lebar tiap tab
@@ -542,6 +545,10 @@ h3,
 .btn-ghost { background: var(--color-card); color: var(--color-ink); border: 1px solid var(--color-line); }
 .btn-ghost:hover:not(:disabled) { background: var(--color-paper); }
 .btn-block { width: 100%; justify-content: center; }
+/* Tautan yang sedang tidak boleh ditekan. `disabled` tidak berlaku pada <a>,
+   jadi tanpa kelas ini tombol unduh tetap bisa diklik saat tanggalnya belum
+   sah — dan yang mendarat di berkas adalah pesan error 400. */
+.btn.is-mati { opacity: .45; pointer-events: none; }
 .btn-sm { padding: 7px 11px; font-size: 12px; border-radius: 9px; }
 
 /* ---------- tabel ---------- */
@@ -917,6 +924,21 @@ tbody tr:hover { background: var(--color-paper); }
      perbaikan — bukan lebih buruk. */
   body * { visibility: hidden; }
   .receipt, .receipt * { visibility: visible; }
+  /* Lembar laporan HARUS ikut disebut di sini. Aturan di atas menyembunyikan
+     SELURUH isi halaman saat mencetak dan hanya mengembalikan struk; tanpa
+     baris ini, /laporan/cetak keluar sebagai kertas kosong tanpa satu pun
+     pesan kesalahan. */
+  .cetak-lembar, .cetak-lembar * { visibility: visible; }
+  .cetak-halaman { background: #fff; padding: 0; }
+  .cetak-lembar {
+    max-width: none; border: none; border-radius: 0; padding: 10mm 8mm;
+  }
+  /* Baris tabel tidak boleh terpotong di tengah oleh pergantian halaman, dan
+     kepala kolomnya diulang di tiap halaman — laporan 12 bulan memang lewat
+     dari satu lembar. */
+  .cetak-tabel { page-break-inside: auto; }
+  .cetak-tabel tr { page-break-inside: avoid; page-break-after: auto; }
+  .cetak-tabel thead { display: table-header-group; }
   .receipt { position: absolute; left: 0; top: 0; width: 58mm; padding: 3mm 5mm; }
   .receipt-preview { border: none; box-shadow: none; border-radius: 0; }
 
@@ -1519,6 +1541,35 @@ tbody tr:hover { background: var(--color-paper); }
    berhenti membedakan mana yang perlu ditindaklanjuti — aturan yang sama
    dengan selisih kas nol di Laporan Shift. */
 .fin-row .is-neg { color: var(--color-coral); }
+
+/* ---------- lembar cetak laporan ----------
+   Dipakai `/laporan/cetak`, yang tinggal di route group `(cetak)` tanpa
+   AppShell. Di layar ia tampil seperti kertas supaya orang tahu persis apa yang
+   akan keluar dari printer atau tersimpan sebagai PDF. */
+.cetak-halaman { background: var(--color-paper); min-height: 100vh; padding: 24px 16px; }
+.cetak-lembar {
+  max-width: 900px; margin: 0 auto; background: #fff; color: #17231c;
+  border: 1px solid var(--color-line); border-radius: var(--radius-md);
+  padding: 28px 26px;
+}
+.cetak-kop {
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between;
+  align-items: flex-start; border-bottom: 2px solid var(--color-forest);
+  padding-bottom: 14px; margin-bottom: 18px;
+}
+.cetak-toko { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--color-ink-faint); }
+.cetak-judul { font-family: var(--font-display); font-size: 21px; font-weight: 800; margin: 2px 0 0; letter-spacing: -.01em; }
+.cetak-meta { font-size: 12px; line-height: 1.6; color: var(--color-ink-soft); text-align: right; }
+.cetak-tabel { width: 100%; border-collapse: collapse; font-size: 12px; }
+.cetak-tabel th {
+  text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--color-ink-faint); border-bottom: 1px solid var(--color-line);
+  padding: 8px 10px; font-weight: 700;
+}
+.cetak-tabel td { padding: 7px 10px; border-bottom: 1px solid var(--color-line); }
+.cetak-tabel .ka { text-align: right; white-space: nowrap; }
+.cetak-kosong { max-width: 900px; margin: 0 auto; padding: 24px; font-size: 13px; color: var(--color-ink-soft); }
+.cetak-kaki { margin: 16px 0 0; font-size: 10.5px; color: var(--color-ink-faint); line-height: 1.5; }
 
 /* ---------- konsinyasi ---------- */
 .consign-due {

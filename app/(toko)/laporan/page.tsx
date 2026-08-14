@@ -218,25 +218,19 @@ export default async function LaporanPage({
             ? `Penjualan ${scopeName} · ${days} hari terakhir`
             : `Penjualan ${days} hari terakhir`
         }
+        action={
+          <ExportReportButton
+            pilihan={[{ jenis: 'penjualan', label: 'Penjualan harian' }]}
+            dari={from}
+            sampai={dates[dates.length - 1]}
+            outlet={scopeParam}
+          />
+        }
       />
 
       {/* Cakupan outlet — hanya saat cabangnya memang lebih dari satu.
           Ditaruh SEBELUM pemilih periode karena ia menentukan angka siapa yang
           sedang dibaca; periode hanya menentukan rentangnya. */}
-      {/* Unduh mengikuti PERSIS periode dan cakupan yang sedang dilihat. Berkas
-          yang isinya berbeda dari layarnya lebih buruk daripada tidak ada
-          berkas: yang membandingkan keduanya tidak punya cara tahu mana yang
-          benar. */}
-      <div className="period-tabs" style={{ marginBottom: 10, justifyContent: 'flex-end' }}>
-        <ExportReportButton
-          jenis="penjualan"
-          dari={from}
-          sampai={dates[dates.length - 1]}
-          outlet={scopeParam}
-          label="Unduh penjualan harian"
-        />
-      </div>
-
       {multiOutlet && (
         <div className="period-tabs" style={{ marginBottom: 10 }}>
           {session.outlets.map((o) => (

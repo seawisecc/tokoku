@@ -117,8 +117,9 @@ pekerjaan sebelum dijual".
   dan biaya lain yang tidak menambah stok; lihat "Pengeluaran operasional"
 - **Laporan keuangan** (`/laporan/keuangan`) — arus kas & laba rugi, DUA BUKU
   yang sengaja menjawab angka berbeda; lihat "Laporan keuangan"
-- **Ekspor tiap laporan** ke CSV (penjualan harian, shift, pengeluaran, laba
-  rugi, arus kas) — mengikuti periode & cakupan outlet yang sedang dilihat
+- **Ekspor tiap laporan** (penjualan harian, shift, pengeluaran, laba rugi,
+  arus kas) ke **CSV atau PDF**, dengan rentang tanggal bebas; lihat "Ekspor
+  laporan"
 - **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — terbit
 - **Halaman pemasaran** (`/`, `/fitur`) — rincian per paket, tabel perbandingan,
   FAQ; lihat "Halaman fitur" di bawah
@@ -2130,6 +2131,58 @@ dan hanya sekali di cakupan semua outlet · dan invarian utamanya:
 `transactions` status paid, `v_daily_sales`, dan `v_profit_loss` menjawab
 angka yang sama persis (47 transaksi, Rp 3.681.940). Seluruh data uji
 dibersihkan.
+
+## Ekspor laporan
+
+Ikon unduh di samping judul halaman pada keempat halaman Laporan. Menekannya
+membuka panel berisi rentang tanggal dan pilihan format.
+
+**Ikon, bukan tombol berteks.** Ia tindakan ATAS halaman, bukan salah satu
+pilihan di dalamnya; tombol berteks sebesar tombol periode membuat keduanya
+terbaca setara, padahal yang satu mengubah isi layar dan yang satu mengeluarkan
+berkas. Keterangannya muncul lewat `title` saat kursor menyentuhnya, dan
+pembaca layar membacanya lewat `aria-label` yang sama. `PageHeader` karena itu
+punya slot `action` yang duduk rata ATAS bersama baris judul.
+
+**Tanggalnya bisa diubah tapi TERISI dulu** dengan periode yang sedang dilihat.
+Kasus paling umum ("unduh yang barusan saya lihat") selesai dalam dua ketukan,
+sementara "1 sampai 15 Agustus" tetap mungkin tanpa memaksa orang mengarang
+tanggal dari nol.
+
+**`buildReportData()` adalah SATU penyusun untuk kedua format.** Yang
+dikembalikan bukan teks CSV melainkan judul, nama berkas, kepala kolom, dan
+barisnya; rute unduh menjadikannya CSV, halaman cetak menjadikannya tabel HTML.
+Kalau keduanya menyusun angkanya sendiri-sendiri, suatu hari PDF dan CSV untuk
+periode yang sama akan berbeda isinya. Alasan yang sama dengan `org_usage` dan
+`v_consignment_summary`.
+
+**PDF-nya lewat DIALOG CETAK, tanpa pustaka PDF sama sekali.** Yang dibutuhkan
+cuma tabel teks di atas kertas putih, dan setiap browser sudah punya "Simpan
+sebagai PDF" di dialog cetaknya, di ponsel maupun komputer. Satu dependensi
+pembuat PDF berarti satu paket lagi yang harus ikut diaudit seumur hidup
+project demi sesuatu yang sudah ada di alat yang dipegang orangnya. Pola yang
+sama dengan struk 58mm.
+
+Yang harus diingat kalau menyentuhnya lagi:
+
+- **Halaman cetak tinggal di route group `(cetak)`, TANPA AppShell.** Ditaruh
+  di dalam `(toko)`, sidebar dan bottom nav ikut ke atas kertas, dan
+  menyembunyikannya lewat CSS berarti mengulang seluruh akrobat `:has()` milik
+  struk.
+- **`.cetak-lembar` WAJIB disebut di blok `@media print`.** Aturan `body * {
+  visibility: hidden }` di sana menyembunyikan seluruh halaman saat mencetak dan
+  hanya mengembalikan `.receipt`; tanpa satu baris tambahan, lembar laporan
+  keluar sebagai kertas KOSONG tanpa satu pun pesan kesalahan.
+- **Rentang tanggal dioper apa adanya dari halaman**, tidak ditafsirkan ulang
+  dari nama periode. Halaman Penjualan memotong waktu per hari sementara
+  Keuangan per bulan; kalau rutenya menafsir sendiri, suatu hari berkasnya
+  memuat rentang yang berbeda dari angka yang barusan dilihat orangnya.
+- **Gerbang paket diulang di rute unduh DAN di halaman cetak.** Keduanya
+  mengeluarkan angka jadi ke luar tanpa melewati render halaman laporan, jadi
+  `PlanLock` di layar saja tidak cukup.
+- **PDF dibuka di tab baru tanpa `download`.** Browser yang diminta mengunduh
+  halaman HTML akan menyimpannya sebagai berkas `.html` alih-alih membuka
+  dialog cetaknya.
 
 ## Diskon: tiga lapis, dan kenapa dipisah
 

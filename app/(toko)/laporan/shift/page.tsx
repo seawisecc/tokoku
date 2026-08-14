@@ -83,18 +83,16 @@ export default async function LaporanShiftPage({
         }
         title="Laporan Shift"
         subtitle="Siapa yang berjaga, berapa penjualannya, dan apakah uang di laci cocok."
+        action={
+          <ExportReportButton
+            pilihan={[{ jenis: 'shift', label: 'Laporan shift' }]}
+            dari={since.slice(0, 10)}
+            sampai={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Makassar' })}
+          />
+        }
       />
 
       {error && <DataError apa="Laporan shift" />}
-
-      <div className="period-tabs" style={{ marginBottom: 10, justifyContent: 'flex-end' }}>
-        <ExportReportButton
-          jenis="shift"
-          dari={since.slice(0, 10)}
-          sampai={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Makassar' })}
-          label="Unduh laporan shift"
-        />
-      </div>
 
       <div className="period-tabs" style={{ marginBottom: 16 }}>
         {PERIODS.map((p) => (

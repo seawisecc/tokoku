@@ -130,6 +130,13 @@ export default async function PengeluaranPage({
         eyebrow={session.org!.name}
         title="Pengeluaran"
         subtitle="Biaya yang tidak menambah stok: sewa, listrik, gaji, transportasi."
+        action={
+          <ExportReportButton
+            pilihan={[{ jenis: 'pengeluaran', label: 'Pengeluaran' }]}
+            dari={from}
+            sampai={to}
+          />
+        }
       />
 
       <div className="period-tabs" style={{ marginBottom: 16 }}>
@@ -143,10 +150,6 @@ export default async function PengeluaranPage({
             {PERIODE_LABEL[p]}
           </Link>
         ))}
-      </div>
-
-      <div className="period-tabs" style={{ marginBottom: 14, justifyContent: 'flex-end' }}>
-        <ExportReportButton jenis="pengeluaran" dari={from} sampai={to} label="Unduh pengeluaran" />
       </div>
 
       <ExpenseManager
