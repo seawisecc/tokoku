@@ -4,6 +4,7 @@ import { requirePermission } from '@/lib/auth'
 import { jam, rupiah } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { TransactionTable } from '@/components/domain/TransactionTable'
+import { DataError } from '@/components/domain/DataError'
 
 export const metadata: Metadata = { title: 'Transaksi | TokoKu' }
 export const dynamic = 'force-dynamic'
@@ -12,7 +13,7 @@ export default async function TransaksiPage() {
   const session = await requirePermission('reports')
   const supabase = await createClient()
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     // Per outlet aktif, sama seperti seluruh aplikasi. Dicampur dua cabang,
     // daftar ini tidak menyebut satu pun kolom yang membedakan asalnya — nomor
     // transaksinya memang membawa kode perangkat, tapi tidak ada yang bisa
@@ -42,7 +43,11 @@ export default async function TransaksiPage() {
         title="Transaksi"
         subtitle="Riwayat seluruh transaksi kasir."
       />
-      <TransactionTable rows={rows} showCashier canVoid={session.permissions.reports} />
+      {error ? (
+        <DataError apa="Daftar transaksi" />
+      ) : (
+        <TransactionTable rows={rows} showCashier canVoid={session.permissions.reports} />
+      )}
     </>
   )
 }

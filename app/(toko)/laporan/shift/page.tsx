@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LaporanTabs } from '@/components/domain/LaporanTabs'
+import { DataError } from '@/components/domain/DataError'
 import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
 import { cn, rupiah, tanggal } from '@/lib/format'
@@ -53,7 +54,7 @@ export default async function LaporanShiftPage({
   // cabang; menggabungkannya lintas cabang membuat "kasir siapa yang jaga" dan
   // "uang di laci cocok atau tidak" — dua pertanyaan yang dijawab halaman ini —
   // kehilangan tempatnya.
-  const { data: shifts } = await supabase
+  const { data: shifts, error } = await supabase
     .from('v_shift_summary')
     .select('*')
     .eq('organization_id', session.org!.id)
@@ -82,6 +83,8 @@ export default async function LaporanShiftPage({
         title="Laporan Shift"
         subtitle="Siapa yang berjaga, berapa penjualannya, dan apakah uang di laci cocok."
       />
+
+      {error && <DataError apa="Laporan shift" />}
 
       <div className="period-tabs" style={{ marginBottom: 16 }}>
         {PERIODS.map((p) => (

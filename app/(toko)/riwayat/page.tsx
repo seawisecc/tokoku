@@ -4,6 +4,7 @@ import { requireSession } from '@/lib/auth'
 import { jam, rupiah } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
 import { TransactionTable } from '@/components/domain/TransactionTable'
+import { DataError } from '@/components/domain/DataError'
 
 export const metadata: Metadata = { title: 'Riwayat | TokoKu' }
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,7 @@ export default async function RiwayatPage() {
   // membatasi kasir hanya melihat transaksinya sendiri. Ditulis eksplisit
   // supaya maksudnya jelas dibaca, dan tetap benar kalau nanti halaman ini
   // dibuka oleh pemilik yang policy-nya lebih longgar.
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('transactions')
     .select('id, code, total, status, payment_method, origin, client_created_at')
     .eq('organization_id', session.org!.id)
@@ -43,7 +44,7 @@ export default async function RiwayatPage() {
         title="Riwayat Transaksi"
         subtitle="Transaksi yang kamu proses."
       />
-      <TransactionTable rows={rows} />
+      {error ? <DataError apa="Riwayat transaksi" /> : <TransactionTable rows={rows} />}
     </>
   )
 }

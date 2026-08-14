@@ -1880,7 +1880,14 @@ tbody tr:hover { background: var(--color-paper); }
 .mk-brand img { border-radius: 8px; display: block; }
 .mk-nav-links { display: flex; align-items: center; gap: 20px; font-size: 13.5px; font-weight: 600; }
 .mk-nav-links a { color: var(--color-ink-soft); }
-.mk-nav-links a:hover { color: var(--color-ink); }
+/* `:not(.btn)` WAJIB, dan ini bukan kerapian.
+   Tombol Masuk di sini adalah <a> ber-class .btn.btn-dark, jadi tanpa
+   pengecualian ini `.mk-nav-links a:hover` (0,2,1) menang atas
+   `.mk-nav-links .btn` (0,2,0) dan mengubah warnanya jadi --color-ink
+   (#17231c) DI ATAS latar forest (#0e2419). Rasio kontrasnya ~1,1:1: tulisan
+   "Masuk" hilang total begitu kursor menyentuhnya, tepat di satu-satunya
+   tombol yang harus ditekan calon klien. Dilaporkan pemilik project 14 Agu. */
+.mk-nav-links a:not(.btn):hover { color: var(--color-ink); }
 .mk-nav-links .btn { color: #fff; }
 
 .mk-hero { text-align: center; padding-block: clamp(56px, 11vw, 116px) clamp(40px, 7vw, 76px); }

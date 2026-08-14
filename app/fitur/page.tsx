@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Icon, type IconName } from '@/components/ui/icons'
 import { rupiah } from '@/lib/format'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 
 const DESKRIPSI =
   'Kasir offline, pindai barcode, stok bercabang, pembelian, konsinyasi, pelanggan & poin. Mulai Rp 99.000/bulan, gratis 14 hari.'
@@ -299,7 +299,9 @@ const TANYA: { t: string; j: string }[] = [
 const WA_ADMIN = '6281237597759'
 
 export default async function FiturPage() {
-  const supabase = await createClient()
+  // Klien TANPA cookie: memanggil `cookies()` membuat rute ini dinamis dan
+  // membatalkan `revalidate` di atas tanpa peringatan apa pun.
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('plans')
     .select(
