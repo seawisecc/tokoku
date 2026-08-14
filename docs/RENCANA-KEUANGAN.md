@@ -145,24 +145,29 @@ pengeluaran akan punya laporan yang salah, bukan laporan yang lebih sedikit.
 
 ### Layar
 
-`/pembelian/pengeluaran`, jadi tab ketiga di `PembelianTabs`
-(Pembelian · Pengeluaran · Konsinyasi). **Bukan** item navigasi baru: bottom nav
-ponsel sudah pas 5 slot, aturan yang sama dengan `/laporan/shift` dan
-`/pembelian/konsinyasi`.
+`/laporan/pengeluaran`, tab ketiga di `LaporanTabs`
+(Penjualan · Laporan Shift · Pengeluaran). **Bukan** item navigasi baru: bottom
+nav ponsel sudah pas 5 slot, aturan yang sama dengan `/laporan/shift`.
 
-Satu masalah yang harus diputuskan saat mengerjakan: menu Pembelian butuh izin
-`products`, sementara halaman ini butuh `reports`. Orang yang punya `reports`
-tanpa `products` tidak punya jalan ke sana. Dua pilihan, dan yang kedua lebih
-disukai:
+Rencana awal menaruhnya di bawah Pembelian, dan itu dibatalkan saat
+mengerjakan. Menu Pembelian dijaga izin `products` sementara halaman ini butuh
+`reports`, jadi anggota yang memegang laporan tanpa memegang produk tidak punya
+jalan sama sekali ke halaman yang secara aturan boleh ia pakai. Itu persis
+celah yang dulu terjadi pada Transfer Stok. Di bawah Laporan, izin menu dan
+izin halaman tidak pernah bisa berbeda, karena keduanya `reports`.
 
-1. Menu Pembelian jadi `requires: ['products', 'reports']`.
-2. Beri pintu kedua dari halaman Laporan Keuangan (Fase 2), pola "dua pintu satu
-   tindakan" yang sudah dipakai Transfer Stok.
+Isi halaman: hero total periode, rincian per kategori (terbesar dulu), daftar
+per tanggal dengan label cabang, drawer tambah/ubah, drawer hapus yang meminta
+alasan, dan drawer kelola kategori. Kategori pengeluaran diatur DI HALAMAN INI,
+bukan di Pengaturan → Kategori: halaman itu mengurus kategori produk yang
+dipakai layar kasir, dan dua jenis kategori berbeda di satu layar lebih
+membingungkan daripada satu tombol tambahan di sini.
 
-Isi halaman: ringkasan bulan berjalan (total, tiga kategori terbesar), daftar
-per tanggal dengan label cabang, drawer tambah/ubah, saringan periode dan
-kategori. Kategori pengeluaran diatur di Pengaturan → Kategori sebagai bagian
-kedua (halamannya sudah ada untuk kategori produk).
+Periodenya **bulanan** (Bulan Ini · Bulan Lalu · 3 Bulan · 12 Bulan), bukan
+"7/30/90 hari" seperti Laporan Penjualan. Pengeluaran memang berirama bulan:
+"30 hari terakhir" pada tanggal 5 memuat dua kali sewa dan tidak satu pun
+listrik. Laba rugi di Fase 2 juga bulanan, dan dua halaman yang memotong waktu
+dengan cara berbeda tidak akan pernah cocok angkanya.
 
 ---
 
@@ -383,16 +388,24 @@ sesudahnya, dan data uji dibersihkan.
 
 ## Urutan kerja
 
-| # | pekerjaan | ukuran |
-|---|---|---|
-| 1 | migrasi 0043 (expenses, kategori, kolom pembelian, RLS, TK002) | sedang |
-| 2 | `npm run db:types`, layar Pengeluaran + drawer + kategori | sedang |
-| 3 | migrasi 0044 (view arus kas & laba rugi) | sedang |
-| 4 | halaman `/laporan/keuangan` + PlanLock + cakupan outlet | besar |
-| 5 | migrasi 0045 + pengaturan pajak + tampilan kasir + `catalog_version` | sedang |
-| 6 | ekspor CSV + halaman cetak PDF + rekap pajak | sedang |
-| 7 | pengujian angka lewat skrip, lalu 390px | sedang |
-| 8 | perbarui CLAUDE.md dan halaman `/fitur` | kecil |
+| # | pekerjaan | ukuran | status |
+|---|---|---|---|
+| 1 | migrasi 0043 (expenses, kategori, kolom pembelian, RLS, TK002) | sedang | ✅ 14 Agu |
+| 2 | migrasi 0044 (kategori & outlet wajib satu toko) | kecil | ✅ 14 Agu |
+| 3 | layar `/laporan/pengeluaran` + drawer + kategori | sedang | ✅ 14 Agu |
+| 4 | migrasi 0045 (view arus kas & laba rugi) | sedang | |
+| 5 | halaman `/laporan/keuangan` + PlanLock + cakupan outlet | besar | |
+| 6 | migrasi 0046 + pengaturan pajak + tampilan kasir + `catalog_version` | sedang | |
+| 7 | ekspor CSV + halaman cetak PDF + rekap pajak | sedang | |
+| 8 | pengujian angka lewat skrip, lalu 390px | sedang | |
+| 9 | perbarui CLAUDE.md dan halaman `/fitur` | kecil | |
+
+Migrasi 0044 tidak ada di rencana awal. Ia lahir dari pengujian 0043: FK biasa
+menerima kategori milik toko lain, karena foreign key cuma bertanya "barisnya
+ada?" dan tidak pernah "barisnya milik siapa?". Ditambal dengan FK komposit
+`(organization_id, id)`. Bahayanya kecil (perlu menebak UUID toko lain), tapi
+kalau sampai terjadi, laporan Fase 2 akan menjumlahkan pengeluaran ke kategori
+milik orang lain tanpa satu pun error.
 
 Fase 1 dan 2 sudah berdiri sendiri sebagai bahan jualan. Fase 3 boleh menyusul
 kapan saja tanpa mengubah apa pun yang sudah dibangun.

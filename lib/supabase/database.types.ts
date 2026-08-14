@@ -625,6 +625,138 @@ export type Database = {
           },
         ]
       }
+      expense_categories: {
+        Row: {
+          created_at: string
+          deleted_at: string | null
+          id: string
+          name: string
+          organization_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name: string
+          organization_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          name?: string
+          organization_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expense_categories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "v_client_overview"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          created_by: string | null
+          delete_reason: string | null
+          deleted_at: string | null
+          expense_date: string
+          id: string
+          note: string | null
+          organization_id: string
+          outlet_id: string | null
+          payee: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          expense_date?: string
+          id?: string
+          note?: string | null
+          organization_id: string
+          outlet_id?: string | null
+          payee?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          created_by?: string | null
+          delete_reason?: string | null
+          deleted_at?: string | null
+          expense_date?: string
+          id?: string
+          note?: string | null
+          organization_id?: string
+          outlet_id?: string | null
+          payee?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_same_org"
+            columns: ["organization_id", "category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "expenses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "v_client_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_outlet_same_org"
+            columns: ["organization_id", "outlet_id"]
+            isOneToOne: false
+            referencedRelation: "outlets"
+            referencedColumns: ["organization_id", "id"]
+          },
+        ]
+      }
       impersonation_sessions: {
         Row: {
           admin_user_id: string
@@ -1508,6 +1640,7 @@ export type Database = {
           outlet_id: string
           paid_at: string | null
           payment: Database["public"]["Enums"]["purchase_payment"]
+          payment_method: Database["public"]["Enums"]["payment_method"]
           purchased_at: string
           supplier_id: string | null
           total: number
@@ -1524,6 +1657,7 @@ export type Database = {
           outlet_id: string
           paid_at?: string | null
           payment?: Database["public"]["Enums"]["purchase_payment"]
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           purchased_at?: string
           supplier_id?: string | null
           total?: number
@@ -1540,6 +1674,7 @@ export type Database = {
           outlet_id?: string
           paid_at?: string | null
           payment?: Database["public"]["Enums"]["purchase_payment"]
+          payment_method?: Database["public"]["Enums"]["payment_method"]
           purchased_at?: string
           supplier_id?: string | null
           total?: number

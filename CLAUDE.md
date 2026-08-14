@@ -11,7 +11,7 @@ tampilan, buka file itu dulu.
 ## Kondisi terkini — mulai baca dari sini
 
 Terakhir dikerjakan **13 Agustus 2026**. Semua yang di bawah ini sudah dibangun
-dan **42 migrasinya sudah diterapkan** ke Supabase produksi.
+dan **44 migrasinya sudah diterapkan** ke Supabase produksi.
 
 **Sudah di-deploy ke Vercel** lewat GitHub (`seawisecc/tokoku`), dan pushing ke
 `main` memicu deploy produksi otomatis di `tokoku.seawise.id`. Function berjalan
@@ -113,6 +113,8 @@ pekerjaan sebelum dijual".
 - **Diskon tiga lapis** — promo produk, diskon nota manual (dijepit batas
   toko), diskon pelanggan; lihat "Diskon: tiga lapis" di bawah
 - **Produk jasa** — pilihan Barang/Jasa di drawer produk; lihat "Produk jasa"
+- **Pengeluaran operasional** (`/laporan/pengeluaran`) — sewa, listrik, gaji,
+  dan biaya lain yang tidak menambah stok; lihat "Pengeluaran operasional"
 - **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — terbit
 - **Halaman pemasaran** (`/`, `/fitur`) — rincian per paket, tabel perbandingan,
   FAQ; lihat "Halaman fitur" di bawah
@@ -1906,6 +1908,90 @@ Penjagaan di dalam skripnya, dan semuanya ada karena alasan:
   sudah dihapus membuat pemilik Toko Dewi ikut dilewati. Keduanya gagal ke arah
   yang TAMPAK aman, dan itu yang paling berbahaya di skrip seperti ini.
 
+## Pengeluaran operasional
+
+`/laporan/pengeluaran` (migrasi 0043 & 0044). Langkah pertama dari rencana di
+`docs/RENCANA-KEUANGAN.md`: pengeluaran → arus kas → laba rugi → sakelar pajak.
+
+Sampai 14 Agu, uang yang KELUAR dari toko cuma punya satu tempat, dan tempat
+itu tidak bisa menampungnya. `purchase_items.product_id` NOT NULL, jadi sewa,
+listrik, dan gaji secara struktur memang mustahil dicatat. Akibatnya seluruh
+laporan cuma bisa menjawab "untung kotor berapa" dan tidak pernah "usahanya
+untung atau tidak" — dan pemilik warung yang membaca laba kotor Rp 4 juta lalu
+menyadari uangnya tidak pernah sebanyak itu akan menyimpulkan aplikasinya yang
+salah hitung.
+
+**Tabel sendiri, BUKAN melonggarkan `purchases`.** Pembelian menaikkan stok dan
+menulis ulang HPP; pengeluaran tidak menyentuh stok sama sekali. Digabung, sewa
+toko ikut terhitung sebagai harga pokok dan laba kotor salah permanen — dan
+salahnya tidak pernah muncul sebagai error, cuma sebagai angka yang perlahan
+tidak masuk akal. Alasannya sama dengan dipisahkannya Konsinyasi dari Pembelian.
+
+Yang sudah diputuskan dan jangan diubah tanpa alasan:
+
+- **Di bawah LAPORAN, bukan Pembelian.** Rencana awal menaruhnya di
+  `/pembelian/pengeluaran` dan itu dibatalkan saat mengerjakan: menu Pembelian
+  dijaga izin `products` sementara halaman ini butuh `reports`, jadi anggota
+  yang memegang laporan tanpa memegang produk tidak punya jalan sama sekali ke
+  halaman yang secara aturan boleh ia pakai. Celah yang sama pernah terjadi di
+  Transfer Stok. Di bawah Laporan, izin menu dan izin halaman tidak pernah bisa
+  berbeda.
+- **Izin `reports`.** Di aplikasi ini `reports` sudah menjadi izin "boleh
+  menyentuh uang": pembatalan transaksi dijaga izin yang sama, di UI maupun di
+  dalam RPC-nya.
+- **`outlet_id` boleh NULL = seluruh toko**, dan daftarnya TIDAK disaring outlet
+  aktif. Sewa kontrakan cabang jelas milik satu cabang; gaji admin dan langganan
+  internet tidak. Aturannya diambil dari "Aturan cakupan outlet": kalau
+  disembunyikan ada uang yang hilang dari pandangan, jangan disaring. Yang
+  dipakai LABEL cabang.
+- **Periodenya BULANAN**, bukan 7/30/90 hari seperti Laporan Penjualan.
+  Pengeluaran berirama bulan, dan "30 hari terakhir" pada tanggal 5 memuat dua
+  kali sewa tanpa satu pun listrik. Laba rugi nanti juga bulanan; dua halaman
+  yang memotong waktu dengan cara berbeda tidak akan pernah cocok angkanya.
+  Rentangnya dihitung dari hari ini **menurut jam Asia/Makassar**, bukan jam
+  server — function berjalan di Singapura dengan jam UTC, jadi tiap tanggal 1
+  sebelum pukul 08.00 WITA "Bulan Ini" akan menampilkan bulan kemarin.
+- **`payment_method` per baris**, bukan tabel akun kas. Untuk menjawab "uang di
+  laci berkurang berapa" itu sudah cukup. `purchases` ikut diberi kolom yang
+  sama: `payment` cuma menjawab lunas atau tempo, sementara lunas pakai tunai
+  dan lunas pakai transfer berakibat berbeda pada arus kas. Baris lama menjadi
+  `cash`, dan itu ASUMSI yang ditulis apa adanya di kepala migrasinya.
+- **Hapus itu SOFT dan alasannya wajib.** Pengeluaran boleh diperbaiki kalau
+  salah ketik (ia tidak punya nomor berurut dan tidak menggerakkan stok), tapi
+  baris yang sudah pernah masuk laporan tidak boleh lenyap tanpa jejak.
+- **Ikut diaudit** (`audit_logs`). Karena boleh diubah, "siapa yang mengubah
+  nominal sewa dari 2 juta jadi 5 juta" pasti ditanyakan suatu hari.
+- **Kategori disemai TRIGGER, bukan di `provision_organization`.** Fungsi itu
+  sudah ditulis ulang sekali (migrasi 0034) dan akan ditulis ulang lagi; baris
+  penyemaian yang ikut hilang dalam salah satu penulisan ulang baru ketahuan
+  saat ada toko baru tanpa satu pun kategori. Triggernya SECURITY DEFINER, dan
+  itu wajib: toko yang dibuat lewat jalur ber-RLS menjalankannya sebagai user
+  yang pada detik itu belum jadi anggota organisasinya sendiri, jadi tanpa
+  definer yang gagal bukan cuma penyemaian melainkan seluruh pembuatan toko.
+- **Pencatatannya TIDAK dikunci paket.** Yang akan dikunci lapisan analisanya
+  (Laporan Keuangan). Toko Starter yang tidak bisa mencatat pengeluaran akan
+  punya laporan yang SALAH, bukan laporan yang lebih sedikit.
+
+**FK biasa tidak menjaga tenant** (migrasi 0044). Ditemukan saat MENGUJI 0043,
+bukan saat menulisnya: pengeluaran milik Toko A bisa menunjuk kategori milik
+Toko B, karena foreign key cuma bertanya "barisnya ada?" dan tidak pernah
+"barisnya milik siapa?". Bahayanya kecil (perlu menebak UUID yang tidak pernah
+dikirim ke layar toko lain, dan RLS tetap menjaga barisnya), tapi kalau sampai
+terjadi, laporan keuangan akan menjumlahkan pengeluaran ke kategori milik orang
+lain tanpa satu pun error. Ditambal FK KOMPOSIT ke `(organization_id, id)`,
+bukan trigger: trigger bisa lupa dipasang di tabel berikutnya, FK menempel pada
+definisi tabelnya sendiri. `on delete set null (outlet_id)` menyebut kolomnya
+secara eksplisit — tanpa daftar kolom, Postgres mengosongkan SEMUA kolom FK
+termasuk `organization_id` yang NOT NULL, sehingga menghapus outlet akan gagal
+alih-alih melepas tautannya.
+
+**Sudah diuji langsung ke database** (14 Agu, skrip service-role): jumlah 0
+ditolak, kategori & outlet toko lain ditolak 23503 setelah 0044 (sebelum 0044
+DITERIMA), kategori sendiri dan outlet NULL tetap diterima, kategori yang masih
+dipakai tidak bisa dihapus permanen, soft delete menyisakan baris + alasannya,
+dan audit tercatat. Seluruh data uji dibersihkan; `expenses` kembali 0 baris.
+**Belum diuji lewat layar** — perlu sesi, dan sandinya memang tidak ada di repo.
+
 ## Diskon: tiga lapis, dan kenapa dipisah
 
 Ditambahkan 13 Agu. Yang diminta pemilik project ada tiga bentuk sekaligus —
@@ -2245,7 +2331,8 @@ app/
   (auth)/          masuk (panel split beranimasi), daftar-toko, lupa-sandi,
                    atur-sandi, undangan/[token], actions
   auth/konfirmasi  route handler pendaratan tautan email (WAJIB route, bukan page)
-  (toko)/          beranda, kasir, transaksi/[id], riwayat, laporan/{,shift},
+  (toko)/          beranda, kasir, transaksi/[id], riwayat,
+                   laporan/{,shift,pengeluaran},
                    produk/{,[id],opname,transfer}, pembelian/{,konsinyasi},
                    pelanggan,
                    pengaturan/{toko,outlet,tim,kategori,printer,sinkronisasi,
@@ -2273,6 +2360,7 @@ components/
   layout/SectionTabs  baris tab bersama untuk bagian yang bercabang
   domain/          AuthPanel, ForgotPasswordForm, NewPasswordForm, QuotaBars,
                    OpnameSheet, TransactionRowActions, ImportProducts,
+                   ExpenseManager (pengeluaran + drawer kategori),
                    ChangePasswordCard, PlatformSettingsForm,
                    ProdukTabs / LaporanTabs / PembelianTabs / SettingsNav,
                    LogoUploader, DeviceTable, SettingsNav, WhatsAppButton,
@@ -2303,7 +2391,7 @@ instrumentation-client.ts  Sentry browser (session replay MATI)
 sentry.server.config.ts · sentry.edge.config.ts
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  42 file, Postgres 17
+supabase/migrations/  44 file, Postgres 17
 docs/EMAIL-TEMPLATES-SUPABASE.md  template email Indonesia untuk ditempel di dashboard
 ```
 

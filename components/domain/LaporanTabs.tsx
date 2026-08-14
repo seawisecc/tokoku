@@ -7,6 +7,15 @@ import { SectionTabs } from '@/components/layout/SectionTabs'
  * Laporan Shift dulu cuma tautan kecil di pojok kanan atas dan tidak menyalakan
  * apa pun saat dibuka. Laporan Shift SENGAJA tidak ikut gerbang paket: selisih
  * kas itu pengamanan uang, bukan analisa.
+ *
+ * Pengeluaran adalah satu-satunya tab di sini yang isinya PENCATATAN, bukan
+ * laporan, dan itu disengaja. Ia butuh izin `reports` — izin "boleh menyentuh
+ * uang" di aplikasi ini, yang sama dengan pembatalan transaksi — sementara
+ * menu Pembelian yang bentuknya paling mirip justru dijaga izin `products`.
+ * Ditaruh di sana, anggota yang memegang laporan tanpa memegang produk tidak
+ * punya jalan sama sekali ke halaman yang secara aturan boleh ia pakai, persis
+ * celah yang dulu terjadi pada Transfer Stok. Di bawah Laporan, izin menunya
+ * dan izin halamannya tidak pernah bisa berbeda.
  */
 export function LaporanTabs() {
   return (
@@ -15,6 +24,7 @@ export function LaporanTabs() {
       items={[
         { href: '/laporan' as Route, label: 'Penjualan' },
         { href: '/laporan/shift' as Route, label: 'Laporan Shift' },
+        { href: '/laporan/pengeluaran' as Route, label: 'Pengeluaran' },
       ]}
     />
   )
