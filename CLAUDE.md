@@ -1985,6 +1985,15 @@ secara eksplisit — tanpa daftar kolom, Postgres mengosongkan SEMUA kolom FK
 termasuk `organization_id` yang NOT NULL, sehingga menghapus outlet akan gagal
 alih-alih melepas tautannya.
 
+**Harga dari tambalan itu dibayar dalam hitungan jam**, dan pantas dicatat:
+FK komposit membuat embed PostgREST bergaya `expense_categories:category_id(…)`
+gagal total, sehingga pengeluaran pertama yang dicatat pemilik project
+tersimpan rapi tapi halamannya kosong. Dilaporkan sebagai "tidak tersimpan",
+padahal barisnya ada. Dua obatnya sudah dipasang dan keduanya wajib: embed
+menyebut nama constraint, dan halaman ini sekarang MENAMPILKAN kegagalan query
+alih-alih menampilkannya sebagai daftar kosong. Lihat dua butir baru di
+"Jebakan yang sudah pernah menggigit".
+
 **Sudah diuji langsung ke database** (14 Agu, skrip service-role): jumlah 0
 ditolak, kategori & outlet toko lain ditolak 23503 setelah 0044 (sebelum 0044
 DITERIMA), kategori sendiri dan outlet NULL tetap diterima, kategori yang masih
@@ -2309,6 +2318,24 @@ Dexie, dan grid kasir jadi kosong tanpa error apa pun. Selain itu tiap kali cach
 dibuang, POS mendaftarkan PERANGKAT BARU — kuota `max_devices` Toko Dewi sempat
 penuh 8/8 hanya karena pengujian. Kalau perlu mereset, pakai jalur aplikasinya
 (`ensureTenant`) atau hapus lewat DevTools, dan periksa kuota perangkat sesudahnya.
+
+**FK KOMPOSIT mematikan embed PostgREST yang menyebut nama kolom.** Bentuk
+`kategori:category_id(id, name)` dipakai di seluruh project ini, dan ia
+mensyaratkan foreign key SATU kolom. Begitu FK-nya diganti komposit
+`(organization_id, category_id)` demi menjaga tenant, petunjuk satu nama kolom
+tidak lagi cocok dan PostgREST menjawab "Could not find a relationship" —
+**seluruh query gagal**, bukan cuma kolom yang di-embed. Sudah menggigit dalam
+hitungan jam di `/laporan/pengeluaran`: pengeluaran pertama yang dicatat
+pemilik project tersimpan rapi di database tapi halamannya menampilkan daftar
+kosong, dan ia melaporkannya sebagai "tidak tersimpan". Yang benar: sebut NAMA
+CONSTRAINT-nya, `expense_categories!expenses_category_same_org(id, name)`.
+
+**`const { data } = await supabase…` membuang errornya, dan di halaman uang itu
+berbahaya.** Query yang gagal mengembalikan `data: null`, yang lalu jatuh ke
+`?? []` dan tampil sebagai "belum ada apa-apa". Itu yang membuat jebakan di
+atas butuh waktu untuk ditemukan: layarnya tidak berbohong sedikit, ia
+berbohong total. "Tidak ada apa-apa" dan "saya tidak bisa membacanya" harus
+kelihatan berbeda di layar.
 
 **Setelah mengubah skema, jalankan `npm run db:types`.** Tanpa itu RPC baru akan ditolak
 typecheck.

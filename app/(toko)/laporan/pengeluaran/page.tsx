@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LaporanTabs } from '@/components/domain/LaporanTabs'
 import { ExpenseManager, type ExpenseRow } from '@/components/domain/ExpenseManager'
+import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
 import { cn } from '@/lib/format'
 import { createClient } from '@/lib/supabase/server'
@@ -85,10 +86,21 @@ export default async function PengeluaranPage({
    * Baris ber-`outlet_id` NULL memang milik seluruh toko, jadi ia harus selalu
    * ikut terhitung.
    */
-  const [{ data: expenses }, { data: categories }] = await Promise.all([
+  const [{ data: expenses, error: gagalExpenses }, { data: categories, error: gagalKategori }] =
+    await Promise.all([
     supabase
       .from('expenses')
-      .select('id, expense_date, amount, payment_method, payee, note, outlet_id, expense_categories:category_id(id, name)')
+      /**
+       * Embed-nya menyebut NAMA CONSTRAINT, bukan nama kolom.
+       *
+       * `expense_categories:category_id(...)` adalah bentuk yang dipakai di
+       * seluruh project ini dan di sini ia GAGAL, karena migrasi 0044 mengganti
+       * foreign key satu kolom dengan FK KOMPOSIT `(organization_id,
+       * category_id)`. Petunjuk berupa satu nama kolom tidak cocok dengan FK
+       * dua kolom, jadi PostgREST menjawab "Could not find a relationship" dan
+       * SELURUH query gagal — bukan cuma kolom kategorinya yang kosong.
+       */
+      .select('id, expense_date, amount, payment_method, payee, note, outlet_id, expense_categories!expenses_category_same_org(id, name)')
       .eq('organization_id', orgId)
       .is('deleted_at', null)
       .gte('expense_date', from)
@@ -108,6 +120,38 @@ export default async function PengeluaranPage({
   const namaOutlet = new Map(
     session.outlets.length > 1 ? session.outlets.map((o) => [o.id, o.name]) : [],
   )
+
+  /**
+   * Query yang gagal TIDAK boleh tampil sebagai "belum ada pengeluaran".
+   *
+   * Inilah yang menyembunyikan cacat embed di atas: `{ data }` diambil dan
+   * `error` dibuang, jadi pengeluaran Rp 700.000 yang sudah tersimpan rapi di
+   * database tampil sebagai daftar kosong, dan yang mencatatnya menyimpulkan
+   * simpanannya gagal. Untuk halaman uang, "tidak ada apa-apa" dan "saya tidak
+   * bisa membacanya" adalah dua kalimat yang berbeda dan tidak boleh terlihat
+   * sama.
+   */
+  const gagal = gagalExpenses ?? gagalKategori
+  if (gagal) {
+    return (
+      <>
+        <LaporanTabs />
+        <PageHeader
+          eyebrow={session.org!.name}
+          title="Pengeluaran"
+          subtitle="Biaya yang tidak menambah stok: sewa, listrik, gaji, transportasi."
+        />
+        <div className="empty-note" role="alert">
+          <Icon name="alert" size={16} style={{ marginTop: 1 }} />
+          <div style={{ flex: 1 }}>
+            Daftar pengeluaran gagal dimuat, jadi yang tampil di sini belum tentu lengkap. Muat
+            ulang halamannya; kalau masih sama, hubungi admin TokoKu. Catatan yang sudah tersimpan
+            tidak hilang.
+          </div>
+        </div>
+      </>
+    )
+  }
 
   const rows: ExpenseRow[] = (expenses ?? []).map((e) => {
     const kategori = e.expense_categories as unknown as { id: string; name: string } | null
