@@ -1908,6 +1908,27 @@ Yang diperiksa: meta `sentry-trace` di HTML (berarti sisi server hidup), DSN
 privasinya — `replaysSessionSampleRate: 0`, `replaysOnErrorSampleRate: 0`,
 `sendDefaultPii: false`, `tracesSampleRate: 0.1`.
 
+**Error ekstensi peramban dibuang lewat `beforeSend`** (14 Agu). Laporan pertama
+yang masuk ke Sentry produksi adalah `TypeError: Cannot read properties of
+undefined (reading 'M_ID')` di `/pengaturan/toko`, `onunhandledrejection`,
+`handled: no`, 4 kali dalam sejam. **Bukan dari kode kita**, dan itu dibuktikan
+bukan ditebak: tidak ada properti bernama `M_ID` di mana pun dalam bundel
+klien maupun server (satu-satunya kecocokan grep ternyata potongan huruf di
+dalam `__SENTRY_SAFE_RANDOM_ID_WRAPPER__` milik SDK Sentry sendiri), dan kedua
+komponen klien di halaman itu — `LogoUploader` dan `StoreSettingsForm` — tidak
+punya satu pun promise menggantung; keduanya memakai `startTransition(async …)`
+dengan hasil yang selalu diperiksa.
+
+Sentry memasang penangkap global `onerror` dan `onunhandledrejection`, dan
+keduanya ikut menangkap kegagalan skrip apa pun yang disuntikkan ekstensi ke
+halaman kita. Yang dibuang hanya event yang SELURUH frame-nya berasal dari
+`chrome-extension://` dan sejenisnya; satu frame saja dari kode kita membuat
+event-nya tetap dikirim, karena ekstensi yang memicu kegagalan DI DALAM kode
+kita tetap kegagalan kita. Alasannya sama dengan lencana notifikasi yang hanya
+menghitung `danger` + `warn`: laporan yang tidak bisa ditindaklanjuti melatih
+orang mengabaikan Sentry, dan begitu itu terjadi, laporan sungguhan ikut tidak
+dibaca.
+
 Tiga jalur penangkapan, dan ketiganya perlu: `onRequestError` (render server),
 `app/error.tsx` (render klien), `app/global-error.tsx` (root layout gagal).
 `tunnelRoute: '/monitoring'` supaya laporan tidak diblokir pemblokir iklan.

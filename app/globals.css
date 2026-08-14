@@ -1506,7 +1506,7 @@ tbody tr:hover { background: var(--color-paper); }
 .fin-row.is-total span { color: var(--color-ink); font-weight: 600; }
 .fin-row.is-total {
   border-top: 2px solid var(--color-forest);
-  background: var(--color-cream);
+  background: var(--color-paper);
   font-size: 15px;
 }
 .fin-row.is-total strong { font-size: 17px; }

@@ -357,7 +357,7 @@ export default async function LaporanKeuanganPage({
               <thead>
                 <tr>
                   <th>Bulan</th>
-                  <th>Masuk</th>
+                  <th>Masuk & keluar</th>
                   <th style={{ textAlign: 'right' }}>Bersih</th>
                 </tr>
               </thead>
@@ -366,11 +366,14 @@ export default async function LaporanKeuanganPage({
                   <tr key={bulan}>
                     <td className="by-code">
                       <div className="cell-name">{namaBulan(bulan)}</div>
-                      <div className="cell-sub">
-                        Masuk {rupiah(v.masuk)} · Keluar {rupiah(v.keluar)}
-                      </div>
                     </td>
-                    <td className="by-date">{rupiah(v.masuk)}</td>
+                    {/* Di ponsel sel ini turun jadi baris kedua yang redup, jadi
+                        keterangannya ditaruh di sini dan TIDAK diulang sebagai
+                        cell-sub — diulang, angka yang sama tampil dua kali
+                        bertumpuk. */}
+                    <td className="by-date">
+                      Masuk {rupiah(v.masuk)} · Keluar {rupiah(v.keluar)}
+                    </td>
                     <td className="by-total" style={{ textAlign: 'right', fontWeight: 700 }}>
                       {rupiah(v.masuk - v.keluar)}
                     </td>
