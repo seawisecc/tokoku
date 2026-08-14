@@ -3,13 +3,13 @@
 import { useMemo, useState } from 'react'
 import { Drawer } from '@/components/overlay/Drawer'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 
 export type TransferOutlet = { id: string; name: string; isActive: boolean }
 export type TransferProduct = { id: string; name: string; sku: string; unit: string; stock: number }
 
 type Line = { productId: string; quantity: string }
 
-const onlyDigits = (s: string) => s.replace(/[^\d]/g, '')
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Makassar' })
 
 /**
@@ -162,10 +162,10 @@ export function TransferDrawer({
                 <div className="buy-line-row">
                   <div className="field" style={{ marginBottom: 0 }}>
                     <label>Jumlah {p ? `(${p.unit})` : ''}</label>
-                    <input
-                      inputMode="numeric"
+                    <NumberField
                       value={l.quantity}
-                      onChange={(e) => setLine(i, { quantity: onlyDigits(e.target.value) })}
+                      onChange={(d) => setLine(i, { quantity: d })}
+                      ariaLabel="Jumlah dipindahkan"
                     />
                   </div>
                   {lines.length > 1 && (

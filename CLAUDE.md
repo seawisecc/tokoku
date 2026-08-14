@@ -2156,6 +2156,18 @@ Kalau keduanya menyusun angkanya sendiri-sendiri, suatu hari PDF dan CSV untuk
 periode yang sama akan berbeda isinya. Alasan yang sama dengan `org_usage` dan
 `v_consignment_summary`.
 
+**Ribuan diberi titik HANYA di lembar cetak, tidak pernah di CSV.** Angka
+jutaan tanpa pemisah praktis tidak terbaca di atas kertas; di CSV justru
+sebaliknya, begitu diberi titik Excel berlokal Inggris membacanya sebagai teks
+dan seluruh gunanya sebagai berkas yang bisa dihitung ulang hilang. Karena itu
+`buildReportData` menyertakan `kolom: KolomJenis[]` (teks/angka/uang/tanggal/
+waktu) dan halaman cetak yang memformatnya. Jenisnya ditentukan penyusun, bukan
+ditebak dari nama kolom di halaman cetak: nama kolom bisa diubah kapan saja dan
+tebakan yang meleset tidak akan memunculkan satu pun error. Satuan rupiah
+disebut sekali di kepala kolom sebagai "(Rp)", bukan diulang di tiap sel.
+Kolom `waktu` juga diformat di sini — tanpa itu Dibuka/Ditutup di Laporan Shift
+tercetak sebagai ISO mentah.
+
 **PDF-nya lewat DIALOG CETAK, tanpa pustaka PDF sama sekali.** Yang dibutuhkan
 cuma tabel teks di atas kertas putih, dan setiap browser sudah punya "Simpan
 sebagai PDF" di dialog cetaknya, di ponsel maupun komputer. Satu dependensi
@@ -2349,6 +2361,19 @@ Konsekuensinya `middleware.ts` diganti konvensi `proxy.ts`.
 dievaluasi tanpa JOIN.
 
 **Uang selalu `bigint` rupiah bulat.** Tidak ada float, tidak ada sen.
+
+**Isian angka memakai `NumberField`, bukan `<input type="number">`.**
+Pemisah ribuannya tampil saat diketik, dan yang dikirim ke pemanggil selalu
+DIGIT MENTAH tanpa titik. Dua hal yang jangan diubah: isian bertipe `number`
+mustahil menampilkan titik pemisah (browser hanya menerima nilai yang sah
+sebagai bilangan), dan borang ber-FormData harus memakai prop `name` yang
+menaruh digit mentah di isian TERSEMBUNYI — kalau yang terlihat ikut bernama,
+yang terkirim adalah "1.500.000" dan `Number()` di server menghasilkan NaN
+yang diam-diam tersimpan sebagai nol.
+
+Yang SENGAJA tidak dipindah: persentase, jumlah hari, ambang stok, dan
+**barcode**. Tiga yang pertama tidak pernah mencapai empat digit, sementara
+barcode adalah nomor identitas — memberinya titik ribuan mengubah artinya.
 
 **Laporan memakai `transactions.client_created_at`, bukan `created_at`.**
 Yang pertama adalah jam di mesin kasir; yang kedua jam baris masuk Postgres — untuk

@@ -6,6 +6,7 @@ import { savePlan } from '@/app/(platform)/admin/actions'
 import { IconAction } from '@/components/data/IconAction'
 import { Drawer } from '@/components/overlay/Drawer'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { cn, rupiah } from '@/lib/format'
 
 export type PlanRow = {
@@ -225,34 +226,32 @@ function PlanDrawer({
 
       <div className="field">
         <label htmlFor="planPrice">Harga per Bulan</label>
-        <input
+        <NumberField
           id="planPrice"
-          inputMode="numeric"
           value={v.priceMonthly}
-          onChange={(e) => set('priceMonthly', e.target.value.replace(/[^\d]/g, ''))}
+          onChange={(d) => set('priceMonthly', d)}
         />
-        <div className="field-hint">{rupiah(Number(v.priceMonthly || 0))}</div>
       </div>
 
       <div className="section-title">Batasan</div>
       <div className="field-row">
         <div className="field">
           <label htmlFor="maxOutlets">Outlet</label>
-          <input id="maxOutlets" inputMode="numeric" value={v.maxOutlets} onChange={(e) => set('maxOutlets', e.target.value.replace(/[^\d]/g, ''))} placeholder="kosong = tak terbatas" />
+          <NumberField id="maxOutlets" value={v.maxOutlets} onChange={(d) => set('maxOutlets', d)} placeholder="kosong = tak terbatas" ariaLabel="Maksimal outlet" />
         </div>
         <div className="field">
           <label htmlFor="maxUsers">Pengguna</label>
-          <input id="maxUsers" inputMode="numeric" value={v.maxUsers} onChange={(e) => set('maxUsers', e.target.value.replace(/[^\d]/g, ''))} placeholder="kosong = tak terbatas" />
+          <NumberField id="maxUsers" value={v.maxUsers} onChange={(d) => set('maxUsers', d)} placeholder="kosong = tak terbatas" ariaLabel="Maksimal pengguna" />
         </div>
       </div>
       <div className="field-row">
         <div className="field">
           <label htmlFor="maxProducts">Produk</label>
-          <input id="maxProducts" inputMode="numeric" value={v.maxProducts} onChange={(e) => set('maxProducts', e.target.value.replace(/[^\d]/g, ''))} placeholder="kosong = tak terbatas" />
+          <NumberField id="maxProducts" value={v.maxProducts} onChange={(d) => set('maxProducts', d)} placeholder="kosong = tak terbatas" ariaLabel="Maksimal produk" />
         </div>
         <div className="field">
           <label htmlFor="maxDevices">Perangkat Kasir</label>
-          <input id="maxDevices" inputMode="numeric" value={v.maxDevices} onChange={(e) => set('maxDevices', e.target.value.replace(/[^\d]/g, ''))} placeholder="kosong = tak terbatas" />
+          <NumberField id="maxDevices" value={v.maxDevices} onChange={(d) => set('maxDevices', d)} placeholder="kosong = tak terbatas" ariaLabel="Maksimal perangkat" />
         </div>
       </div>
       <div className="field-hint" style={{ marginTop: -6, marginBottom: 14 }}>

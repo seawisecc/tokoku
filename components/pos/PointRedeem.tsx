@@ -1,6 +1,7 @@
 'use client'
 
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { rupiah } from '@/lib/format'
 
 /**
@@ -74,18 +75,11 @@ export function PointRedeem({
       ) : (
         <>
           <div className="redeem-row">
-            <input
-              type="number"
-              inputMode="numeric"
-              min={0}
-              max={maks}
-              value={value === 0 ? '' : value}
+            <NumberField
+              value={value === 0 ? '' : String(value)}
               placeholder="0"
-              aria-label={`Poin yang ditukar, maksimal ${maks}`}
-              onChange={(e) => {
-                const n = Math.floor(Number(e.target.value) || 0)
-                onChange(Math.min(Math.max(n, 0), maks))
-              }}
+              ariaLabel={`Poin yang ditukar, maksimal ${maks}`}
+              onChange={(d) => onChange(Math.min(Number(d || 0), maks))}
             />
             <button
               type="button"

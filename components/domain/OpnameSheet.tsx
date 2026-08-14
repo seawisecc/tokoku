@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { bulkOpname } from '@/app/(toko)/produk/actions'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 
 export type OpnameRow = {
   id: string
@@ -155,15 +156,12 @@ export function OpnameSheet({ rows, outletName }: { rows: OpnameRow[]; outletNam
                       {r.stock} {r.unit}
                     </td>
                     <td style={{ textAlign: 'right' }}>
-                      <input
+                      <NumberField
                         className="opname-input"
                         value={hitung[r.id] ?? ''}
-                        onChange={(e) =>
-                          setHitung((h) => ({ ...h, [r.id]: e.target.value.replace(/[^\d]/g, '') }))
-                        }
-                        inputMode="numeric"
+                        onChange={(d) => setHitung((h) => ({ ...h, [r.id]: d }))}
                         placeholder="-"
-                        aria-label={`Hasil hitung ${r.name}`}
+                        ariaLabel={`Hasil hitung ${r.name}`}
                       />
                     </td>
                     <td style={{ textAlign: 'right' }}>

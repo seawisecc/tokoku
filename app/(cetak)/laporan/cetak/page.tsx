@@ -8,6 +8,7 @@ import {
   JENIS_LAPORAN,
   JUDUL_LAPORAN,
   type JenisLaporan,
+  type KolomJenis,
 } from '@/lib/report-exports'
 import { createClient } from '@/lib/supabase/server'
 
@@ -16,13 +17,38 @@ export const dynamic = 'force-dynamic'
 
 const TANGGAL = /^\d{4}-\d{2}-\d{2}$/
 
-/** Kolom yang isinya angka rupiah, dirapatkan ke kanan seperti di layar. */
-const ANGKA = new Set([
-  'Omzet', 'HPP', 'Laba kotor', 'Rata-rata nota', 'Omzet tunai', 'Jumlah', 'Nilai',
-  'Penjualan', 'Penjualan tunai', 'Penjualan non-tunai', 'Kas awal', 'Kas seharusnya',
-  'Kas fisik', 'Selisih', 'Transaksi', 'Transaksi offline', 'Transaksi batal',
-  'Banyak catatan',
-])
+/**
+ * Pemisah ribuan HANYA di lembar cetak, tidak pernah di CSV.
+ *
+ * Dilaporkan pemilik project: angka jutaan tanpa titik praktis tidak terbaca di
+ * atas kertas, dan yang membacanya harus menghitung digit dengan jari. Di CSV
+ * justru sebaliknya — begitu ribuannya diberi titik, Excel berlokal Inggris
+ * membacanya sebagai teks dan seluruh gunanya sebagai berkas yang bisa dihitung
+ * ulang hilang. Karena itu pemformatan hidup di sini, bukan di penyusun datanya.
+ */
+const ribuan = new Intl.NumberFormat('id-ID')
+
+/** Jam dipakai kolom `waktu`; tanpa ini kolom Dibuka/Ditutup tercetak ISO mentah. */
+const jam = (iso: string) =>
+  new Date(iso).toLocaleString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Makassar',
+  })
+
+function sel(nilai: unknown, jenis: KolomJenis): string {
+  if (nilai === null || nilai === undefined || nilai === '') return '-'
+  if (jenis === 'uang' || jenis === 'angka') {
+    const n = Number(nilai)
+    return Number.isFinite(n) ? ribuan.format(n) : String(nilai)
+  }
+  if (jenis === 'tanggal') return tanggal(String(nilai))
+  if (jenis === 'waktu') return jam(String(nilai))
+  return String(nilai)
+}
 
 /**
  * Lembar cetak laporan. Inilah jalur PDF-nya.
@@ -119,21 +145,34 @@ export default async function CetakLaporanPage({
           <table className="cetak-tabel">
             <thead>
               <tr>
-                {data.headers.map((h) => (
-                  <th key={h} className={ANGKA.has(h) ? 'ka' : undefined}>
-                    {h}
-                  </th>
-                ))}
+                {data.headers.map((h, j) => {
+                  const jenis = data.kolom[j]
+                  const angka = jenis === 'uang' || jenis === 'angka'
+                  return (
+                    <th key={h} className={angka ? 'ka' : undefined}>
+                      {/* Satuan rupiah disebut SEKALI di kepala kolom, bukan
+                          diulang "Rp" di tiap sel. Di tabel berisi belasan baris
+                          angka, pengulangan itu justru membuat digitnya lebih
+                          sulit disejajarkan mata. */}
+                      {h}
+                      {jenis === 'uang' ? ' (Rp)' : ''}
+                    </th>
+                  )
+                })}
               </tr>
             </thead>
             <tbody>
               {data.rows.map((r, i) => (
                 <tr key={i}>
-                  {r.map((sel, j) => (
-                    <td key={j} className={ANGKA.has(data.headers[j]) ? 'ka' : undefined}>
-                      {sel === null || sel === undefined || sel === '' ? '-' : String(sel)}
-                    </td>
-                  ))}
+                  {r.map((nilai, j) => {
+                    const jenis = data.kolom[j] ?? 'teks'
+                    const angka = jenis === 'uang' || jenis === 'angka'
+                    return (
+                      <td key={j} className={angka ? 'ka' : undefined}>
+                        {sel(nilai, jenis)}
+                      </td>
+                    )
+                  })}
                 </tr>
               ))}
             </tbody>

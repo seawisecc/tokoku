@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { adjustStock, type ActionResult } from '@/app/(toko)/produk/actions'
 import { Drawer } from '@/components/overlay/Drawer'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 
 export type StockTarget = { id: string; name: string; sku: string; stock: number; unit: string }
 
@@ -84,15 +85,7 @@ export function StockDrawer({
 
       <div className="field">
         <label htmlFor="qty">Hasil hitung fisik ({target.unit})</label>
-        <input
-          id="qty"
-          type="number"
-          min={0}
-          inputMode="numeric"
-          value={qty}
-          onChange={(e) => setQty(e.target.value)}
-          aria-invalid={!valid}
-        />
+        <NumberField id="qty" value={qty} onChange={setQty} invalid={!valid} />
         {!valid && <div className="field-error">Harus bilangan bulat, minimal 0.</div>}
       </div>
 

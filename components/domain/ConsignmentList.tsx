@@ -12,6 +12,7 @@ import {
 } from '@/app/(toko)/pembelian/konsinyasi/actions'
 import { Drawer } from '@/components/overlay/Drawer'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { rupiah, tanggal } from '@/lib/format'
 
 export type ConsignRow = {
@@ -60,7 +61,6 @@ export type SettlementRow = {
 
 const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Makassar' })
 
-const onlyDigits = (s: string) => s.replace(/[^\d]/g, '')
 
 export function ConsignmentList({
   rows,
@@ -508,21 +508,15 @@ function IntakeDrawer({
       <div className="field-row">
         <div className="field">
           <label htmlFor="cnQty">Jumlah {product ? `(${product.unit})` : ''}</label>
-          <input
-            id="cnQty"
-            inputMode="numeric"
-            value={quantity}
-            onChange={(e) => setQuantity(onlyDigits(e.target.value))}
-          />
+          <NumberField id="cnQty" value={quantity} onChange={setQuantity} />
         </div>
         <div className="field">
           <label htmlFor="cnPrice">Harga titip / satuan</label>
-          <input
+          <NumberField
             id="cnPrice"
-            inputMode="numeric"
             value={price}
-            readOnly={!!existing}
-            onChange={(e) => setPrice(onlyDigits(e.target.value))}
+            disabled={!!existing}
+            onChange={setPrice}
           />
         </div>
       </div>
@@ -649,12 +643,7 @@ function ReturnDrawer({
 
       <div className="field">
         <label htmlFor="rtQty">Jumlah diretur ({row.unit})</label>
-        <input
-          id="rtQty"
-          inputMode="numeric"
-          value={quantity}
-          onChange={(e) => setQuantity(onlyDigits(e.target.value))}
-        />
+        <NumberField id="rtQty" value={quantity} onChange={setQuantity} />
         {tooMany && (
           <div className="field-hint" style={{ color: 'var(--color-coral)' }}>
             Sisa titipan tinggal {row.qtyLeft} {row.unit}.

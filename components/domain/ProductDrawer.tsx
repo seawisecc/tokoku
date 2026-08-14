@@ -5,6 +5,7 @@ import { saveProduct, type ActionResult } from '@/app/(toko)/produk/actions'
 import { Drawer } from '@/components/overlay/Drawer'
 import { BarcodeScanner } from '@/components/pos/BarcodeScanner'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { cn, rupiah } from '@/lib/format'
 
 export type ProductFormValue = {
@@ -206,26 +207,22 @@ export function ProductDrawer({
       <div className="field-row">
         <div className="field">
           <label htmlFor="costPrice">Harga Pokok</label>
-          <input
+          <NumberField
             id="costPrice"
-            inputMode="numeric"
             value={draft.costPrice}
-            onChange={(e) => set('costPrice', e.target.value.replace(/[^\d]/g, ''))}
-            aria-invalid={err?.field === 'costPrice'}
+            onChange={(d) => set('costPrice', d)}
+            invalid={err?.field === 'costPrice'}
           />
-          <div className="field-hint">{rupiah(cost)}</div>
           {err?.field === 'costPrice' && <div className="field-error">{err.error}</div>}
         </div>
         <div className="field">
           <label htmlFor="sellPrice">Harga Jual</label>
-          <input
+          <NumberField
             id="sellPrice"
-            inputMode="numeric"
             value={draft.sellPrice}
-            onChange={(e) => set('sellPrice', e.target.value.replace(/[^\d]/g, ''))}
-            aria-invalid={err?.field === 'sellPrice'}
+            onChange={(d) => set('sellPrice', d)}
+            invalid={err?.field === 'sellPrice'}
           />
-          <div className="field-hint">{rupiah(sell)}</div>
           {err?.field === 'sellPrice' && <div className="field-error">{err.error}</div>}
         </div>
       </div>
@@ -255,13 +252,12 @@ export function ProductDrawer({
           itulah yang membuat lapis promo aman tanpa batas apa pun. */}
       <div className="field">
         <label htmlFor="promoPrice">Harga Promo (opsional)</label>
-        <input
+        <NumberField
           id="promoPrice"
-          inputMode="numeric"
           value={draft.promoPrice}
-          onChange={(e) => set('promoPrice', e.target.value.replace(/[^\d]/g, ''))}
+          onChange={(d) => set('promoPrice', d)}
           placeholder="Kosongkan kalau tidak sedang promo"
-          aria-invalid={err?.field === 'promoPrice'}
+          invalid={err?.field === 'promoPrice'}
         />
         {err?.field === 'promoPrice' && <div className="field-error">{err.error}</div>}
         {promo > 0 && (

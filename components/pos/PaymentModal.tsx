@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { cn, rupiah } from '@/lib/format'
 
 const QUICK_CASH = [1000, 2000, 5000, 10000, 20000, 50000, 100000]
@@ -140,13 +141,15 @@ export function PaymentModal({
             <>
               <div className="field">
                 <label htmlFor="paid">Uang diterima</label>
-                <input
+                {/* Isian paling rawan di seluruh aplikasi: kasir mengetiknya
+                    sambil ditunggu pembeli, dan satu nol yang meleset langsung
+                    salah menghitung kembalian. Pemisah ribuannya membuat
+                    "50.000" bisa dibaca sekilas tanpa menghitung digit. */}
+                <NumberField
                   id="paid"
-                  type="number"
-                  inputMode="numeric"
-                  value={paid}
-                  min={bayar}
-                  onChange={(e) => setPaid(Number(e.target.value) || 0)}
+                  value={paid ? String(paid) : ''}
+                  onChange={(d) => setPaid(Number(d) || 0)}
+                  placeholder="0"
                 />
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>

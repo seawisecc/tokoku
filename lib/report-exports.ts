@@ -28,11 +28,27 @@ export const JENIS_LAPORAN: JenisLaporan[] = [
   'arus-kas',
 ]
 
+/**
+ * Jenis tiap kolom, ditentukan penyusunnya.
+ *
+ * Dipakai HANYA oleh lembar cetak, bukan CSV. CSV harus tetap berisi angka
+ * mentah dan tanggal ISO: begitu ribuannya diberi titik, Excel berlokal
+ * Inggris membaca "3.681.940" sebagai teks (atau lebih buruk, sebagai 3,68) dan
+ * seluruh gunanya sebagai berkas yang bisa dihitung ulang hilang. Yang butuh
+ * enak dibaca manusia adalah lembar cetaknya.
+ *
+ * Ditentukan di sini, bukan ditebak dari nama kolom di halaman cetak: nama
+ * kolom bisa diubah kapan saja, dan tebakan yang meleset akan menampilkan
+ * rupiah tanpa pemisah ribuan tanpa satu pun error.
+ */
+export type KolomJenis = 'teks' | 'angka' | 'uang' | 'tanggal' | 'waktu'
+
 export type DataLaporan = {
   /** Judul yang tercetak di lembar PDF. */
   judul: string
   filename: string
   headers: string[]
+  kolom: KolomJenis[]
   rows: unknown[][]
 }
 
@@ -112,6 +128,7 @@ export async function buildReportData(
       judul: JUDUL_LAPORAN.penjualan,
       filename: nama('penjualan-harian'),
       headers: ['Tanggal', 'Transaksi', 'Omzet', 'HPP', 'Laba kotor', 'Rata-rata nota', 'Omzet tunai', 'Transaksi offline'],
+      kolom: ['tanggal', 'angka', 'uang', 'uang', 'uang', 'uang', 'uang', 'angka'],
       rows: (data ?? []).map((r) => [
           r.sales_date,
           r.transaction_count,
@@ -141,6 +158,7 @@ export async function buildReportData(
       judul: JUDUL_LAPORAN.shift,
       filename: nama('laporan-shift'),
       headers: ['Dibuka', 'Ditutup', 'Kasir', 'Perangkat', 'Status', 'Transaksi', 'Penjualan', 'Penjualan tunai', 'Penjualan non-tunai', 'Kas awal', 'Kas seharusnya', 'Kas fisik', 'Selisih', 'Transaksi batal'],
+      kolom: ['waktu', 'waktu', 'teks', 'teks', 'teks', 'angka', 'uang', 'uang', 'uang', 'uang', 'uang', 'uang', 'uang', 'angka'],
       rows: (data ?? []).map((r) => [
           r.opened_at,
           r.closed_at,
@@ -188,6 +206,7 @@ export async function buildReportData(
       judul: JUDUL_LAPORAN.pengeluaran,
       filename: nama('pengeluaran'),
       headers: ['Tanggal', 'Kategori', 'Jumlah', 'Dibayar pakai', 'Dibayar ke', 'Catatan', 'Cabang'],
+      kolom: ['tanggal', 'teks', 'uang', 'teks', 'teks', 'teks', 'teks'],
       rows: (data ?? []).map((r) => [
           r.expense_date,
           (r.expense_categories as unknown as { name: string } | null)?.name ?? '',
@@ -260,6 +279,7 @@ export async function buildReportData(
       judul: JUDUL_LAPORAN['laba-rugi'],
       filename: nama('laba-rugi'),
       headers: ['Pos', 'Nilai'],
+      kolom: ['teks', 'uang'],
       rows: baris,
     }
   }
@@ -280,6 +300,7 @@ export async function buildReportData(
     judul: JUDUL_LAPORAN['arus-kas'],
     filename: nama('arus-kas'),
     headers: ['Tanggal', 'Sumber', 'Arah', 'Tunai', 'Jumlah', 'Banyak catatan'],
+    kolom: ['tanggal', 'teks', 'teks', 'teks', 'uang', 'angka'],
     rows: (data ?? []).map((r) => [
         r.flow_date,
         SUMBER[r.source as string] ?? r.source,

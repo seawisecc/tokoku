@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { savePurchase } from '@/app/(toko)/pembelian/actions'
 import { Drawer } from '@/components/overlay/Drawer'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { cn, rupiah } from '@/lib/format'
 
 export type PickProduct = {
@@ -204,18 +205,18 @@ export function PurchaseDrawer({
             <div className="buy-line-row">
               <div className="field" style={{ marginBottom: 0 }}>
                 <label>Jumlah {p ? `(${p.unit})` : ''}</label>
-                <input
-                  inputMode="numeric"
+                <NumberField
                   value={l.quantity}
-                  onChange={(e) => setLine(i, { quantity: e.target.value.replace(/[^\d]/g, '') })}
+                  onChange={(d) => setLine(i, { quantity: d })}
+                  ariaLabel="Jumlah"
                 />
               </div>
               <div className="field" style={{ marginBottom: 0 }}>
                 <label>Harga beli / satuan</label>
-                <input
-                  inputMode="numeric"
+                <NumberField
                   value={l.unitCost}
-                  onChange={(e) => setLine(i, { unitCost: e.target.value.replace(/[^\d]/g, '') })}
+                  onChange={(d) => setLine(i, { unitCost: d })}
+                  ariaLabel="Harga beli per satuan"
                 />
               </div>
               {lines.length > 1 && (

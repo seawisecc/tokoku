@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { saveStore } from '@/app/(toko)/pengaturan/actions'
 import { rupiah } from '@/lib/format'
+import { NumberField } from '@/components/ui/NumberField'
 import { SettingsForm, ToggleRow } from './SettingsForm'
 
 export type StoreValues = {
@@ -86,14 +87,11 @@ export function StoreSettingsForm({ initial }: { initial: StoreValues }) {
           <div className="field-row">
             <div className="field">
               <label htmlFor="loyaltyEarnPer">Belanja per 1 poin</label>
-              <input
+              <NumberField
                 id="loyaltyEarnPer"
                 name="loyaltyEarnPer"
-                inputMode="numeric"
-                value={v.loyaltyEarnPer}
-                onChange={(e) =>
-                  set('loyaltyEarnPer', Number(e.target.value.replace(/[^\d]/g, '') || 0))
-                }
+                value={String(v.loyaltyEarnPer || '')}
+                onChange={(d) => set('loyaltyEarnPer', Number(d || 0))}
               />
               <div className="field-hint">
                 Belanja {rupiah(v.loyaltyEarnPer)} dapat 1 poin. Pembulatan ke bawah.
@@ -101,14 +99,11 @@ export function StoreSettingsForm({ initial }: { initial: StoreValues }) {
             </div>
             <div className="field">
               <label htmlFor="loyaltyPointValue">Nilai 1 poin</label>
-              <input
+              <NumberField
                 id="loyaltyPointValue"
                 name="loyaltyPointValue"
-                inputMode="numeric"
-                value={v.loyaltyPointValue}
-                onChange={(e) =>
-                  set('loyaltyPointValue', Number(e.target.value.replace(/[^\d]/g, '') || 0))
-                }
+                value={String(v.loyaltyPointValue || '')}
+                onChange={(d) => set('loyaltyPointValue', Number(d || 0))}
               />
               <div className="field-hint">
                 1 poin dipotong {rupiah(v.loyaltyPointValue)} saat ditukar.

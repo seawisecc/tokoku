@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { closeShift } from '@/app/(toko)/shift/actions'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { jam, rupiah } from '@/lib/format'
 
 export type OpenShift = {
@@ -94,13 +95,10 @@ export function ShiftCard({ shift }: { shift: OpenShift }) {
 
       <div className="field">
         <label htmlFor="closing">Uang tunai di laci</label>
-        <input
+        <NumberField
           id="closing"
-          type="number"
-          inputMode="numeric"
-          min={0}
           value={closing}
-          onChange={(e) => setClosing(e.target.value)}
+          onChange={setClosing}
           placeholder="Hitung fisik, lalu isi di sini"
         />
       </div>

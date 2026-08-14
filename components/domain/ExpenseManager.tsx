@@ -11,6 +11,7 @@ import {
 import { Drawer } from '@/components/overlay/Drawer'
 import { IconAction } from '@/components/data/IconAction'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { rupiah, tanggal } from '@/lib/format'
 
 export type ExpenseRow = {
@@ -331,13 +332,10 @@ function ExpenseDrawer({
 
       <div className="field">
         <label htmlFor="expJumlah">Jumlah</label>
-        <input
+        <NumberField
           id="expJumlah"
-          type="number"
-          inputMode="numeric"
-          min={1}
           value={amount}
-          onChange={(e) => setAmount(e.target.value)}
+          onChange={setAmount}
           placeholder="0"
         />
       </div>

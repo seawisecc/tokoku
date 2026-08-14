@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Icon } from '@/components/ui/icons'
+import { NumberField } from '@/components/ui/NumberField'
 import { rupiah } from '@/lib/format'
 
 /**
@@ -62,18 +63,11 @@ export function ManualDiscount({
       </div>
 
       <div className="redeem-row">
-        <input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          max={batas}
-          value={value === 0 ? '' : value}
+        <NumberField
+          value={value === 0 ? '' : String(value)}
           placeholder="0"
-          aria-label={`Potongan rupiah, maksimal ${batas}`}
-          onChange={(e) => {
-            const n = Math.floor(Number(e.target.value) || 0)
-            onChange(Math.min(Math.max(n, 0), batas), reason)
-          }}
+          ariaLabel={`Potongan rupiah, maksimal ${batas}`}
+          onChange={(d) => onChange(Math.min(Number(d || 0), batas), reason)}
         />
         <button
           type="button"
