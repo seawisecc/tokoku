@@ -267,8 +267,9 @@ export async function signUpForInvitation(
   if (!data.session) {
     return {
       notice:
-        'Akun Anda sudah dibuat. Cek email untuk konfirmasi, lalu buka lagi tautan undangan ini. ' +
-        'Undangannya tetap menunggu.',
+        `Akun Anda sudah dibuat. Buka email ${email}, lalu tekan tombol "Konfirmasi Email" di ` +
+        'sana. Setelah itu Anda langsung bergabung, tidak perlu kembali ke halaman ini. ' +
+        'Bukalah emailnya di perangkat yang sama dengan yang Anda pakai sekarang.',
     }
   }
 

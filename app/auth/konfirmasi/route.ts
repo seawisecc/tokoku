@@ -2,6 +2,41 @@ import { NextResponse, type NextRequest } from 'next/server'
 import type { EmailOtpType } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 
+type Klien = Awaited<ReturnType<typeof createClient>>
+
+/** `/undangan/<token>` dan tidak lebih dari itu. */
+const UNDANGAN = /^\/undangan\/([^/?#]+)$/
+
+/**
+ * Kalau tautan konfirmasi ini datang dari pendaftaran lewat undangan,
+ * undangannya diterima DI SINI, bukan di halaman berikutnya.
+ *
+ * Dilaporkan klien 14 Agustus: kasir yang diundang menekan tautan undangan,
+ * mengisi borang, menerima email konfirmasi, menekannya, lalu "malah diberikan
+ * lagi link undangan". Yang dilihatnya memang halaman undangan lagi, dengan
+ * satu tombol Terima Undangan. Secara teknis benar, tapi bagi orang yang baru
+ * saja menekan "Buat Akun & Gabung" lalu mengonfirmasi emailnya, langkah
+ * ketiga itu terbaca seperti berputar-putar di tempat yang sama — dan orang
+ * yang mengira dirinya berputar akan berhenti.
+ *
+ * Persetujuannya sudah diberikan dua kali sebelum sampai ke sini: menekan
+ * "Buat Akun & Gabung", lalu membuktikan alamat emailnya sendiri. Tidak ada
+ * pertanyaan baru yang perlu ditanyakan di tombol ketiga.
+ *
+ * Gagal menerima (undangan kedaluwarsa, sudah dibatalkan, sudah dipakai) TIDAK
+ * dianggap error di sini: user tetap diantar ke halaman undangan, dan halaman
+ * itu yang menjelaskan keadaannya dengan kalimat lengkap.
+ */
+async function tujuanSetelahKonfirmasi(supabase: Klien, next: string): Promise<string> {
+  const cocok = UNDANGAN.exec(next)
+  if (!cocok) return next
+
+  const { data, error } = await supabase.rpc('accept_invitation', { p_token: cocok[1] })
+  if (error) return next
+
+  return (data as { status?: string } | null)?.status === 'accepted' ? '/' : next
+}
+
 /**
  * Titik pendaratan tautan dari email Supabase (reset kata sandi, konfirmasi).
  *
@@ -31,10 +66,14 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(new URL(next, origin))
+    if (!error) {
+      return NextResponse.redirect(new URL(await tujuanSetelahKonfirmasi(supabase, next), origin))
+    }
   } else if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
-    if (!error) return NextResponse.redirect(new URL(next, origin))
+    if (!error) {
+      return NextResponse.redirect(new URL(await tujuanSetelahKonfirmasi(supabase, next), origin))
+    }
   }
 
   // Tautan kedaluwarsa, sudah dipakai, atau dibuka di browser lain. Halaman

@@ -23,8 +23,15 @@ type Preview = {
   organization_city: string | null
 }
 
-export default async function UndanganPage({ params }: { params: Promise<{ token: string }> }) {
+export default async function UndanganPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ token: string }>
+  searchParams: Promise<{ tautan?: string }>
+}) {
   const { token } = await params
+  const { tautan } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -92,6 +99,33 @@ export default async function UndanganPage({ params }: { params: Promise<{ token
     return (
       <div className="auth-single">
         <div className="auth-container">
+          {/**
+           * Konfirmasi email yang gagal mendarat DI SINI, dan sampai 14 Agustus
+           * halaman ini tidak membaca `?tautan=gagal` sama sekali — tidak ada
+           * satu pun halaman di aplikasi yang membacanya. Akibatnya kegagalan
+           * tampil persis seperti undangan yang baru dibuka: borang buat akun
+           * lagi, untuk akun yang justru baru saja dibuat.
+           *
+           * Penyebab yang paling sering: emailnya dibuka di HP sementara
+           * pendaftarannya dikerjakan di laptop. Kunci penukaran kode (PKCE)
+           * disimpan di browser tempat mendaftar, jadi browser lain tidak bisa
+           * menukarnya jadi sesi. Emailnya sendiri SUDAH terkonfirmasi saat
+           * tautannya ditekan, jadi jalan keluarnya memang tinggal masuk biasa
+           * — dan `signIn` sudah mengantar penerima undangan kembali ke
+           * halaman ini setelah berhasil.
+           */}
+          {tautan === 'gagal' && (
+            <div className="empty-note is-warn" style={{ marginBottom: 16 }}>
+              <Icon name="alert" size={16} style={{ marginTop: 1 }} />
+              <div style={{ flex: 1 }}>
+                Email Anda sudah dikonfirmasi, tapi tautannya tidak bisa membuka sesi di browser
+                ini. Ini biasa terjadi kalau emailnya dibuka di HP sementara pendaftarannya tadi
+                dikerjakan di komputer. Tekan &quot;Saya sudah punya akun&quot; di bawah, lalu masuk
+                dengan email dan kata sandi yang tadi Anda buat. Anda akan langsung dibawa kembali
+                ke undangan ini.
+              </div>
+            </div>
+          )}
           <InvitationSignUp
             token={token}
             email={preview!.email ?? ''}

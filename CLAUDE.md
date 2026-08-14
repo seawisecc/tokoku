@@ -1605,6 +1605,53 @@ Yang disengaja dan jangan diubah:
   penerimaannya tetap sah — tapi hampir selalu ini berarti orangnya lupa sedang
   login sebagai siapa.
 
+### Tombol ketiga yang membuat orang menyerah (14 Agu)
+
+Dilaporkan klien setelah mengundang kasirnya: "email masuk, klik link, daftar,
+lalu konfirmasi email, tapi malah diberikan lagi link undangan." Yang dilihatnya
+memang halaman undangan lagi. Dua cacat berbeda bisa menghasilkan gejala itu,
+dan keduanya sudah diperbaiki.
+
+**1. Berhasil pun masih menyisakan satu tombol lagi.** `emailRedirectTo`
+mengantar orangnya kembali ke `/undangan/<token>`, dan di sana masih ada tombol
+"Terima Undangan". Secara teknis benar. Tapi orang yang baru saja menekan "Buat
+Akun & Gabung" lalu mengonfirmasi emailnya membaca langkah ketiga itu sebagai
+berputar di tempat yang sama, dan orang yang mengira dirinya berputar akan
+berhenti. Sekarang `app/auth/konfirmasi/route.ts` memanggil `accept_invitation`
+sendiri kalau `next` berbentuk `/undangan/<token>`, lalu mengantar langsung ke
+aplikasi. Persetujuannya sudah diberikan dua kali sebelum sampai ke sana, jadi
+tidak ada pertanyaan baru yang perlu ditanyakan tombol ketiga. Penerimaan yang
+gagal (kedaluwarsa, dibatalkan, sudah dipakai) tetap jatuh ke halaman undangan,
+yang memang sudah punya kalimat untuk tiap keadaan itu.
+
+**2. `?tautan=gagal` tidak dibaca oleh satu pun halaman.** Komentar di route
+handler menjanjikan "halaman tujuan yang menjelaskan ini ke user", dan itu
+ternyata tidak pernah ada. Untuk `/atur-sandi` kebetulan tidak berakibat (tanpa
+sesi, formnya memang menampilkan pesan tautan tidak sah), tapi untuk halaman
+undangan akibatnya persis gejala yang dilaporkan: kegagalan tampil sebagai
+borang "buat akun" lagi, untuk akun yang justru baru saja dibuat.
+
+Penyebab kegagalannya sendiri hampir selalu satu hal: **kunci penukaran kode
+PKCE tersimpan di browser tempat mendaftar.** Daftar di laptop, buka email di
+HP, dan `exchangeCodeForSession` di HP tidak punya kuncinya. Emailnya SUDAH
+terkonfirmasi saat tautannya ditekan (Supabase menandainya sebelum mengalihkan),
+jadi jalan keluarnya tinggal masuk biasa — dan `signIn` sudah mengantar
+penerima undangan kembali ke halaman undangannya. Itu yang sekarang ditulis di
+layar, dan borang pendaftaran diberi anjuran membuka email di perangkat yang
+sama.
+
+Yang **tidak** dikerjakan: mengganti template email Supabase ke bentuk
+`{{ .TokenHash }}` supaya tautannya bisa dibuka di perangkat mana pun. Itu
+obat yang benar untuk akar masalahnya, tapi harus ditempel tangan di dashboard
+dan menyentuh jalur reset kata sandi yang sedang bekerja. Pertimbangkan kalau
+keluhan yang sama muncul lagi dari klien yang lain.
+
+**Belum diuji ujung ke ujung oleh agen** — perlu kotak masuk sungguhan dan
+akun yang sandinya tidak ada di repo. Yang sudah dipastikan: build bersih,
+token undangan berbentuk hex 48 karakter (jadi cocok dengan pola rutenya), dan
+`invites_read` memang mengizinkan penerima membaca barisnya sendiri lewat
+email, yang membuat jalan keluar lewat `signIn` benar-benar bekerja.
+
 **Brand dobel.** Ikut diperbaiki di halaman yang sama: `(auth)/layout.tsx`
 sudah merender blok brand, dan halaman undangan merendernya lagi. Yang kedua
 tampil sebagai logo kembar dengan tulisan yang HILANG — teks brand di layout
