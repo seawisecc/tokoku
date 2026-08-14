@@ -393,8 +393,8 @@ sesudahnya, dan data uji dibersihkan.
 | 1 | migrasi 0043 (expenses, kategori, kolom pembelian, RLS, TK002) | sedang | ✅ 14 Agu |
 | 2 | migrasi 0044 (kategori & outlet wajib satu toko) | kecil | ✅ 14 Agu |
 | 3 | layar `/laporan/pengeluaran` + drawer + kategori | sedang | ✅ 14 Agu |
-| 4 | migrasi 0045 (view arus kas & laba rugi) | sedang | |
-| 5 | halaman `/laporan/keuangan` + PlanLock + cakupan outlet | besar | |
+| 4 | migrasi 0045 (view arus kas & laba rugi) | sedang | ✅ 14 Agu |
+| 5 | halaman `/laporan/keuangan` + PlanLock + cakupan outlet | besar | ✅ 14 Agu |
 | 6 | migrasi 0046 + pengaturan pajak + tampilan kasir + `catalog_version` | sedang | |
 | 7 | ekspor CSV + halaman cetak PDF + rekap pajak | sedang | |
 | 8 | pengujian angka lewat skrip, lalu 390px | sedang | |

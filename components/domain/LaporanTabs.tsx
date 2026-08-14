@@ -16,6 +16,14 @@ import { SectionTabs } from '@/components/layout/SectionTabs'
  * punya jalan sama sekali ke halaman yang secara aturan boleh ia pakai, persis
  * celah yang dulu terjadi pada Transfer Stok. Di bawah Laporan, izin menunya
  * dan izin halamannya tidak pernah bisa berbeda.
+ *
+ * Tab Keuangan SELALU ditampilkan, termasuk untuk paket yang belum
+ * membukanya — beda dengan tab Konsinyasi yang disembunyikan di
+ * `PembelianTabs`. Bedanya: halaman Konsinyasi MEMANTULKAN orang kembali ke
+ * `/pembelian`, jadi tabnya akan terbaca seperti tombol rusak. Halaman
+ * Keuangan tetap terbuka dan menjelaskan apa yang ada di dalamnya lewat
+ * `PlanLock`, dan itu justru gunanya: yang tidak pernah melihat isinya tidak
+ * akan pernah terpikir menaikkan paketnya.
  */
 export function LaporanTabs() {
   return (
@@ -25,6 +33,7 @@ export function LaporanTabs() {
         { href: '/laporan' as Route, label: 'Penjualan' },
         { href: '/laporan/shift' as Route, label: 'Laporan Shift' },
         { href: '/laporan/pengeluaran' as Route, label: 'Pengeluaran' },
+        { href: '/laporan/keuangan' as Route, label: 'Keuangan' },
       ]}
     />
   )

@@ -2732,6 +2732,19 @@ export type Database = {
       }
     }
     Views: {
+      v_cash_flow: {
+        Row: {
+          amount: number | null
+          direction: string | null
+          entry_count: number | null
+          flow_date: string | null
+          is_cash: boolean | null
+          organization_id: string | null
+          outlet_id: string | null
+          source: string | null
+        }
+        Relationships: []
+      }
       v_client_overview: {
         Row: {
           city: string | null
@@ -2893,6 +2906,47 @@ export type Database = {
           },
         ]
       }
+      v_expense_monthly: {
+        Row: {
+          amount: number | null
+          category_id: string | null
+          category_name: string | null
+          entry_count: number | null
+          organization_id: string | null
+          outlet_id: string | null
+          period_month: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_same_org"
+            columns: ["organization_id", "category_id"]
+            isOneToOne: false
+            referencedRelation: "expense_categories"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "v_client_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_outlet_same_org"
+            columns: ["organization_id", "outlet_id"]
+            isOneToOne: false
+            referencedRelation: "outlets"
+            referencedColumns: ["organization_id", "id"]
+          },
+        ]
+      }
       v_product_sales: {
         Row: {
           gross_profit: number | null
@@ -3004,6 +3058,48 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_client_overview"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_profit_loss: {
+        Row: {
+          cogs: number | null
+          gross_profit: number | null
+          net_revenue: number | null
+          organization_id: string | null
+          outlet_id: string | null
+          period_month: string | null
+          tax_collected: number | null
+          transaction_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "v_client_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: false
+            referencedRelation: "outlets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_outlet_id_fkey"
+            columns: ["outlet_id"]
+            isOneToOne: false
+            referencedRelation: "v_product_stock"
+            referencedColumns: ["outlet_id"]
           },
         ]
       }

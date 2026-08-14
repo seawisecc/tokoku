@@ -1484,6 +1484,37 @@ tbody tr:hover { background: var(--color-paper); }
   .buy-table .by-pay { grid-column: 1 / -1; grid-row: 3; margin-top: 8px; }
 }
 
+/* ---------- laba rugi & arus kas ----------
+   Bentuknya baris berlabel kiri dan angka kanan, bukan tabel: yang dibaca di
+   sini SATU kolom angka yang saling dikurangkan dari atas ke bawah. Sebagai
+   tabel empat kolom ia akan ikut aturan geser horizontal di ponsel, padahal
+   tidak ada apa pun yang perlu digeser.
+
+   .is-sum dan .is-total adalah baris hasil. Garis atasnya yang menandai "yang
+   di atas ini dijumlahkan", persis seperti nota tulis tangan — tanpa itu laba
+   kotor terbaca sebagai satu butir biaya di antara butir lainnya. */
+.fin-row {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 11px 16px; border-bottom: 1px solid var(--color-line);
+  font-size: 13.5px;
+}
+.fin-row:last-child { border-bottom: none; }
+.fin-row span { flex: 1; min-width: 0; color: var(--color-ink-soft); }
+.fin-row strong { font-family: var(--font-display); white-space: nowrap; }
+.fin-row.is-sum { border-top: 1px solid var(--color-line); }
+.fin-row.is-sum span,
+.fin-row.is-total span { color: var(--color-ink); font-weight: 600; }
+.fin-row.is-total {
+  border-top: 2px solid var(--color-forest);
+  background: var(--color-cream);
+  font-size: 15px;
+}
+.fin-row.is-total strong { font-size: 17px; }
+/* Rugi diberi warna, untung TIDAK. Mewarnai keadaan normal membuat mata
+   berhenti membedakan mana yang perlu ditindaklanjuti — aturan yang sama
+   dengan selisih kas nol di Laporan Shift. */
+.fin-row .is-neg { color: var(--color-coral); }
+
 /* ---------- konsinyasi ---------- */
 .consign-due {
   display: flex; align-items: center; gap: 12px;

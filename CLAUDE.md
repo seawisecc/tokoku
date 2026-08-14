@@ -11,7 +11,7 @@ tampilan, buka file itu dulu.
 ## Kondisi terkini — mulai baca dari sini
 
 Terakhir dikerjakan **13 Agustus 2026**. Semua yang di bawah ini sudah dibangun
-dan **44 migrasinya sudah diterapkan** ke Supabase produksi.
+dan **45 migrasinya sudah diterapkan** ke Supabase produksi.
 
 **Sudah di-deploy ke Vercel** lewat GitHub (`seawisecc/tokoku`), dan pushing ke
 `main` memicu deploy produksi otomatis di `tokoku.seawise.id`. Function berjalan
@@ -115,6 +115,8 @@ pekerjaan sebelum dijual".
 - **Produk jasa** — pilihan Barang/Jasa di drawer produk; lihat "Produk jasa"
 - **Pengeluaran operasional** (`/laporan/pengeluaran`) — sewa, listrik, gaji,
   dan biaya lain yang tidak menambah stok; lihat "Pengeluaran operasional"
+- **Laporan keuangan** (`/laporan/keuangan`) — arus kas & laba rugi, DUA BUKU
+  yang sengaja menjawab angka berbeda; lihat "Laporan keuangan"
 - **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — terbit
 - **Halaman pemasaran** (`/`, `/fitur`) — rincian per paket, tabel perbandingan,
   FAQ; lihat "Halaman fitur" di bawah
@@ -2001,6 +2003,84 @@ dipakai tidak bisa dihapus permanen, soft delete menyisakan baris + alasannya,
 dan audit tercatat. Seluruh data uji dibersihkan; `expenses` kembali 0 baris.
 **Belum diuji lewat layar** — perlu sesi, dan sandinya memang tidak ada di repo.
 
+## Laporan keuangan: arus kas & laba rugi
+
+`/laporan/keuangan` (migrasi 0045). Tiga view: `v_cash_flow`, `v_profit_loss`,
+`v_expense_monthly`. Semuanya `security_invoker` tanpa fungsi SECURITY DEFINER
+di dalamnya, mengikuti `v_shift_summary`.
+
+**INI DUA BUKU, BUKAN SATU. Kalau cuma satu hal yang diingat dari bagian ini,
+ini yang itu.**
+
+Arus kas menjawab "uang di tangan bertambah atau berkurang". Laba rugi menjawab
+"usahanya untung atau tidak". Keduanya memakai tabel yang sama dan hampir selalu
+menjawab angka yang BERBEDA, dan itu benar.
+
+Contohnya yang paling sering terjadi: kulakan 20 karton mi Rp 2 juta tunai hari
+ini. Arus kas hari ini turun Rp 2 juta. Laba rugi hari ini tidak berubah sepeser
+pun, karena barangnya belum terjual — biayanya baru diakui sebagai HPP saat mi
+itu dibeli orang, satu per satu. Digabung jadi satu angka, pemilik toko akan
+melihat "rugi" setiap kali kulakan besar lalu berhenti mempercayai seluruh
+laporannya, dan kepercayaan itu tidak bisa dikembalikan dengan penjelasan
+sesudahnya.
+
+    arus kas   : ikut UANGNYA, pada tanggal uang itu berpindah
+    laba rugi  : ikut PENJUALANNYA, dengan HPP barang yang benar-benar terjual
+
+Yang sudah diputuskan dan jangan diubah tanpa alasan:
+
+- **Omzetnya `total - tax_total`, bukan `total` seperti `v_daily_sales`.**
+  Pajak yang dipungut dari pembeli adalah titipan untuk disetor, bukan
+  pendapatan toko. Rumusnya benar untuk KEDUA mode pajak: pada mode termasuk
+  harga pajaknya ada di dalam `total`, pada mode ditambahkan ia di luarnya, dan
+  `total - tax_total` menghasilkan nilai bersih yang sama. Konsekuensinya
+  "Omzet" di sini bisa lebih kecil daripada di Laporan Penjualan begitu pajak
+  dinyalakan nanti — itu sebabnya pajak terpungut ditampilkan sebagai barisnya
+  sendiri, supaya selisihnya bisa dijelaskan tanpa membuka SQL.
+- **Nota tempo baru masuk arus kas pada tanggal DILUNASI**, bukan saat
+  barangnya datang. Dimasukkan lebih awal, arus kas menunjukkan uang yang
+  sebenarnya masih ada di laci.
+- **Tanggal penjualan memakai `(client_created_at at time zone o.timezone)`,**
+  persis `v_daily_sales`. Kalau berbeda, dua halaman Laporan menempatkan
+  transaksi yang sama pada tanggal berbeda.
+- **`v_cash_flow` berbentuk panjang, bukan lebar** (satu baris per sumber per
+  arah per hari). Kolom lebar berarti tiap sumber uang baru menambah kolom, dan
+  `create or replace view` cuma boleh menambah kolom di UJUNG — aturan yang
+  sudah memaksa `v_product_sales` menaruh `outlet_id` di tempat yang tidak rapi.
+- **`v_expense_monthly` dipisah dari `v_profit_loss`.** Digabung, omzet
+  terduplikasi sebanyak jumlah kategori dan penjumlahan apa pun di atasnya jadi
+  salah tanpa terlihat salah.
+- **Pengeluaran ber-`outlet_id` NULL wajib ikut di SETIAP cakupan outlet.**
+  Saringan `eq` biasa membuangnya dari semua cabang sekaligus, jadi querynya
+  memakai `outlet_id.eq.X,outlet_id.is.null`. Akibatnya laba bersih tiap cabang
+  kalau dijumlahkan TIDAK sama dengan laba bersih "Semua outlet" — keduanya
+  benar, dan halamannya menyebut itu apa adanya supaya tidak ada yang mengira
+  salah satunya salah hitung.
+- **Laba BERSIH yang jadi angka besar di hero, bukan omzet.** Omzet besar
+  dengan laba tipis adalah keadaan paling sering di warung.
+- **Dikunci `reports: 'full'` lewat `PlanLock`, tapi tabnya tetap terlihat.**
+  Beda dengan tab Konsinyasi yang disembunyikan: halaman Konsinyasi memantulkan
+  orang kembali sehingga tabnya terbaca seperti tombol rusak, sementara halaman
+  ini tetap terbuka dan menjelaskan isinya. Pencatatan pengeluarannya sendiri
+  tidak pernah dikunci paket.
+- **`lib/period.ts` adalah SATU tempat memotong waktu**, dipakai Pengeluaran dan
+  Laporan Keuangan. Rentangnya dihitung dari jam Asia/Makassar, bukan jam
+  server: function berjalan di Singapura dengan jam UTC, jadi tiap tanggal 1
+  sebelum pukul 08.00 WITA "Bulan Ini" akan menampilkan bulan kemarin.
+
+**Sudah diuji ujung ke ujung** (14 Agu, skrip service-role, dan kali ini
+**query halamannya dijalankan persis seperti yang ditulis di kode** — bukan
+cuma tabelnya, karena itu yang meloloskan cacat embed di Fase 1):
+pengeluaran Rp 500.000 tidak mengubah laba kotor maupun omzet tapi menaikkan
+arus kas keluar tunai persis Rp 500.000 · pembelian tunai Rp 2 juta tidak
+membuat laba rugi ikut turun · nota tempo belum menyentuh arus kas sampai
+dilunasi, lalu muncul pada tanggal pelunasannya · transaksi batal tidak
+terhitung di buku mana pun · biaya seluruh toko ikut terhitung di kedua cabang
+dan hanya sekali di cakupan semua outlet · dan invarian utamanya:
+`transactions` status paid, `v_daily_sales`, dan `v_profit_loss` menjawab
+angka yang sama persis (47 transaksi, Rp 3.681.940). Seluruh data uji
+dibersihkan.
+
 ## Diskon: tiga lapis, dan kenapa dipisah
 
 Ditambahkan 13 Agu. Yang diminta pemilik project ada tiga bentuk sekaligus —
@@ -2359,7 +2439,7 @@ app/
                    atur-sandi, undangan/[token], actions
   auth/konfirmasi  route handler pendaratan tautan email (WAJIB route, bukan page)
   (toko)/          beranda, kasir, transaksi/[id], riwayat,
-                   laporan/{,shift,pengeluaran},
+                   laporan/{,shift,pengeluaran,keuangan},
                    produk/{,[id],opname,transfer}, pembelian/{,konsinyasi},
                    pelanggan,
                    pengaturan/{toko,outlet,tim,kategori,printer,sinkronisasi,
@@ -2408,6 +2488,7 @@ lib/
   csv.ts           baca-tulis CSV (deteksi pemisah, BOM UTF-8) — tanpa dependensi
   exports.ts       SATU penyusun berkas backup, dipakai jalur toko & Super Admin
   phone.ts         normalkan nomor HP ke 62… + hpLokal() untuk menampilkannya
+  period.ts        SATU pemotong periode bulanan halaman keuangan (jam WITA)
   plan.ts          SATU pembaca plans.features — kolom kosong = kemampuan penuh
   subscription.ts  keadaan langganan sisi toko — harus sama dengan org_lapsed_at()
   supabase/        client (RLS) · server (RLS) · admin (LEWAT RLS, server-only)
@@ -2418,7 +2499,7 @@ instrumentation-client.ts  Sentry browser (session replay MATI)
 sentry.server.config.ts · sentry.edge.config.ts
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  44 file, Postgres 17
+supabase/migrations/  45 file, Postgres 17
 docs/EMAIL-TEMPLATES-SUPABASE.md  template email Indonesia untuk ditempel di dashboard
 ```
 
