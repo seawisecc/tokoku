@@ -1639,6 +1639,7 @@ export type Database = {
           organization_id: string
           outlet_id: string
           paid_at: string | null
+          paid_note: string | null
           payment: Database["public"]["Enums"]["purchase_payment"]
           payment_method: Database["public"]["Enums"]["payment_method"]
           purchased_at: string
@@ -1656,6 +1657,7 @@ export type Database = {
           organization_id: string
           outlet_id: string
           paid_at?: string | null
+          paid_note?: string | null
           payment?: Database["public"]["Enums"]["purchase_payment"]
           payment_method?: Database["public"]["Enums"]["payment_method"]
           purchased_at?: string
@@ -1673,6 +1675,7 @@ export type Database = {
           organization_id?: string
           outlet_id?: string
           paid_at?: string | null
+          paid_note?: string | null
           payment?: Database["public"]["Enums"]["purchase_payment"]
           payment_method?: Database["public"]["Enums"]["payment_method"]
           purchased_at?: string

@@ -48,6 +48,7 @@ export function PurchaseDrawer({
   const [invoiceNo, setInvoiceNo] = useState('')
   const [purchasedAt, setPurchasedAt] = useState(today())
   const [payment, setPayment] = useState<'paid' | 'credit'>('paid')
+  const [paymentMethod, setPaymentMethod] = useState('cash')
   const [dueDate, setDueDate] = useState('')
   const [note, setNote] = useState('')
   const [lines, setLines] = useState<Line[]>([{ productId: '', quantity: '1', unitCost: '' }])
@@ -91,6 +92,7 @@ export function PurchaseDrawer({
     fd.set('invoiceNo', invoiceNo)
     fd.set('purchasedAt', purchasedAt)
     fd.set('payment', canUseSupplier ? payment : 'paid')
+    fd.set('paymentMethod', paymentMethod)
     fd.set('dueDate', canUseSupplier && payment === 'credit' ? dueDate : '')
     fd.set('note', note)
 
@@ -256,6 +258,29 @@ export function PurchaseDrawer({
               Tempo
             </button>
           </div>
+          {/* Cara bayar hanya ditanyakan untuk nota yang langsung lunas. Untuk
+              tempo, yang menentukan arus kas adalah cara bayar saat DILUNASI
+              nanti, dan itu ditanyakan di drawer "Tandai Lunas". */}
+          {payment === 'paid' && (
+            <div className="field">
+              <label htmlFor="beliMetode">Dibayar Pakai</label>
+              <select
+                id="beliMetode"
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+              >
+                <option value="cash">Tunai</option>
+                <option value="qris">QRIS</option>
+                <option value="transfer">Transfer</option>
+                <option value="card">Kartu</option>
+                <option value="other">Lainnya</option>
+              </select>
+              <div className="field-hint">
+                Transfer ke pemasok tidak mengurangi uang di laci kasir. Arus Kas membedakan
+                keduanya.
+              </div>
+            </div>
+          )}
           {payment === 'credit' && (
             <div className="field">
               <label htmlFor="dueDate">Jatuh tempo</label>

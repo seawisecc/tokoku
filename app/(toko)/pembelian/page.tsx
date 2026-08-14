@@ -25,7 +25,7 @@ export default async function PembelianPage() {
         // di atasnya, tanpa ada apa pun di layar yang memberi tahu ada yang
         // disembunyikan. Yang dibutuhkan bukan saringan, melainkan LABEL cabang.
         .from('purchases')
-        .select('id, code, invoice_no, purchased_at, total, payment, due_date, paid_at, outlet_id, suppliers(name)')
+        .select('id, code, invoice_no, purchased_at, total, payment, payment_method, due_date, paid_at, paid_note, outlet_id, suppliers(name)')
         .eq('organization_id', orgId)
         .order('purchased_at', { ascending: false })
         .order('created_at', { ascending: false })
@@ -71,6 +71,8 @@ export default async function PembelianPage() {
           payment: p.payment,
           dueDate: p.due_date,
           paidAt: p.paid_at,
+          paidNote: p.paid_note,
+          paymentMethod: p.payment_method,
           supplierName: (p.suppliers as unknown as { name: string } | null)?.name ?? null,
           outletName: outletName.get(p.outlet_id) ?? null,
         }))}

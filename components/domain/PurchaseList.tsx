@@ -10,6 +10,14 @@ import { Icon } from '@/components/ui/icons'
 import { cn, rupiah, tanggal } from '@/lib/format'
 import { SortTh, useTableSort } from '@/components/data/SortableTable'
 
+export const METODE: Record<string, string> = {
+  cash: 'Tunai',
+  qris: 'QRIS',
+  transfer: 'Transfer',
+  card: 'Kartu',
+  other: 'Lainnya',
+}
+
 export type PurchaseRow = {
   id: string
   code: string
@@ -19,6 +27,8 @@ export type PurchaseRow = {
   payment: string
   dueDate: string | null
   paidAt: string | null
+  paidNote: string | null
+  paymentMethod: string
   supplierName: string | null
   /** null kalau toko cuma punya satu outlet — tidak perlu disebut. */
   outletName: string | null
@@ -54,6 +64,7 @@ export function PurchaseList({
     dir: 'desc',
   })
   const [supplierForm, setSupplierForm] = useState(false)
+  const [paying, setPaying] = useState<PurchaseRow | null>(null)
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
   const [notice, setNotice] = useState<string | null>(null)
@@ -138,6 +149,17 @@ export function PurchaseList({
                           {p.invoiceNo ? ` · ${p.invoiceNo}` : ''}
                           {p.outletName ? ` · ${p.outletName}` : ''}
                         </div>
+                        {/* Riwayat pelunasan disebut di barisnya sendiri, bukan
+                            cuma sebagai badge "Lunas": pertanyaan yang muncul
+                            berbulan-bulan kemudian adalah "nota ini dibayar
+                            kapan dan lewat apa", dan jawabannya harus ada tanpa
+                            perlu membuka apa pun. */}
+                        {p.paidAt && (
+                          <div className="cell-sub">
+                            Dibayar {tanggal(p.paidAt)} · {METODE[p.paymentMethod] ?? p.paymentMethod}
+                            {p.paidNote ? ` · ${p.paidNote}` : ''}
+                          </div>
+                        )}
                       </td>
                       <td className="by-date">{tanggal(p.purchasedAt)}</td>
                       <td className="by-pay">
@@ -161,14 +183,7 @@ export function PurchaseList({
                             type="button"
                             className="btn btn-ghost btn-sm"
                             style={{ marginLeft: 8 }}
-                            disabled={pending}
-                            onClick={() =>
-                              startTransition(async () => {
-                                const res = await markPurchasePaid(p.id)
-                                if (!res.ok) setNotice(res.error)
-                                else router.refresh()
-                              })
-                            }
+                            onClick={() => setPaying(p)}
                           >
                             Tandai lunas
                           </button>
@@ -206,6 +221,21 @@ export function PurchaseList({
           Paket ini mencatat barang masuk. Stok dan harga pokok tetap akurat. Pencatatan pemasok,
           tempo, dan hutang dagang tersedia mulai paket Growth.
         </p>
+      )}
+
+      {/* Dirender kondisional dengan `key`: initializer useState cuma jalan
+          sekali, jadi drawer yang di-mount saat tertutup akan selamanya
+          menampilkan isian nota yang pertama kali dipilih. */}
+      {paying && (
+        <PayPurchaseDrawer
+          key={paying.id}
+          nota={paying}
+          onClose={() => setPaying(null)}
+          onDone={() => {
+            setPaying(null)
+            router.refresh()
+          }}
+        />
       )}
 
       {adding && (
@@ -270,5 +300,115 @@ export function PurchaseList({
         </Drawer>
       )}
     </>
+  )
+}
+
+/**
+ * Drawer pelunasan nota tempo.
+ *
+ * Sebelum ini "Tandai lunas" adalah satu tombol yang langsung menulis jam saat
+ * itu juga. Untuk nota yang dibayar akhir pekan lalu tapi baru sempat ditandai
+ * Senin, itu menggeser uang keluarnya dua hari di Arus Kas — laporan yang
+ * gunanya justru mencocokkan uang dengan tanggalnya.
+ *
+ * Catatannya OPSIONAL dan memang harus opsional: kebanyakan pelunasan tidak
+ * punya cerita, dan isian wajib yang tidak punya isi akan diisi titik.
+ */
+function PayPurchaseDrawer({
+  nota,
+  onClose,
+  onDone,
+}: {
+  nota: PurchaseRow
+  onClose: () => void
+  onDone: () => void
+}) {
+  const hariIni = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Makassar' })
+  const [paidOn, setPaidOn] = useState(hariIni)
+  const [method, setMethod] = useState('cash')
+  const [note, setNote] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [pending, startTransition] = useTransition()
+
+  return (
+    <Drawer
+      open
+      title="Tandai Lunas"
+      onClose={onClose}
+      footer={
+        <>
+          <button className="btn btn-ghost" type="button" onClick={onClose}>
+            Batal
+          </button>
+          <button
+            className="btn btn-primary"
+            type="button"
+            disabled={pending}
+            onClick={() =>
+              startTransition(async () => {
+                const res = await markPurchasePaid(nota.id, paidOn, method, note)
+                if (res.ok) onDone()
+                else setError(res.error)
+              })
+            }
+          >
+            {pending ? 'Menyimpan…' : 'Simpan'}
+          </button>
+        </>
+      }
+    >
+      {error && (
+        <div className="empty-note" style={{ marginBottom: 14 }} role="alert">
+          <Icon name="alert" size={16} style={{ marginTop: 1 }} />
+          <div style={{ flex: 1 }}>{error}</div>
+        </div>
+      )}
+
+      <p className="auth-sub" style={{ marginBottom: 14 }}>
+        {nota.code} · {nota.supplierName ?? 'Tanpa pemasok'} · {rupiah(nota.total)}
+        {nota.dueDate ? ` · jatuh tempo ${tanggal(nota.dueDate)}` : ''}
+      </p>
+
+      <div className="field">
+        <label htmlFor="bayarTanggal">Tanggal Dibayar</label>
+        <input
+          id="bayarTanggal"
+          type="date"
+          value={paidOn}
+          max={hariIni}
+          min={nota.purchasedAt}
+          onChange={(e) => setPaidOn(e.target.value)}
+        />
+        <div className="field-hint">
+          Isi tanggal uangnya benar-benar keluar, bukan tanggal hari ini kalau memang berbeda.
+          Tanggal inilah yang dipakai Laporan Keuangan.
+        </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="bayarMetode">Dibayar Pakai</label>
+        <select id="bayarMetode" value={method} onChange={(e) => setMethod(e.target.value)}>
+          {Object.entries(METODE).map(([k, label]) => (
+            <option key={k} value={k}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <div className="field-hint">
+          Transfer ke pemasok tidak mengurangi uang di laci kasir, dan Arus Kas membedakan
+          keduanya.
+        </div>
+      </div>
+
+      <div className="field">
+        <label htmlFor="bayarCatatan">Catatan</label>
+        <input
+          id="bayarCatatan"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Opsional, misalnya nomor bukti transfer"
+        />
+      </div>
+    </Drawer>
   )
 }

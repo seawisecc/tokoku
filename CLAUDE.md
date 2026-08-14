@@ -11,7 +11,7 @@ tampilan, buka file itu dulu.
 ## Kondisi terkini — mulai baca dari sini
 
 Terakhir dikerjakan **13 Agustus 2026**. Semua yang di bawah ini sudah dibangun
-dan **45 migrasinya sudah diterapkan** ke Supabase produksi.
+dan **46 migrasinya sudah diterapkan** ke Supabase produksi.
 
 **Sudah di-deploy ke Vercel** lewat GitHub (`seawisecc/tokoku`), dan pushing ke
 `main` memicu deploy produksi otomatis di `tokoku.seawise.id`. Function berjalan
@@ -1085,6 +1085,33 @@ tersenggol saat menggulir.
 ## Pembelian
 
 Dua keputusan yang disepakati, jangan diubah tanpa alasan baru:
+
+**Pelunasan nota tempo punya tanggal, cara bayar, dan catatan** (migrasi 0046).
+Sampai Arus Kas ada, "Tandai lunas" cukup jadi satu tombol yang menulis jam saat
+itu juga. Begitu `v_cash_flow` membaca `paid_at` untuk menempatkan uang keluar,
+tombol itu jadi salah di tempat yang paling penting: nota yang dibayar Sabtu
+tapi baru ditandai Senin menggeser arus kas dua hari, di laporan yang gunanya
+justru mencocokkan uang dengan tanggal. Sekarang tanggalnya diisi yang
+membayar, dijepit antara tanggal nota dan hari ini.
+
+`paid_at` disimpan pukul **12.00 UTC**, bukan tengah malam: yang dipilih orang
+adalah TANGGAL, sementara kolomnya timestamptz dan view mengubahnya kembali jadi
+tanggal memakai zona waktu toko. Tengah malam UTC mundur sehari untuk zona
+waktu barat, tengah malam lokal maju sehari untuk sebagian zona; tengah hari
+aman ke dua arah.
+
+**`payment_method` di `purchases` sempat mustahil diisi.** Ditambahkan migrasi
+0043 untuk arus kas, tapi `create_purchase` tidak menerimanya, jadi SETIAP
+pembelian tercatat tunai dan transfer ke pemasok muncul sebagai uang yang keluar
+dari laci kasir. 0046 menambahkannya ke RPC dan ke kedua layarnya: drawer
+pembelian (hanya saat "Lunas") dan drawer pelunasan (untuk nota tempo, karena di
+situlah uangnya benar-benar berpindah).
+
+Catatan pelunasan sengaja OPSIONAL: kebanyakan pelunasan tidak punya cerita, dan
+isian wajib yang tidak punya isi akan diisi titik. Tabel `purchase_payments`
+untuk pembayaran SEBAGIAN sengaja belum dibuat — menambahkannya berarti mengubah
+arti "lunas" di Beranda, lonceng notifikasi, dan `v_cash_flow` sekaligus, demi
+kebutuhan yang belum pernah diminta.
 
 **Pembelian langsung menambah stok.** Tidak ada langkah "terima barang"
 terpisah — pemisahan itu berguna kalau yang memesan dan yang menerima orang
@@ -2499,7 +2526,7 @@ instrumentation-client.ts  Sentry browser (session replay MATI)
 sentry.server.config.ts · sentry.edge.config.ts
 proxy.ts           konvensi middleware Next 16
 public/sw.js       service worker — app shell offline
-supabase/migrations/  45 file, Postgres 17
+supabase/migrations/  46 file, Postgres 17
 docs/EMAIL-TEMPLATES-SUPABASE.md  template email Indonesia untuk ditempel di dashboard
 ```
 
