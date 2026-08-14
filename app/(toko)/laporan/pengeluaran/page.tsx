@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LaporanTabs } from '@/components/domain/LaporanTabs'
 import { ExpenseManager, type ExpenseRow } from '@/components/domain/ExpenseManager'
+import { ExportReportButton } from '@/components/domain/ExportReportButton'
 import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
 import { cn } from '@/lib/format'
@@ -142,6 +143,10 @@ export default async function PengeluaranPage({
             {PERIODE_LABEL[p]}
           </Link>
         ))}
+      </div>
+
+      <div className="period-tabs" style={{ marginBottom: 14, justifyContent: 'flex-end' }}>
+        <ExportReportButton jenis="pengeluaran" dari={from} sampai={to} label="Unduh pengeluaran" />
       </div>
 
       <ExpenseManager

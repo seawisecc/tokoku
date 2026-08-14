@@ -197,7 +197,7 @@ export function ImportProducts({ existingSkus }: { existingSkus: string[] }) {
 
   return (
     <div className="card">
-      <p className="field-hint" style={{ marginTop: 0 }}>
+      <p className="impor-intro">
         Berkas CSV dengan kolom <b>sku</b> dan <b>nama</b> (wajib), serta kategori, satuan,
         barcode, harga jual, harga beli, stok, dan stok minimal. Nama kolom boleh ditulis
         bebas huruf besar-kecil. Kolom stok yang dikosongkan berarti stoknya tidak diubah.

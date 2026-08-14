@@ -64,7 +64,7 @@ export function ChangePasswordCard() {
   }, [state])
 
   return (
-    <div className="card">
+    <div className="card form-narrow">
       <div className="cp-head" style={{ marginBottom: buka || sukses ? 14 : 0 }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: 13.5 }}>Kata sandi</div>

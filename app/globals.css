@@ -1162,7 +1162,12 @@ tbody tr:hover { background: var(--color-paper); }
 .pwd-toggle:hover { background: var(--color-paper); color: var(--color-ink); }
 .pwd-toggle[aria-pressed='true'] { color: var(--color-success); }
 
-.field-hint { font-size: 11.5px; color: var(--color-ink-faint); margin-top: 4px; }
+/* `line-height` WAJIB di sini. Kelas ini lahir sebagai keterangan satu baris di
+   bawah isian, jadi tidak pernah butuh tinggi baris sendiri. Begitu dipakai
+   sebagai PARAGRAF penjelasan yang membungkus tiga baris (paling parah di kartu
+   impor CSV), barisnya menempel satu sama lain dan dilaporkan sebagai "tulisannya
+   mepet sekali". 1,55 aman untuk keduanya. */
+.field-hint { font-size: 11.5px; line-height: 1.55; color: var(--color-ink-faint); margin-top: 4px; }
 .field-error { font-size: 11.5px; color: var(--color-coral); margin-top: 4px; font-weight: 600; }
 .field input[aria-invalid='true'] { border-color: var(--color-coral); }
 
@@ -1793,6 +1798,15 @@ tbody tr:hover { background: var(--color-paper); }
   display: flex; align-items: center; justify-content: center;
   background: var(--color-success-soft); color: var(--color-success);
 }
+
+/* Paragraf pembuka kartu impor. Bukan keterangan isian melainkan INSTRUKSI yang
+   harus benar-benar dibaca sebelum orang menyiapkan berkasnya, jadi ia diberi
+   ukuran dan jarak sendiri alih-alih menumpang .field-hint yang 11,5px. */
+.impor-intro {
+  font-size: 12.5px; line-height: 1.65; color: var(--color-ink-soft);
+  margin: 0 0 14px;
+}
+.impor-intro b { color: var(--color-ink); }
 
 /* Baris tombol pilih berkas. Membungkus di layar sempit — tiga tombol sebaris
    butuh ~330px sementara isi kartunya tinggal ~310px di 390px. */

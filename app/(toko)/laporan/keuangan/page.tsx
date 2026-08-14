@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ExportReportButton } from '@/components/domain/ExportReportButton'
 import { LaporanTabs } from '@/components/domain/LaporanTabs'
 import { PlanLock } from '@/components/domain/PlanLock'
 import { Icon } from '@/components/ui/icons'
@@ -232,6 +233,14 @@ export default async function LaporanKeuanganPage({
             {PERIODE_LABEL[p]}
           </Link>
         ))}
+      </div>
+
+      {/* Dua berkas, bukan satu. Laba rugi dan arus kas adalah dua buku yang
+          menjawab pertanyaan berbeda; dipaksa jadi satu lembar, yang
+          menerimanya harus memisahkannya lagi sebelum bisa dipakai. */}
+      <div className="period-tabs" style={{ marginBottom: 14, justifyContent: 'flex-end' }}>
+        <ExportReportButton jenis="laba-rugi" dari={from} sampai={to} outlet={scopeParam} label="Unduh laba rugi" />
+        <ExportReportButton jenis="arus-kas" dari={from} sampai={to} outlet={scopeParam} label="Unduh arus kas" />
       </div>
 
       {/* Laba BERSIH yang jadi angka besar, bukan omzet. Omzet besar dengan

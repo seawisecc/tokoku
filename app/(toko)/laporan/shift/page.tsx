@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PageHeader } from '@/components/layout/PageHeader'
+import { ExportReportButton } from '@/components/domain/ExportReportButton'
 import { LaporanTabs } from '@/components/domain/LaporanTabs'
 import { DataError } from '@/components/domain/DataError'
 import { Icon } from '@/components/ui/icons'
@@ -85,6 +86,15 @@ export default async function LaporanShiftPage({
       />
 
       {error && <DataError apa="Laporan shift" />}
+
+      <div className="period-tabs" style={{ marginBottom: 10, justifyContent: 'flex-end' }}>
+        <ExportReportButton
+          jenis="shift"
+          dari={since.slice(0, 10)}
+          sampai={new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Makassar' })}
+          label="Unduh laporan shift"
+        />
+      </div>
 
       <div className="period-tabs" style={{ marginBottom: 16 }}>
         {PERIODS.map((p) => (

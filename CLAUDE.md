@@ -117,6 +117,8 @@ pekerjaan sebelum dijual".
   dan biaya lain yang tidak menambah stok; lihat "Pengeluaran operasional"
 - **Laporan keuangan** (`/laporan/keuangan`) — arus kas & laba rugi, DUA BUKU
   yang sengaja menjawab angka berbeda; lihat "Laporan keuangan"
+- **Ekspor tiap laporan** ke CSV (penjualan harian, shift, pengeluaran, laba
+  rugi, arus kas) — mengikuti periode & cakupan outlet yang sedang dilihat
 - **Halaman legal** (`/kebijakan-privasi`, `/syarat-ketentuan`) — terbit
 - **Halaman pemasaran** (`/`, `/fitur`) — rincian per paket, tabel perbandingan,
   FAQ; lihat "Halaman fitur" di bawah
@@ -2446,6 +2448,19 @@ Dexie, dan grid kasir jadi kosong tanpa error apa pun. Selain itu tiap kali cach
 dibuang, POS mendaftarkan PERANGKAT BARU — kuota `max_devices` Toko Dewi sempat
 penuh 8/8 hanya karena pengujian. Kalau perlu mereset, pakai jalur aplikasinya
 (`ensureTenant`) atau hapus lewat DevTools, dan periksa kuota perangkat sesudahnya.
+
+**Keterangan `.field-hint` lahir untuk SATU BARIS.** Kelasnya tidak punya
+`line-height` sendiri sampai 14 Agu, jadi begitu dipakai sebagai paragraf
+penjelasan yang membungkus tiga baris, barisnya menempel satu sama lain.
+Dilaporkan pemilik project di kartu impor CSV sebagai "tulisannya mepet
+sekali". Sekarang 1,55, dan instruksi yang memang harus dibaca (bukan sekadar
+keterangan isian) punya kelasnya sendiri: `.impor-intro`, 12,5px.
+
+**Kartu yang berisi BORANG ikut `.form-narrow`.** `ChangePasswordCard` dulu
+`.card` polos sementara `PlatformSettingsForm` di halaman yang sama
+`.card form-narrow`, jadi dua kartu bertumpuk di `/admin/pengaturan` lebarnya
+beda sendiri — dan tombol "Ganti" duduk 1200px dari labelnya. Aturannya sudah
+lama ada di `.form-narrow`; yang belum, kartu pembungkusnya ikut memakainya.
 
 **FK KOMPOSIT mematikan embed PostgREST yang menyebut nama kolom.** Bentuk
 `kategori:category_id(id, name)` dipakai di seluruh project ini, dan ia

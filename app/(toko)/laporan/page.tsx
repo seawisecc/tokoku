@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { ExportReportButton } from '@/components/domain/ExportReportButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { LaporanTabs } from '@/components/domain/LaporanTabs'
 import { DailyRevenueChart, type DailyPoint } from '@/components/charts/DailyRevenueChart'
@@ -222,6 +223,20 @@ export default async function LaporanPage({
       {/* Cakupan outlet — hanya saat cabangnya memang lebih dari satu.
           Ditaruh SEBELUM pemilih periode karena ia menentukan angka siapa yang
           sedang dibaca; periode hanya menentukan rentangnya. */}
+      {/* Unduh mengikuti PERSIS periode dan cakupan yang sedang dilihat. Berkas
+          yang isinya berbeda dari layarnya lebih buruk daripada tidak ada
+          berkas: yang membandingkan keduanya tidak punya cara tahu mana yang
+          benar. */}
+      <div className="period-tabs" style={{ marginBottom: 10, justifyContent: 'flex-end' }}>
+        <ExportReportButton
+          jenis="penjualan"
+          dari={from}
+          sampai={dates[dates.length - 1]}
+          outlet={scopeParam}
+          label="Unduh penjualan harian"
+        />
+      </div>
+
       {multiOutlet && (
         <div className="period-tabs" style={{ marginBottom: 10 }}>
           {session.outlets.map((o) => (
