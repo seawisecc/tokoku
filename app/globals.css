@@ -1425,6 +1425,33 @@ tbody tr:hover { background: var(--color-paper); }
   .sub-banner { padding: 12px 32px; }
 }
 
+/* Ajakan memasang aplikasi (PWA).
+
+   Bentuknya spanduk seperti .sub-banner supaya keduanya tidak berebut cara
+   bicara, tapi warnanya BIRU, bukan amber atau coral. Amber dan coral di
+   aplikasi ini berarti "ada yang harus dikerjakan sekarang"; memakainya untuk
+   sebuah ajakan akan melatih orang mengabaikan warna itu, dan begitu terjadi,
+   peringatan langganan yang sungguhan ikut tidak dibaca. */
+.pwa-bar {
+  /* `flex-start`, sama dengan .sub-banner tepat di atasnya: di 390px
+     kalimatnya membungkus empat baris, dan ikon yang rata TENGAH melayang di
+     tengah paragraf alih-alih menandai awalnya. Dua spanduk bersebelahan yang
+     ikonnya tidak sebaris terbaca seperti salah satunya bergeser. */
+  display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px; font-size: 12.5px; font-weight: 600; line-height: 1.55;
+  background: var(--color-blue-soft); color: var(--color-blue-ink);
+  border-bottom: 1px solid var(--color-line);
+}
+.pwa-bar strong { font-weight: 800; }
+.pwa-ikon { flex: 0 0 auto; display: flex; align-items: center; min-height: 19px; }
+/* `min-width: 0` supaya kalimatnya boleh menyusut dan tombolnya tetap muat;
+   tanpa itu teks panjang mendorong tombol Pasang ke luar layar di 390px. */
+.pwa-teks { flex: 1 1 240px; min-width: 0; }
+.pwa-aksi { display: flex; gap: 6px; flex: 0 0 auto; margin-left: auto; }
+@media (min-width: 1024px) {
+  .pwa-bar { padding: 10px 32px; }
+}
+
 /* Laporan shift di layar sempit — enam kolom tidak muat di 390px, dan yang
    paling penting (selisih kas) justru kolom paling kanan. Ditumpuk seperti
    .trx-table supaya tidak ada yang terdorong ke luar layar. */

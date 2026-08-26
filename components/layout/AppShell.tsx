@@ -3,6 +3,7 @@ import { getNotifications } from '@/lib/notifications'
 import { visibleNav } from '@/lib/navigation'
 import { BottomNav } from './BottomNav'
 import { ImpersonationBanner } from './ImpersonationBanner'
+import { InstallPrompt } from './InstallPrompt'
 import { Sidebar } from './Sidebar'
 import { SubscriptionBanner } from './SubscriptionBanner'
 import { Topbar } from './Topbar'
@@ -54,6 +55,9 @@ export async function AppShell({
           notices={notices}
         />
         <SubscriptionBanner state={subscription} />
+        {/* Sesudah spanduk langganan, bukan sebelumnya: langganan yang habis
+            menghentikan penjualan hari ini, sementara ini cuma ajakan. */}
+        <InstallPrompt />
         <main className="content">{children}</main>
       </div>
       <BottomNav items={items} />

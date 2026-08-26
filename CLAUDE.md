@@ -96,6 +96,8 @@ pekerjaan sebelum dijual".
   sendiri dengan notanya sudah tertulis
 - **Scan barcode** (kamera + alat pemindai) — SUDAH DI-DEPLOY TAPI BELUM
   DIVERIFIKASI SIAPA PUN; lihat bagian bertanda ⚠ di bawah
+- **Bisa dipasang sebagai aplikasi (PWA)** — manifest + ikon + ajakan "Pasang"
+  di dalam aplikasi; lihat "Pasang sebagai aplikasi" di bawah
 - Pembelian & pemasok (`/pembelian`) — lihat "Pembelian" di bawah
 - Konsinyasi (`/pembelian/konsinyasi`) — titip jual, bagi hasil, retur; lihat
   "Konsinyasi" di bawah
@@ -372,7 +374,9 @@ Diperbarui 13 Agu. Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan.
 6. **Payment gateway.** Perubahan paket masih tangan lewat Super Admin.
 7. **Content-Security-Policy.** Header dasar sudah ada di `next.config.ts`
    (nosniff, SAMEORIGIN, referrer policy). CSP butuh nonce untuk script inline
-   Next dan harus diuji per halaman.
+   Next dan harus diuji per halaman. **Ada satu skrip inline milik kita
+   sendiri** di `app/layout.tsx` (penangkap `beforeinstallprompt`) yang ikut
+   butuh nonce — lihat "Pasang sebagai aplikasi".
 8. ~~Onboarding klien baru~~ ✅ **selesai** — panduan awal di beranda.
 8b. ~~Ekspor laporan~~ ✅ **selesai** 14 Agu — CSV & PDF untuk kelima laporan,
    dengan rentang tanggal bebas. Lihat "Ekspor laporan".
@@ -519,6 +523,99 @@ Belum dikerjakan dan mungkin tidak perlu: tabel produk & sinkronisasi masih
 tabel geser di ponsel. Bayangan tepi cuma petunjuk. Kalau nanti terasa kurang,
 langkah berikutnya menumpuk barisnya seperti `.trx-table` — polanya sudah ada,
 tinggal diterapkan per tabel.
+
+## Pasang sebagai aplikasi (PWA)
+
+Dilaporkan pemilik project 26 Agu: situs lain menawarkan "Instal" di pojok
+bilah alamat Chrome, TokoKu tidak. Service worker sudah ada sejak awal, dan di
+situlah salah pahamnya — service worker membuat aplikasi bertahan tanpa
+internet, ia tidak pernah membuatnya bisa dipasang. Yang tidak pernah ada
+adalah **manifest**. Selama manifest kurang satu syarat pun (nama, halaman
+awal, mode tampilan, ikon 192 DAN 512), tombol instalnya tidak muncul dan
+**tidak ada satu pun pesan yang menjelaskan kenapa** — kegagalan senyap yang
+sejenis dengan URL Configuration Supabase di "Reset kata sandi".
+
+`app/manifest.ts`, bukan berkas statis di `public/`: Next ikut menyisipkan
+`<link rel="manifest">` ke setiap halaman sendiri. Manifest yang ada tapi tidak
+pernah ditautkan sama saja dengan tidak ada.
+
+Yang sudah diputuskan dan jangan diubah tanpa alasan:
+
+- **`start_url` dan `id` keduanya `/`.** `/` adalah pengalih menurut peran, jadi
+  Super Admin maupun sesi yang habis mendarat di tempat yang benar. `id` dikunci
+  terpisah karena tanpa ia identitas aplikasi diambil dari `start_url` —
+  mengubah halaman awal suatu hari nanti akan terbaca sebagai APLIKASI BARU,
+  dan yang sudah terpasang di HP klien tidak ikut diperbarui.
+- **Ikon maskable TERPISAH dari ikon biasa**, bukan `purpose: 'any maskable'`.
+  Launcher Android memotong yang maskable sesuai bentuknya sendiri; logo TokoKu
+  memenuhi kanvas, jadi keempat sudutnya hilang. Versi maskable-nya dikecilkan
+  ke 62% di atas latar `#0E2419` supaya potongannya tidak pernah memakan huruf
+  T-nya. Dibuat dari `public/brand/tokoku.png` lewat sharp; ada di
+  `public/icons/`.
+- **`orientation: 'any'`.** `portrait` akan MENGUNCI layar kasir yang dipakai
+  di tablet mendatar.
+- **`background_color` = `--color-paper`, bukan putih.** Kalau berbeda dari
+  latar aplikasi, tiap kali dibuka ada kedipan putih yang terbaca seperti
+  aplikasi gagal muat.
+
+### Ajakannya harus dari dalam aplikasi
+
+`components/layout/InstallPrompt.tsx`, dirender di AppShell tepat di bawah
+`SubscriptionBanner`. Tombol instal bawaan Chrome adalah ikon kecil tanpa
+tulisan di pojok bilah alamat, dan di Chrome Android ia bersembunyi di dalam
+menu tiga titik — pemilik warung tidak akan pernah menemukannya.
+
+Ditaruh di AppShell, BUKAN di beranda: beranda dijaga izin `reports`, jadi
+kasir tidak akan pernah melihatnya. Padahal kasir justru yang paling butuh —
+layar kasir yang dibuka dari layar utama tidak bisa tertutup tab lain dan tidak
+hilang saat tombol Home ditekan. Celah izin yang sama sudah pernah terjadi di
+Transfer Stok dan di Pengeluaran.
+
+- **Eventnya ditangkap SKRIP INLINE di `<head>`** (`app/layout.tsx`), lalu
+  dititipkan di `window.__tokokuPasang`. Ini bukan kehati-hatian berlebih:
+  diuji langsung di Chrome, pendengar yang dipasang komponen React KEHILANGAN
+  eventnya. Chrome menyalakan `beforeinstallprompt` sekali saja, segera setelah
+  manifest dibaca dan service worker aktif — pada kunjungan kedua dan
+  seterusnya service workernya sudah hidup sejak awal, jadi eventnya lewat jauh
+  sebelum hidrasi. Dan yang hilang bukan sekadar spanduk: tanpa event itu
+  tersimpan, `prompt()` tidak bisa dipanggil lagi sama sekali.
+- **Komponennya mendengar DUA kabar.** Yang bernama `tokoku:pasang-siap` datang
+  dari skrip head (kunjungan kedua dan seterusnya); yang asli menangkap
+  kunjungan PERTAMA, di mana service worker baru didaftarkan setelah hidrasi
+  sehingga Chrome baru menyalakan eventnya sesudah komponennya hidup.
+- **Tidak pernah muncul kalau perangkatnya tidak bisa memasang.** Tombol
+  "Pasang" yang terlihat lalu tidak melakukan apa-apa adalah cacat yang sudah
+  pernah terjadi di sini (lonceng notifikasi di wireframe).
+- **iOS dapat PETUNJUK, bukan tombol.** Apple tidak mengizinkan pemasangan
+  lewat tombol; satu-satunya jalan adalah menu Bagikan. Dibatasi Safari saja:
+  di dalam Chrome atau WhatsApp iOS menu itu tidak ada, dan petunjuk yang
+  mengarah ke tombol yang tidak ada lebih membingungkan daripada diam.
+  `appleWebApp` di root layout yang membuat pintasannya terbuka tanpa bilah
+  alamat; `statusBarStyle` sengaja BUKAN `black-translucent` — gaya itu menaruh
+  isi halaman di bawah jam dan baterai, jadi baris pertama topbar tertutup.
+- **Spanduknya BIRU**, bukan amber atau coral. Dua warna itu di aplikasi ini
+  berarti "ada yang harus dikerjakan sekarang"; memakainya untuk sebuah ajakan
+  melatih orang mengabaikannya, dan begitu terjadi, peringatan langganan yang
+  sungguhan ikut tidak dibaca. Alasan yang sama dengan lencana notifikasi yang
+  hanya menghitung `danger` + `warn`.
+- **"Nanti saja" menutupnya SELAMANYA** lewat localStorage, dan pembacaannya
+  dibungkus try/catch: di mode penyamaran sebagian browser MELEMPAR saat
+  localStorage disentuh. Tanpa itu seluruh AppShell gagal dirender karena
+  sebuah spanduk ajakan.
+
+**Sudah diuji di Chrome sungguhan** (26 Agu, `npm start`): manifest terbit di
+`/manifest.webmanifest` dan tertaut di setiap halaman, ketiga ikonnya terjangkau
+200, service worker bercakupan `/` (jadi menaungi `start_url`), dan
+`beforeinstallprompt` benar-benar menyala serta **tertangkap skrip head** —
+percobaan sebelumnya dengan pendengar biasa mengembalikan false, dan itulah
+yang membuktikan skrip head-nya perlu. Spanduknya diukur di 390px dan 1240px
+lewat halaman uji: teks membungkus, tombol turun ke barisnya sendiri, tanpa
+geser horizontal.
+
+**Belum diuji:** pemasangan sungguhan di HP (perlu sesi toko, dan sandinya
+memang tidak ada di repo). Yang paling berguna dari pemilik project: buka
+`tokoku.seawise.id` di Chrome Android setelah deploy, pastikan spanduk birunya
+muncul dan tombol Pasang benar-benar memunculkan kotak pemasangan.
 
 ## Logo toko
 
@@ -2626,6 +2723,7 @@ app/
   about/  setup/   halaman publik & status koneksi
 components/
   layout/          AppShell, Sidebar (memuat brand), Topbar, BottomNav,
+                   InstallPrompt (ajakan pasang PWA, hanya kalau bisa dipasang),
                    OutletSwitcher (toko + outlet), ImpersonationBanner,
                    NotificationBell (isinya dari lib/notifications.ts)
   ui/icons.tsx     registry ikon dari wireframe (+ whatsapp, star, eye/eyeOff)
@@ -2676,6 +2774,8 @@ instrumentation.ts   register Sentry server/edge + onRequestError
 instrumentation-client.ts  Sentry browser (session replay MATI)
 sentry.server.config.ts · sentry.edge.config.ts
 proxy.ts           konvensi middleware Next 16
+app/manifest.ts    manifest PWA — tanpa ini tombol "Instal" tidak pernah muncul
+public/icons/      ikon PWA 192/512 + maskable (dari public/brand/tokoku.png)
 public/sw.js       service worker — app shell offline
 supabase/migrations/  46 file, Postgres 17
 docs/EMAIL-TEMPLATES-SUPABASE.md  template email Indonesia untuk ditempel di dashboard
