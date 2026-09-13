@@ -2,144 +2,116 @@
 
 Formulir: `sales-tooling.midtrans.com/merchant-form/83fff262-7967-476d-b271-cc1a3be77eb3`
 
+Terakhir diperbarui **13 September 2026**.
+
 ---
 
-## 1. Yang diminta formulir, dan jawabannya
+## 1. Keadaan sekarang: apa yang sudah beres
 
-### Pertanyaan 1 (wajib)
-> "Saya sudah menyesuaikan URL kembali sesuai yang terakhir didaftarkan dengan cara
-> klik Pengaturan → Pengaturan Umum → URL → Simpan"
-
-**Jangan pilih "Ya" sebelum benar-benar dikerjakan.** Buka dashboard Midtrans lebih dulu:
-
-1. Masuk ke `dashboard.midtrans.com`
-2. Pengaturan → Pengaturan Umum → URL
-3. Pastikan isinya `https://tokoku.seawise.id` (tanpa garis miring di belakang, sama persis
-   dengan yang didaftarkan saat pengajuan)
-4. Tekan Simpan, walaupun isinya sudah benar. Formulir ini memang meminta tombol Simpan ditekan.
-5. Baru pilih **Ya** di formulir.
-
-Sekalian periksa di halaman yang sama, karena ini yang akan dites reviewer:
-
-| Kolom | Diisi |
+| | Status |
 |---|---|
-| Payment Notification URL | `https://tokoku.seawise.id/api/pembayaran/midtrans/notifikasi` |
-| Finish Redirect URL | `https://tokoku.seawise.id/pengaturan/langganan?status=berhasil` |
-| Unfinish Redirect URL | `https://tokoku.seawise.id/pengaturan/langganan?status=tertunda` |
-| Error Redirect URL | `https://tokoku.seawise.id/pengaturan/langganan?status=gagal` |
+| Pembayaran langganan di aplikasi | ✅ menyala di produksi, kunci Sandbox |
+| Diuji ujung ke ujung | ✅ satu pembayaran BCA virtual account benar-benar mengaktifkan langganan |
+| Alamat website di dashboard **Production** | ✅ dikembalikan ke `https://tokoku.seawise.id` |
+| Payment Notification URL (Production & Sandbox) | ✅ terdaftar |
+| Finish Redirect URL (Production & Sandbox) | ✅ terdaftar |
+| Snap Successful / Failed payment (Production & Sandbox) | ✅ terdaftar |
+| Dokumen PDF untuk diunggah | ✅ dibuat, tinggal diisi & ditandatangani |
+| **Akun peninjauan untuk Midtrans** | ❌ **belum dibuat** |
 
-### Pertanyaan 2 (tidak wajib)
-> "Jika ingin menggunakan URL baru, isi Form Perubahan Data terlampir, tandatangani, unggah."
-
-**Kosongkan.** Alamatnya tidak berubah, jadi tidak perlu Form Perubahan Data. Formulir ini
-baru diperlukan kalau nanti pindah domain atau menambah domain baru, dan formnya harus
-diminta dulu ke `support@midtrans.com`.
-
-### Dokumen tambahan (wajib)
-> "Mohon bantuannya untuk melampirkan kredensial akun yang dapat kami gunakan untuk
-> mengakses platform Anda dan melakukan tes transaksi URL https://tokoku.seawise.id/"
-
-Unggah **`Data-Susulan-Onboarding-TokoKu-Midtrans.pdf`** (dari berkas HTML di folder yang
-sama, lihat bagian 3 di bawah).
+**Penyebab formulir ini muncul sudah ketemu dan sudah diperbaiki.** Pada dashboard
+Production, kolom alamat website sempat berisi `https://www.seawise.id/en`, bukan
+`https://tokoku.seawise.id` yang didaftarkan saat pengajuan. Itulah "perubahan
+website selama proses review" yang disebut formulirnya. Sudah dikembalikan dan
+disimpan.
 
 ---
 
-## 2. Yang harus disiapkan sebelum mengisi
+## 2. Yang tinggal dikerjakan sebelum kirim
 
-### a. Akun peninjauan untuk Midtrans
+### a. Buat akun peninjauan
 
-Jangan berikan akun pribadi, akun Super Admin, atau akun Toko Dewi. Buat akun baru khusus:
+Jangan pakai akun Toko Dewi atau akun pribadi. Daftar toko baru:
 
-1. Daftar toko baru lewat `https://tokoku.seawise.id/daftar-toko`
+1. Buka `https://tokoku.seawise.id/daftar-toko`
 2. Saran isian:
    - Nama toko: `Toko Contoh Midtrans`
    - Email: alamat yang bisa dipantau, misalnya `midtrans.review@seawise.id`
    - Kata sandi: kuat, tapi mudah diketik ulang oleh reviewer
-3. Isi datanya supaya halaman tidak kosong: impor beberapa produk lewat
-   Pengaturan → Impor & Backup, lalu catat 2 sampai 3 transaksi di Kasir
-4. Dari Super Admin, atur masa langganan akun ini supaya tidak habis di tengah peninjauan
-5. Tulis email dan kata sandinya di Bagian 2 dokumen PDF
+3. Konfirmasi emailnya, lalu masuk sekali supaya tokonya benar-benar terbentuk
 
-Setelah peninjauan selesai: ganti kata sandinya dan nonaktifkan tokonya. Ini sudah
-dijanjikan di dalam dokumen.
-
-### b. Data yang perlu diisi tangan di dokumen
-
-| Halaman | Yang kosong |
-|---|---|
-| Sampul | Nama merchant, penanggung jawab, tanggal |
-| Bagian 1 | Domain terdaftar atas nama siapa, penyedia hosting |
-| Bagian 2 | Email akun, kata sandi, nama toko peninjauan, berlaku sampai |
-| Bagian 3 | Lingkungan pengujian, kunci yang dipakai, catatan |
-| Bagian 4 | Nama lengkap, jabatan, NIK, badan usaha, alamat, telepon, email, tanggal, tanda tangan |
-
-Nama badan usaha dan alamat **harus sama persis** dengan yang dipakai saat pengajuan awal
-di Midtrans. Beda satu kata saja bisa memicu pertanyaan susulan lagi.
-
----
-
-## 3. Cara membuat PDF-nya
+Setelah itu jalankan ini supaya halamannya tidak kosong saat ditelusuri reviewer:
 
 ```bash
-open Data-Susulan-Onboarding-TokoKu-Midtrans.html
+node scripts/seed-review-tenant.mjs "Toko Contoh Midtrans"
 ```
 
-Lalu di browser: Cetak → Tujuan "Simpan sebagai PDF" → Ukuran A4 → **centang "Grafik latar
-belakang"** (kalau tidak, warna dan tabelnya hilang) → Simpan sebagai
-`Data-Susulan-Onboarding-TokoKu-Midtrans.pdf` di folder ini.
+Skrip itu mengisi kategori, 12 produk dengan barcode, stok, satu pelanggan, dan
+beberapa transaksi di hari-hari terakhir, supaya Beranda, Kasir, Produk, dan
+Laporan semuanya tampil terisi. Jalankan `--dry` dulu kalau mau melihat rencananya
+tanpa menulis apa pun.
 
-Isian yang kosong sengaja dibuat sebagai garis titik-titik supaya bisa ditulis tangan
-setelah dicetak, atau diisi lewat aplikasi PDF sebelum ditandatangani.
+### b. Isi dokumennya
 
----
+Buka `Data-Susulan-Onboarding-TokoKu-Midtrans.pdf` (sudah dibuat, 5 halaman).
+Yang masih kosong tinggal ini:
 
-## 4. Urutan pengerjaan yang disarankan
+| Halaman | Isian |
+|---|---|
+| Sampul | Penanggung jawab |
+| Bagian 1 | Domain `seawise.id` terdaftar atas nama siapa |
+| Bagian 2 | Email akun peninjauan, kata sandinya, nama tokonya, berlaku sampai kapan |
+| Bagian 5 | Nama lengkap, jabatan, NIK, nama badan usaha, alamat usaha, telepon, email, tanggal, tanda tangan di atas materai Rp 10.000 |
 
-1. Buat akun peninjauan dan isi datanya
-2. Rapikan URL di dashboard Midtrans, tekan Simpan
-3. Isi dokumen, cetak, tanda tangan di atas materai, pindai jadi PDF
-4. Buka formulir, pilih **Ya** pada pertanyaan 1, kosongkan pertanyaan 2
-5. Unggah PDF pada Dokumen Tambahan
-6. Kirim
+Sisanya sudah terisi otomatis, termasuk nama merchant, tanggal dokumen, seluruh
+daftar alamat, dan keterangan lingkungan pengujian.
 
----
+**Nama badan usaha dan alamat harus sama persis** dengan yang dipakai saat
+pengajuan awal di Midtrans. Beda satu kata bisa memicu pertanyaan susulan lagi.
 
-## 5. Pembayarannya sudah ada, tapi harus dinyalakan dulu
-
-Reviewer Midtrans diminta **melakukan tes transaksi**. Halaman checkout,
-tagihan, dan pemberitahuan pembayarannya sudah dibangun (13 Sep) dan sudah diuji
-sampai ke database, tapi **kuncinya belum dipasang dan kodenya belum di-deploy**.
-Selama itu belum dikerjakan, halaman Langganan masih menampilkan tombol WhatsApp
-seperti sebelumnya, dan reviewer tidak akan menemukan apa pun untuk dites.
-
-Kerjakan ini **sebelum** mengirim formulir:
-
-1. Ambil kunci **Sandbox** di dashboard Midtrans → Settings → Access Keys
-2. Pasang di Vercel (Production): `MIDTRANS_SERVER_KEY`,
-   `MIDTRANS_IS_PRODUCTION=false`, dan `SUPABASE_SERVICE_ROLE_KEY`
-3. Daftarkan keempat alamat di dashboard Midtrans → Settings → Configuration
-   (daftarnya ada di bagian 1 di atas)
-4. Deploy, lalu coba sendiri satu kali: masuk sebagai pemilik toko, buka
-   Pengaturan → Langganan, tekan **Bayar Sekarang**, dan pastikan halaman
-   pembayaran Midtrans benar-benar terbuka
-5. Selesaikan pembayarannya dengan kartu uji Sandbox, lalu pastikan halaman
-   Langganan menyebut langganannya aktif
-
-Baru setelah langkah 5 berhasil, kirim formulirnya.
-
-Rinciannya ada di CLAUDE.md, bagian "Yang harus dikerjakan pemilik project".
+**Periksa baris "Penyedia hosting" di Bagian 1.** Saya isikan "Vercel (aplikasi)
+dan Supabase (basis data), keduanya dengan server di kawasan Asia Tenggara".
+Itu benar, tapi di halaman legal publik nama vendor sengaja tidak disebut atas
+keputusan pemilik project. Untuk dokumen onboarding yang privat ini menyebutnya
+wajar dan diharapkan, tapi silakan dicoret kalau tidak berkenan.
 
 ---
 
-## 6. Kenapa memakai kunci Sandbox di alamat produksi
+## 3. Mengisi formulirnya
 
-Kunci Production baru diterbitkan setelah merchant disetujui, sementara
-peninjauan ini justru memerlukan tes transaksi yang selesai. Jadi urutannya
-memang harus begitu, dan ini hal yang biasa pada onboarding Midtrans.
+| Bagian formulir | Jawaban |
+|---|---|
+| Pertanyaan 1 (wajib) | **Ya** |
+| Pertanyaan 2, Form Perubahan Data | **Kosongkan.** Alamatnya tidak berubah |
+| Dokumen Tambahan (wajib) | Unggah `Data-Susulan-Onboarding-TokoKu-Midtrans.pdf` |
 
-Supaya tidak ada pengguna sungguhan yang salah mengira sedang membayar, aplikasi
-memasang peringatan amber tepat di atas tombol bayar selama mode Sandbox aktif.
-Peringatan itu hilang sendiri begitu `MIDTRANS_IS_PRODUCTION` disetel `true`.
+Hanya satu berkas yang diunggah. `Alur-Transaksi-TokoKu-Midtrans.pdf` sudah dikirim
+sebelumnya, tidak perlu diulang. Kunci API tidak pernah masuk ke formulir mana pun.
 
-Hal ini sudah dijelaskan di Bagian 3 dokumen PDF-nya, jadi tidak perlu
-disebutkan lagi di badan formulir.
+Kalau PDF-nya perlu dibuat ulang setelah diedit:
+
+```bash
+"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
+  --headless --disable-gpu --no-pdf-header-footer \
+  --print-to-pdf="$PWD/Data-Susulan-Onboarding-TokoKu-Midtrans.pdf" \
+  "file://$PWD/Data-Susulan-Onboarding-TokoKu-Midtrans.html"
+```
+
+---
+
+## 4. Setelah merchant disetujui
+
+1. Ambil kunci **Production** di dashboard Midtrans → Settings → Access Keys →
+   General Credentials
+2. Ganti `MIDTRANS_SERVER_KEY` di Vercel, dan setel `MIDTRANS_IS_PRODUCTION=true`
+3. Spanduk amber "Mode uji coba" di halaman Langganan hilang sendiri
+4. Coba satu pembayaran sungguhan bernilai kecil, lalu batalkan atau biarkan
+
+Keempat alamat di dashboard Production **sudah didaftarkan**, jadi langkah itu
+tidak perlu diulang.
+
+**Jangan menebak lingkungan dari bentuk kuncinya.** Kunci Sandbox akun ini tidak
+berawalan `SB-`, bentuknya `Mid-server-…` persis seperti kunci Production. Yang
+menentukan hanya `MIDTRANS_IS_PRODUCTION`, yang memilih alamat API. Salah setel
+berarti kunci dikirim ke endpoint yang salah dan dijawab 401 tanpa penjelasan
+yang jelas di layar.

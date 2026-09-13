@@ -413,12 +413,22 @@ bentuk kuncinya; yang menentukan cuma `MIDTRANS_IS_PRODUCTION`, yang memilih
 alamat API. Salah setel berarti kunci Sandbox dikirim ke endpoint Production
 dan dijawab 401 tanpa penjelasan yang jelas di layar.
 
+**Penyebab formulir data susulan sudah ketemu dan sudah diperbaiki.** Pada
+dashboard **Production**, kolom alamat website berisi `https://www.seawise.id/en`,
+bukan `https://tokoku.seawise.id` yang didaftarkan saat pengajuan. Itulah
+"perubahan website selama proses review" yang dikeluhkan formulirnya, dan itu
+tidak akan pernah terlihat dari memeriksa dashboard Sandbox saja — keduanya
+punya pengaturan yang benar-benar terpisah. Sudah dikembalikan dan disimpan,
+berikut ketiga alamat lainnya.
+
 **Sisa pekerjaannya tinggal dua, dan keduanya menunggu Midtrans:**
 
 1. Kirim kredensial akun peninjauan lewat formulir data susulan. Dokumennya ada
-   di `Data-Susulan-Onboarding-TokoKu-Midtrans.html`, cara mengisi formulirnya
-   di `PANDUAN-ISI-FORMULIR-MIDTRANS.md`. Akun peninjauannya sendiri **belum
-   dibuat**.
+   di `Data-Susulan-Onboarding-TokoKu-Midtrans.html` (+ PDF-nya), cara mengisi
+   formulirnya di `PANDUAN-ISI-FORMULIR-MIDTRANS.md`. Akun peninjauannya sendiri
+   **belum dibuat** — didaftarkan lewat layar oleh pemilik project (butuh kata
+   sandi, jadi bukan pekerjaan agen), lalu diisi
+   `scripts/seed-review-tenant.mjs`.
 2. Setelah merchant disetujui: ganti ke kunci Production dan setel
    `MIDTRANS_IS_PRODUCTION=true`. Spanduk amber "Mode uji coba" hilang sendiri,
    dan keempat alamat di atas harus didaftarkan ulang di dashboard
@@ -2711,6 +2721,9 @@ node scripts/retire-demo.mjs                    # lapor saja (kering)
 node scripts/retire-demo.mjs --confirm          # pensiunkan tenant demo sungguhan
 node scripts/retire-demo.mjs --confirm --only "X" --keep "Toko Dewi"
                                                 # pensiunkan satu toko, lindungi akun toko lain
+node scripts/seed-review-tenant.mjs "Toko Contoh Midtrans" --dry
+node scripts/seed-review-tenant.mjs "Toko Contoh Midtrans"
+                                                # isi toko peninjauan Midtrans dengan data contoh
 ```
 
 ## Stack
@@ -3027,7 +3040,9 @@ lib/
   supabase/        client (RLS) · server (RLS) · admin (LEWAT RLS, server-only)
                    public (TANPA cookie — halaman publik yang boleh di-cache)
 scripts/           seed-demo.mjs, grant-platform-admin.mjs, recovery-link.mjs,
-                   retire-demo.mjs (pensiunkan tenant demo — kering by default)
+                   retire-demo.mjs (pensiunkan tenant demo — kering by default),
+                   seed-review-tenant.mjs (isi toko peninjauan Midtrans;
+                   menolak Toko Dewi & Leuca, dan TIDAK membuat akun)
 instrumentation.ts   register Sentry server/edge + onRequestError
 instrumentation-client.ts  Sentry browser (session replay MATI)
 sentry.server.config.ts · sentry.edge.config.ts
