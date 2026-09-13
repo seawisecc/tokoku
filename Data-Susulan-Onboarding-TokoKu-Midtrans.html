@@ -291,6 +291,7 @@ table.t.fill td { padding: 7px 8px; }
     <tr><td>Alamat email</td><td><span class="isi full"></span></td></tr>
     <tr><td>Kata sandi</td><td><span class="isi full"></span></td></tr>
     <tr><td>Peran di dalam aplikasi</td><td>Pemilik toko, akses penuh termasuk halaman Langganan</td></tr>
+    <tr><td>Paket saat ini</td><td>Growth, masih dalam masa coba gratis</td></tr>
     <tr><td>Nama toko peninjauan</td><td><span class="isi full"></span></td></tr>
     <tr><td>Berlaku sampai</td><td><span class="isi full"></span></td></tr>
   </table>
@@ -305,10 +306,10 @@ table.t.fill td { padding: 7px 8px; }
   <h3>Yang bisa ditelusuri dengan akun ini</h3>
   <table class="t">
     <tr><th>Bagian aplikasi</th><th>Yang dapat diperiksa</th></tr>
-    <tr><td>Beranda</td><td>Ringkasan penjualan harian, pengingat, dan panduan awal toko.</td></tr>
+    <tr><td>Beranda</td><td>Omset hari ini, peringatan stok menipis, dan daftar transaksi terbaru.</td></tr>
     <tr><td>Kasir</td><td>Layar penjualan, keranjang, cetak struk, dan pemindai barcode.</td></tr>
-    <tr><td>Produk &amp; Stok</td><td>Daftar barang, kartu stok, opname, dan transfer antar cabang.</td></tr>
-    <tr><td>Laporan</td><td>Penjualan, shift kasir, pengeluaran, arus kas, dan laba rugi.</td></tr>
+    <tr><td>Produk &amp; Stok</td><td>Daftar barang beserta stoknya, kartu stok per produk, dan opname.</td></tr>
+    <tr><td>Laporan</td><td>Penjualan harian dengan grafik, laba kotor, produk terlaris, dan metode bayar.</td></tr>
     <tr><td>Pengaturan &gt; Langganan</td><td><b>Halaman checkout langganan.</b> Di sinilah tes transaksi dilakukan.</td></tr>
     <tr><td>Kebijakan &amp; Syarat</td><td>Dapat dibuka tanpa akun, tertaut di kaki halaman.</td></tr>
   </table>
@@ -338,7 +339,7 @@ table.t.fill td { padding: 7px 8px; }
     <tr><td class="num">3</td><td>Pilih paket dan masa bayar</td><td>Pilih salah satu paket (Starter Rp 99.000, Growth Rp 249.000, atau Enterprise Rp 749.000 per bulan) dan jumlah bulan yang dibayar.</td></tr>
     <tr><td class="num">4</td><td>Periksa ringkasan tagihan</td><td>Sistem menampilkan nama paket, harga per bulan, jumlah bulan, total yang harus dibayar, dan tanggal berakhir langganan bila pembayaran berhasil.</td></tr>
     <tr><td class="num">5</td><td>Tekan Bayar Sekarang</td><td>Halaman pembayaran Midtrans (Snap) terbuka di atas halaman Langganan, memuat nomor pesanan dan nominal tagihan.</td></tr>
-    <tr><td class="num">6</td><td>Selesaikan pembayaran</td><td>Pilih metode pembayaran, lalu selesaikan sesuai petunjuk metode tersebut.</td></tr>
+    <tr><td class="num">6</td><td>Selesaikan pembayaran</td><td>Pilih metode pembayaran, lalu selesaikan sesuai petunjuknya. Karena lingkungannya Sandbox, pembayaran dapat diselesaikan dengan kartu uji Midtrans, atau untuk virtual account lewat simulator di simulator.sandbox.midtrans.com. Jalur virtual account sudah kami uji sendiri sampai langganan aktif.</td></tr>
     <tr><td class="num">7</td><td>Periksa hasilnya</td><td>Pengguna dikembalikan ke halaman Langganan. Status langganan, tanggal berakhir, dan riwayat tagihan ikut terbarui setelah pemberitahuan dari Midtrans diterima dan diperiksa keasliannya.</td></tr>
   </table>
 
