@@ -18,8 +18,9 @@ checkout, pemberitahuan server ke server, penyelarasan), dan satu cacat
 otorisasi lama yang ikut ketahuan saat mengujinya — `can_manage()` menjawab
 NULL untuk orang yang bukan anggota toko, sehingga setiap gerbang PL/pgSQL yang
 memakainya lolos diam-diam. Lihat "Pembayaran langganan" dan "`can_manage()`
-tidak boleh NULL". Kodenya **belum di-deploy** dan kunci Midtrans belum dipasang
-di Vercel; lihat "Yang harus dikerjakan pemilik project".
+tidak boleh NULL". **Sudah di-deploy dan sudah diuji ujung ke ujung dengan uang
+sungguhan palsu** (Sandbox): satu pembayaran BCA virtual account benar-benar
+mengaktifkan langganan lewat pemberitahuan resmi Midtrans.
 
 **Yang dikerjakan 14 Agu**, semuanya sudah di produksi: modul keuangan
 (pengeluaran operasional → arus kas & laba rugi), pelunasan nota tempo yang
@@ -313,12 +314,34 @@ nomor pesanan asing dijawab 200 supaya Midtrans berhenti mengulang.
 Tata letak diukur di 390px dan 1240px lewat iframe: nol geser horizontal, empat
 pilihan bulan muat, nominal tagihan terlihat penuh.
 
-**BELUM DIUJI: panggilan sungguhan ke Midtrans.** `snapCreateTransaction()`
-belum pernah menerima jawaban dari Midtrans karena belum ada kunci. Bentuk
-muatannya mengikuti dokumentasi Snap, tapi itu tetap satu-satunya bagian yang
-belum dibuktikan bekerja. Yang paling berguna dari pemilik project: pasang kunci
-Sandbox, tekan Bayar Sekarang sekali, dan pastikan halaman Midtrans benar-benar
-terbuka.
+### Uji ujung ke ujung di produksi (13 Sep, Sandbox)
+
+Dikerjakan setelah deploy, memakai sesi pemilik Toko Dewi di produksi. **Ini yang
+menutup satu-satunya bagian yang tadinya belum terbukti**, yaitu panggilan
+sungguhan ke Midtrans:
+
+1. Tombol Bayar Sekarang membuka `app.sandbox.midtrans.com` dengan nomor pesanan
+   `TKS-20260913-000001`, nama merchant "Seawise Studio", Rp 249.000, dan
+   hitung mundur 24 jam. Snap menerima kunci di Vercel, jadi kuncinya cocok.
+2. Dipilih BCA virtual account. **Midtrans mengirim pemberitahuan `pending`
+   sendiri**, tanda tangannya lolos, dan tagihan menyimpan `payment_type`,
+   `transaction_id`, serta nomor VA dari `raw_notification` — tanpa
+   mengaktifkan langganan apa pun. Lolosnya tanda tangan itulah bukti terkuat
+   bahwa `MIDTRANS_SERVER_KEY` di Vercel memang milik akun ini.
+3. Dibayar lewat `simulator.sandbox.midtrans.com`. Inquiry menampilkan atas nama
+   "Rina Kartika" senilai 249000.00, cocok dengan tagihannya.
+4. Pemberitahuan `settlement` masuk: tagihan jadi `paid`, dan **periodenya
+   2027-05-01 sampai 2027-06-01** — bukan dihitung dari hari ini. Itu bukti
+   aturan "perpanjangan menumpuk" bekerja, karena langganan Toko Dewi memang
+   berakhir 2027-04-30. `subscription_ends_at` tersimpan 23:59:59 waktu toko.
+5. Halaman Langganan menyebut "Pembayaran diterima. Langganan sudah aktif sampai
+   01 Jun 2027", riwayat tagihan menampilkan "Lunas · bank_transfer", dan riwayat
+   langganan menampilkan "Perpanjangan · Growth · Rp 249.000".
+
+**Seluruh data ujinya dikembalikan sesudahnya**: tagihan dihapus, peristiwa
+langganannya dihapus, dan `subscription_ends_at` Toko Dewi dikembalikan ke
+2027-04-30. Diperiksa: 0 tagihan tersisa di seluruh database, dan riwayat
+langganan Toko Dewi kembali 3 baris seperti semula.
 
 ## `can_manage()` tidak boleh NULL
 
@@ -362,28 +385,44 @@ syarat, dan itu diperbaiki di `set_member_pin` dengan `is distinct from`.
 sebagai gerbang harus SELALU menjawab true atau false. Kalau ia boleh NULL,
 setiap `if not <gerbang>` yang memakainya akan lolos diam-diam.
 
-## Yang harus dikerjakan pemilik project (pembayaran Midtrans)
+## Keadaan pembayaran Midtrans sekarang
 
-Kodenya selesai dan migrasinya sudah di produksi, tapi **belum di-deploy** dan
-kuncinya belum dipasang. Urutannya:
+**Sudah menyala di produksi dengan kunci Sandbox** (13 Sep).
 
-1. **Ambil kunci Sandbox** di dashboard Midtrans → Settings → Access Keys.
-2. **Pasang env di Vercel** (Production): `MIDTRANS_SERVER_KEY`,
-   `MIDTRANS_IS_PRODUCTION=false`, dan **`SUPABASE_SERVICE_ROLE_KEY`** yang
-   sebelumnya sempat dicatat boleh dihapus. Tanpa yang terakhir, pemberitahuan
-   pembayaran masuk tapi langganannya tidak pernah aktif.
-3. **Daftarkan alamat di dashboard Midtrans** → Settings → Configuration:
-   - Payment Notification URL: `https://tokoku.seawise.id/api/pembayaran/midtrans/notifikasi`
-   - Finish: `https://tokoku.seawise.id/pengaturan/langganan?status=berhasil`
-   - Unfinish: `…?status=tertunda` · Error: `…?status=gagal`
-4. **Deploy**, lalu masuk sebagai pemilik toko dan tekan Bayar Sekarang sekali.
-   Yang dipastikan: halaman Midtrans benar-benar terbuka, dan setelah dibayar
-   dengan kartu uji Sandbox, halaman Langganan menyebut langganannya aktif.
-5. Baru setelah itu kredensial akun peninjauan dikirim ke Midtrans. Dokumennya
-   ada di `Data-Susulan-Onboarding-TokoKu-Midtrans.html` dan cara mengisi
-   formulirnya di `PANDUAN-ISI-FORMULIR-MIDTRANS.md`.
-6. Setelah merchant disetujui: ganti ke kunci Production dan setel
-   `MIDTRANS_IS_PRODUCTION=true`. Spanduk amber "Mode uji coba" hilang sendiri.
+Env di Vercel Production: `MIDTRANS_SERVER_KEY` (Sandbox),
+`MIDTRANS_IS_PRODUCTION=false`, `SUPABASE_SERVICE_ROLE_KEY` (ternyata memang
+masih terpasang sejak awal, jadi tidak perlu ditambah).
+
+Terdaftar di dashboard Midtrans Sandbox, akun `seawise.cc@gmail.com`, merchant
+"Seawise Studio". Menu URL-nya **bukan** di Settings → Configuration seperti
+dashboard lama; di dashboard baru tempatnya:
+
+| Yang diatur | Di mana |
+|---|---|
+| Payment Notification URL | Settings → **Payment** → Notification URL |
+| Finish Redirect URL | Settings → **Payment** → Finish Redirect URL |
+| Successful / Failed payment | Settings → **Snap Checkout** → tab **System** → Redirection URLs |
+
+Ketiganya sudah diisi ke `tokoku.seawise.id`. Kadaluarsa halaman checkout di
+dashboard sudah 24 jam, sama dengan `KADALUARSA_JAM` di `lib/midtrans.ts` —
+kalau salah satunya diubah, ubah dua-duanya.
+
+**Kunci Sandbox akun ini TIDAK berawalan `SB-`**, melainkan `Mid-server-…`
+persis seperti kunci Production. Jadi jangan pernah menebak lingkungan dari
+bentuk kuncinya; yang menentukan cuma `MIDTRANS_IS_PRODUCTION`, yang memilih
+alamat API. Salah setel berarti kunci Sandbox dikirim ke endpoint Production
+dan dijawab 401 tanpa penjelasan yang jelas di layar.
+
+**Sisa pekerjaannya tinggal dua, dan keduanya menunggu Midtrans:**
+
+1. Kirim kredensial akun peninjauan lewat formulir data susulan. Dokumennya ada
+   di `Data-Susulan-Onboarding-TokoKu-Midtrans.html`, cara mengisi formulirnya
+   di `PANDUAN-ISI-FORMULIR-MIDTRANS.md`. Akun peninjauannya sendiri **belum
+   dibuat**.
+2. Setelah merchant disetujui: ganti ke kunci Production dan setel
+   `MIDTRANS_IS_PRODUCTION=true`. Spanduk amber "Mode uji coba" hilang sendiri,
+   dan keempat alamat di atas harus didaftarkan ulang di dashboard
+   **Production**, karena Sandbox dan Production punya pengaturan terpisah.
 
 ## Penukaran poin di Kasir
 
