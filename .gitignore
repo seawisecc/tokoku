@@ -16,3 +16,9 @@ supabase/.branches
 # Salinan tenant demo dari scripts/retire-demo.mjs — berisi data nyata,
 # tidak boleh ikut ter-commit.
 backup-demo-*/
+
+# Dokumen Midtrans yang SUDAH DIISI data pribadi (NIK, alamat, kredensial).
+# Repo ini publik — yang boleh ter-commit hanya templat kosongnya.
+*-ISI.html
+*-ISI.pdf
+midtrans-data.local.json

@@ -53,27 +53,44 @@ tanpa menulis apa pun.
 
 ### b. Isi dokumennya
 
-Buka `Data-Susulan-Onboarding-TokoKu-Midtrans.pdf` (sudah dibuat, 5 halaman).
-Yang masih kosong tinggal ini:
+Data pribadi diisi lewat skrip, bukan diketik ulang di HTML:
 
-| Halaman | Isian |
-|---|---|
-| Sampul | Penanggung jawab |
-| Bagian 1 | Domain `seawise.id` terdaftar atas nama siapa |
-| Bagian 2 | Email akun peninjauan, kata sandinya, nama tokonya, berlaku sampai kapan |
-| Bagian 5 | Nama lengkap, jabatan, NIK, nama badan usaha, alamat usaha, telepon, email, tanggal, tanda tangan di atas materai Rp 10.000 |
+```bash
+node scripts/isi-dokumen-midtrans.mjs
+```
 
-Sisanya sudah terisi otomatis, termasuk nama merchant, tanggal dokumen, seluruh
-daftar alamat, dan keterangan lingkungan pengujian.
+Skripnya membaca `midtrans-data.local.json` di akar project, lalu menulis
+`Data-Susulan-Onboarding-TokoKu-Midtrans-ISI.html` dan langsung mencetaknya jadi
+PDF. Ketiga berkas itu **di-gitignore**: repo ini publik, dan isinya NIK, alamat
+rumah, serta kata sandi akun peninjauan.
 
-**Nama badan usaha dan alamat harus sama persis** dengan yang dipakai saat
-pengajuan awal di Midtrans. Beda satu kata bisa memicu pertanyaan susulan lagi.
+Yang sudah terisi: nama merchant, penanggung jawab, tanggal, pemilik domain,
+seluruh daftar alamat, keterangan lingkungan pengujian, dan seluruh Bagian 4
+(nama, jabatan, NIK, bentuk usaha, alamat, telepon, email, kota, blok tanda
+tangan).
 
-**Periksa baris "Penyedia hosting" di Bagian 1.** Saya isikan "Vercel (aplikasi)
-dan Supabase (basis data), keduanya dengan server di kawasan Asia Tenggara".
-Itu benar, tapi di halaman legal publik nama vendor sengaja tidak disebut atas
-keputusan pemilik project. Untuk dokumen onboarding yang privat ini menyebutnya
-wajar dan diharapkan, tapi silakan dicoret kalau tidak berkenan.
+Yang masih kosong tinggal **Bagian 2**, karena akun peninjauannya belum ada:
+email, kata sandi, nama toko, dan berlaku sampai kapan. Setelah akunnya dibuat,
+isi keempatnya di `midtrans-data.local.json` lalu jalankan skripnya sekali lagi.
+Hasilnya tidak perlu ditulis tangan sama sekali kecuali tanda tangan di atas
+materai.
+
+Skrip itu memeriksa jumlah halaman dan memperingatkan kalau hasilnya bukan 5
+halaman. Lebih dari 5 berarti ada bagian yang meluap, dan itu sudah dua kali
+terjadi saat isinya ditambah.
+
+**Bentuk usaha ditulis apa adanya: perorangan, belum berbadan hukum, dengan nama
+dagang Seawise Studio.** Kolom yang tadinya bernama "Nama badan usaha" diganti
+jadi "Bentuk usaha" supaya tidak terbaca seperti pertanyaan yang dikosongkan.
+
+**Periksa dua hal sebelum tanda tangan:**
+
+1. Baris "Penyedia hosting" di Bagian 1 saya isi "Vercel (aplikasi) dan Supabase
+   (basis data), keduanya dengan server di kawasan Asia Tenggara". Itu benar,
+   tapi di halaman legal publik nama vendor sengaja tidak disebut. Untuk dokumen
+   onboarding privat ini menyebutnya wajar, silakan dicoret kalau tidak berkenan.
+2. Baris "Terdaftar atas nama" pada Pemilikan domain diisi nama pribadi. Cocokkan
+   dengan data di registrar domain `seawise.id` yang sebenarnya.
 
 ---
 
