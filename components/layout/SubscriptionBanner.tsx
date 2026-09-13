@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Icon } from '@/components/ui/icons'
 import { tanggal } from '@/lib/format'
 import type { SubscriptionState } from '@/lib/subscription'
@@ -10,7 +11,24 @@ import type { SubscriptionState } from '@/lib/subscription'
  * muncul seminggu sebelumnya supaya keputusan membayar diambil saat tenang,
  * bukan saat panik.
  */
-export function SubscriptionBanner({ state }: { state: SubscriptionState }) {
+/**
+ * `bisaBayar` sengaja dioper dari luar, tidak disimpulkan di sini.
+ *
+ * Spanduk ini dirender untuk SEMUA peran di AppShell, termasuk kasir yang tidak
+ * memegang izin `settings` — dan itu memang benar: kalau langganan habis, kasir
+ * pun berhenti bisa menerima uang, jadi ia berhak tahu sebelum antreannya
+ * mengular. Tapi tautan ke halaman Langganan hanya boleh muncul untuk orang
+ * yang benar-benar bisa membukanya. Tautan yang memantulkan orang kembali
+ * terbaca seperti aplikasi rusak, dan celah izin sejenis sudah pernah terjadi
+ * di Transfer Stok dan di Pengeluaran.
+ */
+export function SubscriptionBanner({
+  state,
+  bisaBayar = false,
+}: {
+  state: SubscriptionState
+  bisaBayar?: boolean
+}) {
   if (state.kind === 'ok') return null
 
   if (state.kind === 'ending') {
@@ -30,9 +48,15 @@ export function SubscriptionBanner({ state }: { state: SubscriptionState }) {
           </strong>{' '}
           Sampai {tanggal(state.endsAt.toISOString())}. Setelah itu kasir tidak bisa mencatat
           penjualan baru.{' '}
-          {state.reason === 'trial'
-            ? 'Hubungi admin TokoKu untuk berlangganan.'
-            : 'Hubungi admin TokoKu untuk memperpanjang.'}
+          {bisaBayar ? (
+            <Link href="/pengaturan/langganan" className="sub-banner-link">
+              {state.reason === 'trial' ? 'Berlangganan sekarang' : 'Perpanjang sekarang'}
+            </Link>
+          ) : state.reason === 'trial' ? (
+            'Hubungi admin TokoKu untuk berlangganan.'
+          ) : (
+            'Hubungi admin TokoKu untuk memperpanjang.'
+          )}
         </div>
       </div>
     )
@@ -51,7 +75,14 @@ export function SubscriptionBanner({ state }: { state: SubscriptionState }) {
         </strong>{' '}
         Kasir tidak bisa mencatat penjualan baru dan data baru tidak bisa ditambah. Semua data
         lama tetap aman dan bisa dilihat. Penjualan yang sudah terlanjur tercatat di perangkat
-        tetap akan terkirim. Hubungi admin TokoKu untuk mengaktifkan kembali.
+        tetap akan terkirim.{' '}
+        {bisaBayar && state.reason !== 'suspended' ? (
+          <Link href="/pengaturan/langganan" className="sub-banner-link">
+            Bayar sekarang untuk mengaktifkan kembali
+          </Link>
+        ) : (
+          'Hubungi admin TokoKu untuk mengaktifkan kembali.'
+        )}
       </div>
     </div>
   )

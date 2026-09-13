@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Alur Transaksi TokoKu | Seawise Studio</title>
+<style>
+  @page { size: A4; margin: 15mm 15mm 14mm; }
+
+  :root {
+    --forest: #0e2419;
+    --forest-soft: #173c2b;
+    --ink: #17231c;
+    --ink-soft: #55655b;
+    --ink-faint: #8b9a90;
+    --line: #dde5df;
+    --line-soft: #eef2ee;
+    --paper: #f7faf5;
+    --mint: #a1ffce;
+    --lime: #f9f586;
+    --green: #146b3a;
+    --green-soft: #e8f7ee;
+    --blue: #2c5fc4;
+    --blue-soft: #eef3ff;
+    --amber-soft: #fff6d6;
+    --amber-ink: #8a6a00;
+    --coral: #c0392b;
+    --coral-soft: #fdeeec;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: var(--ink);
+    font-size: 9.4pt;
+    line-height: 1.46;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page { page-break-after: always; position: relative; min-height: 245mm; }
+  .page:last-child { page-break-after: auto; }
+
+  h1, h2, h3, h4 { color: var(--forest); margin: 0; font-weight: 700; }
+  h2 { font-size: 14.4pt; letter-spacing: -.01em; }
+  h3 { font-size: 10.9pt; margin-top: 13px; }
+  h4 { font-size: 10pt; }
+  p { margin: 6px 0; }
+  ul, ol { margin: 7px 0; padding-left: 17px; }
+  li { margin: 3.5px 0; }
+  strong { color: var(--forest); }
+  code { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 8.6pt; background: var(--line-soft); padding: 1px 4px; border-radius: 3px; color: var(--forest-soft); }
+
+  /* ---------- sampul ---------- */
+  .cover { display: flex; flex-direction: column; min-height: 258mm; }
+  .cover-top { display: flex; align-items: center; gap: 12px; padding-bottom: 18px; border-bottom: 3px solid var(--forest); }
+  .cover-top img { width: 46px; height: 46px; border-radius: 12px; }
+  .cover-brand { font-size: 15pt; font-weight: 800; color: var(--forest); letter-spacing: -.02em; line-height: 1.1; }
+  .cover-brand small { display: block; font-size: 8.6pt; font-weight: 500; color: var(--ink-faint); letter-spacing: .04em; text-transform: uppercase; margin-top: 3px; }
+  .cover-mid { margin-top: 70px; }
+  .cover-kicker { font-size: 9pt; letter-spacing: .18em; text-transform: uppercase; color: var(--green); font-weight: 700; }
+  .cover-title { font-size: 32pt; line-height: 1.08; letter-spacing: -.03em; color: var(--forest); margin: 12px 0 14px; font-weight: 800; }
+  .cover-sub { font-size: 12pt; color: var(--ink-soft); max-width: 130mm; line-height: 1.5; }
+  .cover-rule { height: 6px; width: 120px; margin: 26px 0; background: linear-gradient(135deg, var(--lime), var(--mint)); border-radius: 3px; }
+  .cover-meta { margin-top: auto; border-top: 1px solid var(--line); padding-top: 16px; }
+  .cover-meta table { width: 100%; border-collapse: collapse; }
+  .cover-meta td { padding: 4.5px 0; vertical-align: top; font-size: 9.6pt; }
+  .cover-meta td:first-child { width: 42mm; color: var(--ink-faint); }
+  .cover-meta td:last-child { color: var(--forest); font-weight: 600; }
+
+  /* ---------- kepala halaman ---------- */
+  .head { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid var(--forest); padding-bottom: 6px; margin-bottom: 13px; }
+  .head .no { font-size: 8.4pt; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-faint); font-weight: 700; }
+
+  .lead { color: var(--ink-soft); font-size: 10pt; margin-bottom: 10px; }
+
+  /* ---------- tabel ---------- */
+  table.t { width: 100%; border-collapse: collapse; margin: 9px 0 3px; font-size: 8.9pt; }
+  table.t th { text-align: left; background: var(--forest); color: #fff; font-weight: 600; padding: 5px 8px; font-size: 8.4pt; letter-spacing: .02em; }
+  table.t td { padding: 4.5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.t tr:nth-child(even) td { background: #fbfdfa; }
+  table.t td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* ---------- kartu ---------- */
+  .card { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: #fff; }
+  .card + .card { margin-top: 10px; }
+  .grid2 > .card + .card, .grid3 > .card + .card { margin-top: 0; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  .note { border-left: 3px solid var(--green); background: var(--green-soft); padding: 8px 11px; border-radius: 0 8px 8px 0; font-size: 9.1pt; margin: 10px 0; }
+  .note.blue { border-left-color: var(--blue); background: var(--blue-soft); }
+  .note.amber { border-left-color: #d9a300; background: var(--amber-soft); }
+  .note b { color: var(--forest); }
+
+  /* ---------- alur chevron ---------- */
+  .flow { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 4px; }
+  .flow .step { flex: 1 1 30%; border: 1px solid var(--line); border-radius: 9px; padding: 9px 10px; background: #fff; position: relative; }
+  .flow .step .n { display: inline-flex; width: 17px; height: 17px; border-radius: 50%; background: var(--forest); color: #fff; font-size: 7.6pt; font-weight: 700; align-items: center; justify-content: center; margin-bottom: 5px; }
+  .flow .step .ttl { font-weight: 700; color: var(--forest); font-size: 9.4pt; line-height: 1.25; }
+  .flow .step .dsc { font-size: 8.4pt; color: var(--ink-soft); line-height: 1.35; margin-top: 3px; }
+  .flow .step.pay { border-color: var(--green); background: var(--green-soft); }
+  .flow .step.pay .n { background: var(--green); }
+
+  /* ---------- tahap rinci ---------- */
+  .stage { display: grid; grid-template-columns: 52mm 1fr; gap: 12px; border-top: 1px solid var(--line); padding: 11px 0; page-break-inside: avoid; }
+  .stage:first-of-type { border-top: none; padding-top: 4px; }
+  .stage-h { font-size: 8pt; letter-spacing: .12em; text-transform: uppercase; color: var(--green); font-weight: 700; }
+  .stage-t { font-size: 11.6pt; font-weight: 700; color: var(--forest); line-height: 1.2; margin: 3px 0 5px; }
+  .stage-url { font-size: 8.2pt; color: var(--ink-faint); font-family: "SF Mono", Menlo, monospace; word-break: break-all; margin-bottom: 7px; }
+  .stage dl { margin: 0; font-size: 9.2pt; }
+  .stage dt { font-weight: 700; color: var(--forest); font-size: 8.4pt; text-transform: uppercase; letter-spacing: .06em; margin-top: 7px; }
+  .stage dt:first-child { margin-top: 0; }
+  .stage dd { margin: 2px 0 0; color: var(--ink-soft); }
+
+  /* ---------- mock layar ---------- */
+  .screen { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: #fff; }
+  .screen .bar { background: var(--line-soft); border-bottom: 1px solid var(--line); padding: 4px 7px; display: flex; align-items: center; gap: 4px; }
+  .screen .dot { width: 5px; height: 5px; border-radius: 50%; background: #c8d2ca; }
+  .screen .url { flex: 1; background: #fff; border: 1px solid var(--line); border-radius: 4px; font-size: 6.6pt; padding: 1.5px 5px; color: var(--ink-faint); font-family: "SF Mono", Menlo, monospace; overflow: hidden; white-space: nowrap; }
+  .screen .body { padding: 8px; }
+  .sk { background: var(--line-soft); border-radius: 3px; height: 6px; margin-bottom: 5px; }
+  .sk.w70 { width: 70%; } .sk.w50 { width: 50%; } .sk.w40 { width: 40%; } .sk.w85 { width: 85%; }
+  .sk.tall { height: 13px; }
+  .sk.dark { background: #cfd9d2; }
+  .chipline { display: flex; gap: 4px; margin-bottom: 6px; }
+  .chip { flex: 1; height: 22px; border: 1px solid var(--line); border-radius: 5px; background: #fbfdfa; }
+  .chip.on { border-color: var(--green); background: var(--green-soft); }
+  .cta { height: 15px; border-radius: 5px; background: linear-gradient(135deg, var(--lime), var(--mint)); }
+  .cta.dark { background: var(--forest); }
+  .cap { font-size: 7.8pt; color: var(--ink-faint); text-align: center; margin-top: 5px; line-height: 1.3; }
+
+  /* ---------- diagram teknis ---------- */
+  .seq { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 12px 0; }
+  .seq .lanes { display: grid; grid-template-columns: 1fr 1fr 1fr; background: var(--forest); }
+  .seq .lanes div { padding: 6px 8px; color: #fff; font-size: 8.4pt; font-weight: 700; text-align: center; }
+  .seq .lanes div + div { border-left: 1px solid rgba(255,255,255,.18); }
+  .seq .row { display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 5.5px 10px; border-top: 1px solid var(--line); page-break-inside: avoid; }
+  .seq .row:nth-child(even) { background: #fbfdfa; }
+  .seq .row .n { width: 19px; height: 19px; border-radius: 50%; background: var(--forest); color: #fff; font-size: 7.6pt; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .seq .row .txt { font-size: 8.8pt; }
+  .seq .row .who { font-size: 7.6pt; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--green); display: block; margin-bottom: 1px; }
+  .seq .row .txt code { font-size: 8.2pt; }
+
+  .footer { position: absolute; bottom: -8mm; left: 0; right: 0; display: flex; justify-content: space-between; font-size: 7.6pt; color: var(--ink-faint); border-top: 1px solid var(--line-soft); padding-top: 5px; }
+
+  .pill { display: inline-block; font-size: 7.8pt; font-weight: 700; padding: 1.5px 7px; border-radius: 20px; letter-spacing: .03em; }
+  .pill.ok { background: var(--green-soft); color: var(--green); }
+  .pill.wait { background: var(--amber-soft); color: var(--amber-ink); }
+  .pill.no { background: var(--coral-soft); color: var(--coral); }
+  .pill.info { background: var(--blue-soft); color: var(--blue); }
+
+  /* halaman padat: bagian 4 dan 5 */
+  .compact h3 { margin-top: 10px; }
+  .compact p { margin: 5px 0; }
+  .compact table.t { margin: 7px 0 2px; }
+  .compact table.t td { padding: 3.4px 8px; }
+  .compact table.t th { padding: 4px 8px; }
+  .compact .seq { margin: 9px 0; }
+  .compact .seq .row { padding: 4px 10px; }
+  .compact .card { padding: 8px 11px; }
+  .compact .grid2 { gap: 8px; }
+  .compact .note { margin: 8px 0; padding: 7px 11px; }
+  .compact .lead { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- ============ SAMPUL ============ -->
+<section class="page cover">
+  <div class="cover-top">
+    <img src="data:image/png;base64,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" alt="Logo TokoKu">
+    <div class="cover-brand">TokoKu<small>by Seawise Studio</small></div>
+  </div>
+
+  <div class="cover-mid">
+    <div class="cover-kicker">Dokumen pendukung pengajuan Midtrans</div>
+    <div class="cover-title">Alur Transaksi &amp;<br>Customer Journey</div>
+    <div class="cover-rule"></div>
+    <div class="cover-sub">
+      Perjalanan pengguna sejak membuka website, menelusuri fitur dan harga,
+      memilih paket, sampai pembayaran diproses di halaman pembayaran dan
+      langganan aktif secara otomatis.
+    </div>
+  </div>
+
+  <div class="cover-meta">
+    <table>
+      <tr><td>Nama aplikasi</td><td>TokoKu (aplikasi kasir dan manajemen toko)</td></tr>
+      <tr><td>Pemilik</td><td>Seawise Studio</td></tr>
+      <tr><td>Alamat website</td><td>https://tokoku.seawise.id</td></tr>
+      <tr><td>Jenis usaha</td><td>Perangkat lunak berlangganan (SaaS) untuk usaha retail</td></tr>
+      <tr><td>Yang dibayar pengguna</td><td>Biaya langganan bulanan aplikasi</td></tr>
+      <tr><td>Nilai transaksi</td><td>Rp 99.000 sampai Rp 749.000 per bulan per toko</td></tr>
+      <tr><td>Metode integrasi</td><td>Midtrans Snap (halaman pembayaran Midtrans)</td></tr>
+      <tr><td>Cakupan dokumen</td><td>Pembayaran langganan aplikasi, dan rencana QRIS untuk toko</td></tr>
+      <tr><td>Tanggal dokumen</td><td>3 September 2026</td></tr>
+    </table>
+  </div>
+</section>
+
+<!-- ============ 1. RINGKASAN ============ -->
+<section class="page">
+  <div class="head"><h2>Ringkasan usaha dan produk</h2><span class="no">Bagian 1</span></div>
+
+  <p class="lead">
+    TokoKu adalah aplikasi kasir dan manajemen toko berbasis web untuk usaha retail kecil dan menengah:
+    warung, kios, toko kelontong, minimarket, dan usaha jasa. Aplikasi dibuka lewat browser di ponsel,
+    tablet, atau komputer, dan dapat dipasang di layar utama perangkat seperti aplikasi biasa.
+  </p>
+
+  <h3>Apa yang dijual</h3>
+  <p>
+    Yang dijual adalah <strong>langganan bulanan atas aplikasi</strong>, satu langganan untuk satu toko.
+    Tidak ada barang fisik yang dikirim. Setelah pembayaran diterima, akses langsung terbuka di akun
+    pembeli, biasanya kurang dari satu menit.
+  </p>
+
+  <table class="t">
+    <tr>
+      <th>Paket</th><th>Untuk siapa</th><th>Batas pemakaian</th><th style="text-align:right">Harga per bulan</th>
+    </tr>
+    <tr>
+      <td><strong>Starter</strong></td>
+      <td>Warung dan kios satu lokasi</td>
+      <td>1 outlet, 3 pengguna, 200 produk, 2 perangkat kasir</td>
+      <td class="num">Rp 99.000</td>
+    </tr>
+    <tr>
+      <td><strong>Growth</strong></td>
+      <td>Toko berkembang dengan beberapa cabang</td>
+      <td>5 outlet, 15 pengguna, 2.000 produk, 8 perangkat kasir</td>
+      <td class="num">Rp 249.000</td>
+    </tr>
+    <tr>
+      <td><strong>Enterprise</strong></td>
+      <td>Minimarket dan jaringan retail</td>
+      <td>Tanpa batas outlet, pengguna, produk, dan perangkat</td>
+      <td class="num">Rp 749.000</td>
+    </tr>
+  </table>
+  <p style="font-size:9pt;color:var(--ink-soft);margin-top:4px">
+    Setiap toko baru mendapat masa coba gratis 14 hari tanpa perlu memasukkan data pembayaran.
+    Pembayaran baru muncul ketika pengguna memutuskan berlangganan.
+  </p>
+
+  <h3>Siapa yang membayar</h3>
+  <p>
+    Pembelinya adalah <strong>pemilik atau pengelola toko</strong> yang mendaftarkan usahanya sendiri
+    di website. Satu akun boleh mengelola beberapa toko, dan setiap toko punya langganannya sendiri.
+    Tidak ada pihak ketiga yang menerima dana dari transaksi ini.
+  </p>
+
+  <div class="note blue">
+    <b>Batas yang perlu ditegaskan.</b> Yang diproses lewat Midtrans hari ini hanya pembayaran
+    langganan aplikasi, yaitu dari pemilik toko kepada Seawise Studio. Penjualan sehari hari di
+    dalam aplikasi kasir dicatat sebagai pembukuan toko dan tidak melewati Midtrans. Pada fase
+    berikutnya, penjualan QRIS di kasir direncanakan diproses lewat Midtrans, tetapi atas nama
+    <strong>toko sebagai merchant Midtrans sendiri</strong>, bukan atas nama Seawise Studio.
+    Rinciannya ada di bagian 6. Dalam kedua keadaan itu, Seawise Studio tidak menampung,
+    menyimpan, atau menyalurkan dana milik pembeli akhir toko.
+  </div>
+
+  <h3>Metode pembayaran yang akan digunakan</h3>
+  <div class="grid3">
+    <div class="card"><h4>QRIS dan e-wallet</h4><p style="margin:4px 0 0;font-size:9pt;color:var(--ink-soft)">QRIS, GoPay, ShopeePay, dan dompet digital lain yang tersedia di Snap.</p></div>
+    <div class="card"><h4>Virtual account</h4><p style="margin:4px 0 0;font-size:9pt;color:var(--ink-soft)">BCA, BNI, BRI, Mandiri, Permata, dan bank lain yang didukung.</p></div>
+    <div class="card"><h4>Kartu</h4><p style="margin:4px 0 0;font-size:9pt;color:var(--ink-soft)">Kartu kredit dan debit dengan 3D Secure, diproses penuh di sisi Midtrans.</p></div>
+  </div>
+
+  <h3>Sifat transaksi</h3>
+  <table class="t">
+    <tr><th>Aspek</th><th>Keterangan</th></tr>
+    <tr><td>Frekuensi</td><td>Berulang setiap bulan, atau sekaligus untuk beberapa bulan bila pengguna memilihnya</td></tr>
+    <tr><td>Rata rata nilai</td><td>Sekitar Rp 99.000 sampai Rp 249.000 per transaksi</td></tr>
+    <tr><td>Bentuk penyerahan</td><td>Digital, akses akun terbuka otomatis setelah pembayaran terkonfirmasi</td></tr>
+    <tr><td>Wilayah pembeli</td><td>Indonesia</td></tr>
+    <tr><td>Mata uang</td><td>Rupiah (IDR), tanpa pecahan sen</td></tr>
+  </table>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 2</span></div>
+</section>
+
+<!-- ============ 2. PETA JOURNEY ============ -->
+<section class="page">
+  <div class="head"><h2>Peta customer journey</h2><span class="no">Bagian 2</span></div>
+  <p class="lead">
+    Sembilan tahap berikut adalah jalur utama yang dilalui pengguna. Tahap 7 dan 8 yang berwarna hijau
+    adalah bagian yang melibatkan Midtrans.
+  </p>
+
+  <div class="flow">
+    <div class="step"><span class="n">1</span><div class="ttl">Membuka website</div><div class="dsc">Pengunjung tiba di tokoku.seawise.id dari pencarian, media sosial, atau rekomendasi.</div></div>
+    <div class="step"><span class="n">2</span><div class="ttl">Eksplorasi fitur</div><div class="dsc">Membaca halaman fitur, melihat tampilan aplikasi, membandingkan isi tiap paket.</div></div>
+    <div class="step"><span class="n">3</span><div class="ttl">Memilih paket</div><div class="dsc">Menimbang harga dan batas pemakaian, lalu menekan tombol pilih paket.</div></div>
+    <div class="step"><span class="n">4</span><div class="ttl">Membuat akun toko</div><div class="dsc">Mengisi nama toko, email, dan kata sandi, lalu mengonfirmasi email.</div></div>
+    <div class="step"><span class="n">5</span><div class="ttl">Mencoba gratis 14 hari</div><div class="dsc">Memakai aplikasi penuh tanpa membayar. Sisa hari terlihat di dalam aplikasi.</div></div>
+    <div class="step"><span class="n">6</span><div class="ttl">Checkout langganan</div><div class="dsc">Membuka halaman Langganan, memilih paket dan masa bayar, memeriksa ringkasan tagihan.</div></div>
+    <div class="step pay"><span class="n">7</span><div class="ttl">Halaman pembayaran</div><div class="dsc">Halaman pembayaran Midtrans terbuka. Pengguna memilih metode lalu membayar.</div></div>
+    <div class="step pay"><span class="n">8</span><div class="ttl">Konfirmasi dan aktivasi</div><div class="dsc">Status pembayaran diterima dari Midtrans, langganan aktif, bukti bayar dikirim ke email.</div></div>
+    <div class="step"><span class="n">9</span><div class="ttl">Pemakaian dan perpanjangan</div><div class="dsc">Aplikasi dipakai sehari hari. Menjelang masa berakhir, pengingat perpanjangan muncul.</div></div>
+  </div>
+
+  <h3>Ringkas dalam satu baris</h3>
+  <div class="card" style="background:var(--paper);font-size:9.6pt;line-height:1.9">
+    Buka website <span style="color:var(--ink-faint)">&#8594;</span>
+    Lihat fitur dan harga <span style="color:var(--ink-faint)">&#8594;</span>
+    Pilih paket <span style="color:var(--ink-faint)">&#8594;</span>
+    Daftar akun toko <span style="color:var(--ink-faint)">&#8594;</span>
+    Coba gratis 14 hari <span style="color:var(--ink-faint)">&#8594;</span>
+    Checkout <span style="color:var(--ink-faint)">&#8594;</span>
+    <strong style="color:var(--green)">Halaman pembayaran Midtrans</strong> <span style="color:var(--ink-faint)">&#8594;</span>
+    Pembayaran terkonfirmasi <span style="color:var(--ink-faint)">&#8594;</span>
+    Langganan aktif <span style="color:var(--ink-faint)">&#8594;</span>
+    Perpanjangan bulan berikutnya
+  </div>
+
+  <h3>Dua jalur masuk ke checkout</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4>Jalur A: dari halaman harga</h4>
+      <p style="font-size:9.2pt;color:var(--ink-soft);margin:5px 0 0">
+        Pengunjung baru memilih paket lebih dulu di halaman fitur, baru membuat akun.
+        Paket yang dipilih dibawa sampai ke halaman checkout, jadi ia tidak perlu memilih dua kali.
+      </p>
+    </div>
+    <div class="card">
+      <h4>Jalur B: dari dalam aplikasi</h4>
+      <p style="font-size:9.2pt;color:var(--ink-soft);margin:5px 0 0">
+        Pengguna yang sedang dalam masa coba menekan tombol Bayar pada spanduk pengingat atau
+        membuka menu Pengaturan lalu Langganan. Keduanya berakhir di halaman checkout yang sama.
+      </p>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Prinsip yang dipegang.</b> Pengguna tidak pernah diminta data pembayaran sebelum ia benar benar
+    memutuskan berlangganan. Masa coba 14 hari berjalan tanpa kartu, dan tidak ada penagihan otomatis
+    yang terjadi diam diam di akhir masa coba.
+  </div>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 3</span></div>
+</section>
+
+<!-- ============ 3. RINCIAN TAHAP 1-3 ============ -->
+<section class="page">
+  <div class="head"><h2>Rincian tahap 1 sampai 3</h2><span class="no">Bagian 3</span></div>
+  <p class="lead">Tahap eksplorasi, sebelum pengguna membuat akun apa pun.</p>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">tokoku.seawise.id</span></div>
+        <div class="body">
+          <div class="sk tall w70"></div>
+          <div class="sk w85"></div>
+          <div class="sk w50"></div>
+          <div style="display:flex;gap:5px;margin:8px 0 6px"><div class="cta" style="flex:1"></div><div class="cta dark" style="flex:1"></div></div>
+          <div style="display:flex;gap:4px"><div class="chip"></div><div class="chip"></div><div class="chip"></div></div>
+        </div>
+      </div>
+      <div class="cap">Halaman depan: penjelasan singkat, tombol coba gratis, dan tautan ke halaman fitur.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 1</div>
+      <div class="stage-t">Pengunjung membuka website</div>
+      <div class="stage-url">https://tokoku.seawise.id</div>
+      <dl>
+        <dt>Yang dilakukan pengguna</dt>
+        <dd>Membuka alamat website dari ponsel atau komputer. Belum punya akun dan belum login.</dd>
+        <dt>Yang ditampilkan sistem</dt>
+        <dd>Penjelasan singkat aplikasi, tombol menuju halaman fitur dan harga, tombol masuk untuk yang sudah punya akun, serta tautan Kebijakan Privasi dan Syarat &amp; Ketentuan di kaki halaman.</dd>
+        <dt>Keputusan berikutnya</dt>
+        <dd>Menelusuri fitur, atau langsung mendaftar.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">tokoku.seawise.id/fitur</span></div>
+        <div class="body">
+          <div class="sk tall w50"></div>
+          <div class="sk w85"></div>
+          <div class="grid3" style="gap:4px;margin:7px 0">
+            <div style="border:1px solid var(--line);border-radius:5px;padding:5px"><div class="sk w70" style="height:5px"></div><div class="sk dark w50" style="height:8px"></div><div class="sk" style="height:4px"></div><div class="sk w70" style="height:4px"></div></div>
+            <div style="border:1px solid var(--line);border-radius:5px;padding:5px"><div class="sk w70" style="height:5px"></div><div class="sk dark w50" style="height:8px"></div><div class="sk" style="height:4px"></div><div class="sk w70" style="height:4px"></div></div>
+            <div style="border:1px solid var(--line);border-radius:5px;padding:5px"><div class="sk w70" style="height:5px"></div><div class="sk dark w50" style="height:8px"></div><div class="sk" style="height:4px"></div><div class="sk w70" style="height:4px"></div></div>
+          </div>
+          <div class="sk w40" style="height:5px"></div>
+          <div class="sk" style="height:4px"></div>
+          <div class="sk w85" style="height:4px"></div>
+        </div>
+      </div>
+      <div class="cap">Halaman fitur: rincian kemampuan, tiga kartu paket, tabel perbandingan, dan tanya jawab.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 2</div>
+      <div class="stage-t">Eksplorasi fitur dan harga</div>
+      <div class="stage-url">https://tokoku.seawise.id/fitur</div>
+      <dl>
+        <dt>Yang dilakukan pengguna</dt>
+        <dd>Membaca kemampuan aplikasi (kasir offline, pindai barcode, stok, laporan, pembelian, pelanggan), melihat tangkapan layar aplikasi, lalu menggulir ke bagian harga untuk membandingkan tiga paket lewat tabel perbandingan.</dd>
+        <dt>Yang ditampilkan sistem</dt>
+        <dd>Harga per bulan tiap paket, batas pemakaian, daftar kemampuan yang termasuk dan yang tidak, serta tanya jawab yang sering ditanyakan termasuk soal pembayaran dan pembatalan.</dd>
+        <dt>Keputusan berikutnya</dt>
+        <dd>Memilih satu paket yang sesuai ukuran usahanya.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">tokoku.seawise.id/fitur#harga</span></div>
+        <div class="body">
+          <div class="chipline"><div class="chip"></div><div class="chip on"></div><div class="chip"></div></div>
+          <div class="sk w50" style="height:9px"></div>
+          <div class="sk" style="height:4px"></div>
+          <div class="sk w85" style="height:4px"></div>
+          <div class="sk w70" style="height:4px"></div>
+          <div class="cta" style="margin-top:8px"></div>
+        </div>
+      </div>
+      <div class="cap">Paket terpilih ditandai, tombol lanjut membawa kode paket ke halaman pendaftaran.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 3</div>
+      <div class="stage-t">Memilih paket</div>
+      <div class="stage-url">/fitur#harga, tombol menuju /daftar-toko?paket=growth</div>
+      <dl>
+        <dt>Yang dilakukan pengguna</dt>
+        <dd>Menekan tombol pada kartu paket yang dipilih, misalnya Growth.</dd>
+        <dt>Yang dilakukan sistem</dt>
+        <dd>Kode paket dibawa dalam alamat halaman berikutnya sehingga pilihan pengguna tidak hilang. Pilihan ini masih bisa diubah sampai detik terakhir sebelum membayar.</dd>
+        <dt>Catatan</dt>
+        <dd>Pada tahap ini belum ada data pembayaran apa pun yang diminta. Paket yang dipilih baru menjadi tagihan setelah pengguna melewati tahap checkout.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 4</span></div>
+</section>
+
+<!-- ============ 4. RINCIAN TAHAP 4-6 ============ -->
+<section class="page">
+  <div class="head"><h2>Rincian tahap 4 sampai 6</h2><span class="no">Bagian 3</span></div>
+  <p class="lead">Tahap pembuatan akun, masa coba, sampai pengguna siap membayar.</p>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">tokoku.seawise.id/daftar-toko</span></div>
+        <div class="body">
+          <div class="sk w50" style="height:8px"></div>
+          <div class="sk" style="height:11px;background:#fff;border:1px solid var(--line)"></div>
+          <div class="sk" style="height:11px;background:#fff;border:1px solid var(--line)"></div>
+          <div class="sk" style="height:11px;background:#fff;border:1px solid var(--line)"></div>
+          <div class="cta dark" style="margin-top:7px"></div>
+          <div class="sk w70" style="height:4px;margin-top:7px"></div>
+        </div>
+      </div>
+      <div class="cap">Borang pendaftaran: nama toko, nama pemilik, email, dan kata sandi.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 4</div>
+      <div class="stage-t">Membuat akun dan toko</div>
+      <div class="stage-url">https://tokoku.seawise.id/daftar-toko</div>
+      <dl>
+        <dt>Yang dilakukan pengguna</dt>
+        <dd>Mengisi nama toko, nama pemilik, alamat email, dan kata sandi, lalu menyetujui Syarat &amp; Ketentuan dan Kebijakan Privasi.</dd>
+        <dt>Yang dilakukan sistem</dt>
+        <dd>Membuat akun, mengirim email konfirmasi, dan setelah dikonfirmasi menyiapkan toko beserta outlet pertamanya. Masa coba 14 hari langsung berjalan.</dd>
+        <dt>Data yang dikumpulkan</dt>
+        <dd>Nama, email, nomor telepon jika diisi, dan nama usaha. Tidak ada data kartu maupun rekening yang diminta di tahap ini.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">tokoku.seawise.id/beranda</span></div>
+        <div class="body">
+          <div style="background:var(--amber-soft);border-radius:4px;padding:4px 5px;margin-bottom:6px"><div class="sk w85" style="height:4px;background:#e6d69b"></div><div class="sk w40" style="height:4px;background:#e6d69b;margin:0"></div></div>
+          <div class="sk tall w50"></div>
+          <div style="display:flex;gap:4px;margin:6px 0"><div class="chip"></div><div class="chip"></div><div class="chip"></div><div class="chip"></div></div>
+          <div class="sk" style="height:4px"></div><div class="sk w70" style="height:4px"></div>
+        </div>
+      </div>
+      <div class="cap">Di dalam aplikasi, sisa masa coba tampil sebagai spanduk pengingat dengan tombol Bayar.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 5</div>
+      <div class="stage-t">Memakai aplikasi selama masa coba</div>
+      <div class="stage-url">https://tokoku.seawise.id/beranda dan seluruh menu aplikasi</div>
+      <dl>
+        <dt>Yang dilakukan pengguna</dt>
+        <dd>Memasukkan daftar barang, membuka kasir, mencatat penjualan sungguhan, dan menilai apakah aplikasi cocok dengan usahanya.</dd>
+        <dt>Yang dilakukan sistem</dt>
+        <dd>Memberi seluruh kemampuan paket tanpa batas waktu harian. Sisa hari masa coba ditampilkan di lonceng pemberitahuan dan di halaman Langganan. Tujuh hari sebelum berakhir, spanduk pengingat muncul dengan tombol menuju pembayaran.</dd>
+        <dt>Bila masa coba habis tanpa pembayaran</dt>
+        <dd>Data toko tetap tersimpan utuh, tetapi pencatatan penjualan baru dihentikan sampai langganan dibayar. Tidak ada penagihan otomatis.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">/pengaturan/langganan</span></div>
+        <div class="body">
+          <div class="chipline"><div class="chip"></div><div class="chip on"></div><div class="chip"></div></div>
+          <div style="border:1px solid var(--line);border-radius:5px;padding:5px;margin-bottom:6px">
+            <div class="sk w70" style="height:4px"></div>
+            <div class="sk w40" style="height:4px"></div>
+            <div class="sk dark w50" style="height:8px;margin:0"></div>
+          </div>
+          <div class="cta"></div>
+        </div>
+      </div>
+      <div class="cap">Halaman checkout: paket, masa bayar, ringkasan tagihan, dan tombol lanjut ke pembayaran.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 6</div>
+      <div class="stage-t">Checkout langganan</div>
+      <div class="stage-url">https://tokoku.seawise.id/pengaturan/langganan</div>
+      <dl>
+        <dt>Yang dilakukan pengguna</dt>
+        <dd>Memeriksa paket yang dipilih, menentukan masa bayar (1 bulan atau beberapa bulan sekaligus), membaca ringkasan tagihan, lalu menekan tombol Bayar Sekarang.</dd>
+        <dt>Yang ditampilkan sistem</dt>
+        <dd>Nama paket, harga per bulan, jumlah bulan, total yang harus dibayar, dan tanggal berakhirnya langganan bila pembayaran berhasil. Tautan Syarat &amp; Ketentuan serta kebijakan pembatalan disebut di halaman yang sama.</dd>
+        <dt>Yang terjadi di balik layar</dt>
+        <dd>Sistem membuat satu tagihan berstatus menunggu pembayaran dengan nomor pesanan unik, lalu meminta token pembayaran ke Midtrans. Rinciannya ada di bagian 4.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 5</span></div>
+</section>
+
+<!-- ============ 5. RINCIAN TAHAP 7-9 ============ -->
+<section class="page">
+  <div class="head"><h2>Rincian tahap 7 sampai 9</h2><span class="no">Bagian 3</span></div>
+  <p class="lead">Tahap pembayaran dan sesudahnya. Di sinilah Midtrans bekerja.</p>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">app.midtrans.com/snap/v3/redirection</span></div>
+        <div class="body">
+          <div class="sk w50" style="height:7px"></div>
+          <div class="sk dark w40" style="height:9px"></div>
+          <div style="border:1px solid var(--green);background:var(--green-soft);border-radius:5px;padding:4px;margin:6px 0 4px"><div class="sk w70" style="height:4px;background:#bfe4cd"></div><div class="sk w40" style="height:4px;background:#bfe4cd;margin:0"></div></div>
+          <div style="border:1px solid var(--line);border-radius:5px;padding:4px;margin-bottom:4px"><div class="sk w70" style="height:4px"></div><div class="sk w40" style="height:4px;margin:0"></div></div>
+          <div style="border:1px solid var(--line);border-radius:5px;padding:4px;margin-bottom:6px"><div class="sk w70" style="height:4px"></div><div class="sk w40" style="height:4px;margin:0"></div></div>
+          <div class="cta dark"></div>
+        </div>
+      </div>
+      <div class="cap">Halaman pembayaran Midtrans: daftar metode, nominal tagihan, dan tombol bayar.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 7</div>
+      <div class="stage-t">Halaman pembayaran</div>
+      <div class="stage-url">Snap Midtrans, dibuka di atas halaman langganan</div>
+      <dl>
+        <dt>Yang dilakukan pengguna</dt>
+        <dd>Memilih metode pembayaran (QRIS, e-wallet, virtual account, atau kartu), lalu menyelesaikan pembayaran sesuai petunjuk metode yang dipilih.</dd>
+        <dt>Yang ditampilkan</dt>
+        <dd>Nomor pesanan, nama paket, dan nominal yang harus dibayar. Untuk virtual account ditampilkan nomor rekening virtual beserta batas waktu bayar. Untuk QRIS ditampilkan kode QR.</dd>
+        <dt>Catatan keamanan</dt>
+        <dd>Seluruh pengisian data pembayaran terjadi di halaman Midtrans. Aplikasi TokoKu tidak pernah menerima, menampilkan, atau menyimpan nomor kartu, CVV, maupun PIN.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">/pengaturan/langganan?status=berhasil</span></div>
+        <div class="body">
+          <div style="background:var(--green-soft);border:1px solid #bfe4cd;border-radius:5px;padding:6px;margin-bottom:6px">
+            <div class="sk w50" style="height:6px;background:#bfe4cd"></div>
+            <div class="sk w85" style="height:4px;background:#bfe4cd;margin:0"></div>
+          </div>
+          <div class="sk w40" style="height:4px"></div>
+          <div class="sk w70" style="height:4px"></div>
+          <div class="sk" style="height:4px"></div>
+        </div>
+      </div>
+      <div class="cap">Halaman kembali: pembayaran berhasil, paket aktif, dan tanggal berakhir berikutnya.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 8</div>
+      <div class="stage-t">Konfirmasi dan aktivasi langganan</div>
+      <div class="stage-url">Pemberitahuan server ke server dari Midtrans, lalu halaman hasil</div>
+      <dl>
+        <dt>Yang dilakukan sistem</dt>
+        <dd>Menerima pemberitahuan status dari Midtrans, memeriksa keasliannya, menandai tagihan lunas, mengubah status toko menjadi aktif, dan memajukan tanggal berakhir langganan sesuai jumlah bulan yang dibayar.</dd>
+        <dt>Yang diterima pengguna</dt>
+        <dd>Halaman konfirmasi di layar, bukti pembayaran yang dikirim ke email terdaftar, dan riwayat tagihan yang bisa dibuka kapan saja di halaman Langganan.</dd>
+        <dt>Lama proses</dt>
+        <dd>Untuk QRIS, e-wallet, dan kartu, biasanya kurang dari satu menit. Untuk virtual account, aktivasi terjadi begitu pembayaran diteruskan Midtrans, meski pengguna sudah menutup halaman.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div>
+      <div class="screen">
+        <div class="bar"><span class="dot"></span><span class="dot"></span><span class="url">/pengaturan/langganan</span></div>
+        <div class="body">
+          <div class="sk w50" style="height:7px"></div>
+          <div class="sk w85" style="height:4px"></div>
+          <div style="display:flex;gap:4px;margin:6px 0"><div class="chip"></div><div class="chip"></div></div>
+          <div class="sk w40" style="height:4px"></div>
+          <div class="sk" style="height:4px"></div>
+          <div class="sk w70" style="height:4px"></div>
+        </div>
+      </div>
+      <div class="cap">Riwayat langganan dan tagihan, dengan pengingat menjelang tanggal berakhir.</div>
+    </div>
+    <div>
+      <div class="stage-h">Tahap 9</div>
+      <div class="stage-t">Pemakaian dan perpanjangan</div>
+      <div class="stage-url">https://tokoku.seawise.id/pengaturan/langganan</div>
+      <dl>
+        <dt>Yang dilakukan pengguna</dt>
+        <dd>Memakai aplikasi sehari hari. Menjelang masa langganan berakhir, ia menekan tombol perpanjang dan melewati tahap 6 sampai 8 sekali lagi.</dd>
+        <dt>Yang dilakukan sistem</dt>
+        <dd>Menampilkan sisa hari langganan, memunculkan pengingat tujuh hari sebelum berakhir, dan menyimpan seluruh riwayat pembayaran beserta nomor pesanannya.</dd>
+        <dt>Pembatalan</dt>
+        <dd>Pengguna cukup tidak memperpanjang. Tidak ada pemotongan otomatis di kartu, dan tidak ada biaya pembatalan.</dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 6</span></div>
+</section>
+
+<!-- ============ 6. ALUR TEKNIS ============ -->
+<section class="page compact">
+  <div class="head"><h2>Alur teknis pembayaran</h2><span class="no">Bagian 4</span></div>
+  <p class="lead">
+Urutan langkah sejak pengguna menekan tombol Bayar sampai langganannya aktif.
+  </p>
+
+  <div class="seq">
+    <div class="lanes"><div>Pengguna</div><div>Server TokoKu</div><div>Midtrans</div></div>
+
+    <div class="row"><span class="n">1</span><span class="txt"><span class="who">Pengguna</span>Menekan tombol <strong>Bayar Sekarang</strong> di halaman Langganan setelah memeriksa ringkasan tagihan.</span></div>
+    <div class="row"><span class="n">2</span><span class="txt"><span class="who">Server TokoKu</span>Membuat tagihan berstatus <span class="pill wait">menunggu</span> dengan nomor pesanan unik, misalnya <code>TKS-20260903-000128</code>, berisi id toko, kode paket, jumlah bulan, dan total rupiah.</span></div>
+    <div class="row"><span class="n">3</span><span class="txt"><span class="who">Server TokoKu &#8594; Midtrans</span>Memanggil Snap API dari sisi server memakai server key, mengirim <code>order_id</code>, <code>gross_amount</code>, rincian barang, serta nama dan email pembeli.</span></div>
+    <div class="row"><span class="n">4</span><span class="txt"><span class="who">Midtrans &#8594; Server TokoKu</span>Mengembalikan token pembayaran untuk sesi transaksi tersebut.</span></div>
+    <div class="row"><span class="n">5</span><span class="txt"><span class="who">Pengguna</span>Halaman pembayaran Midtrans terbuka memakai token tadi. Pengguna memilih metode dan menyelesaikan pembayaran di sana.</span></div>
+    <div class="row"><span class="n">6</span><span class="txt"><span class="who">Midtrans &#8594; Server TokoKu</span>Mengirim pemberitahuan status transaksi ke alamat pemberitahuan yang didaftarkan, yaitu <code>https://tokoku.seawise.id/api/pembayaran/midtrans/notifikasi</code>.</span></div>
+    <div class="row"><span class="n">7</span><span class="txt"><span class="who">Server TokoKu</span>Memeriksa keaslian pemberitahuan lewat <code>signature_key</code>, yaitu SHA512 dari <code>order_id</code>, <code>status_code</code>, <code>gross_amount</code>, dan server key. Yang tidak cocok ditolak.</span></div>
+    <div class="row"><span class="n">8</span><span class="txt"><span class="who">Server TokoKu</span>Bila statusnya <code>settlement</code> atau <code>capture</code> dengan risiko aman: tagihan ditandai <span class="pill ok">lunas</span>, toko menjadi aktif, dan tanggal berakhir langganan dimajukan sesuai jumlah bulan yang dibayar.</span></div>
+    <div class="row"><span class="n">9</span><span class="txt"><span class="who">Server TokoKu &#8594; Pengguna</span>Mengirim bukti pembayaran ke email pemilik toko dan mencatatnya di riwayat langganan.</span></div>
+    <div class="row"><span class="n">10</span><span class="txt"><span class="who">Pengguna</span>Dikembalikan ke halaman hasil di aplikasi. Halaman itu membaca status terbaru dari database, bukan dari alamat halaman, jadi tampilannya selalu sesuai keadaan sebenarnya.</span></div>
+  </div>
+
+  <h3>Alamat yang didaftarkan di panel Midtrans</h3>
+  <table class="t">
+    <tr><th>Keperluan</th><th>Alamat</th></tr>
+    <tr><td>Pemberitahuan pembayaran (server ke server)</td><td><code>https://tokoku.seawise.id/api/pembayaran/midtrans/notifikasi</code></td></tr>
+    <tr><td>Pengguna selesai membayar</td><td><code>https://tokoku.seawise.id/pengaturan/langganan?status=berhasil</code></td></tr>
+    <tr><td>Pengguna menutup tanpa menyelesaikan</td><td><code>https://tokoku.seawise.id/pengaturan/langganan?status=tertunda</code></td></tr>
+    <tr><td>Pembayaran gagal</td><td><code>https://tokoku.seawise.id/pengaturan/langganan?status=gagal</code></td></tr>
+  </table>
+
+  <div class="note">
+    <b>Sumber kebenaran ada di pemberitahuan server ke server, bukan di halaman kembali.</b>
+Pengguna bisa saja menutup peramban tepat setelah membayar. Karena itu aktivasi langganan hanya
+    dipicu oleh pemberitahuan resmi dari Midtrans yang sudah diperiksa keasliannya, bukan oleh
+    halaman yang dibuka pengguna.
+  </div>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 7</span></div>
+</section>
+
+<!-- ============ 7. STATUS & SKENARIO ============ -->
+<section class="page compact">
+  <div class="head"><h2>Status pembayaran dan skenario khusus</h2><span class="no">Bagian 5</span></div>
+
+  <h3>Penanganan tiap status transaksi</h3>
+  <table class="t">
+    <tr><th style="width:26mm">Status Midtrans</th><th style="width:24mm">Status tagihan</th><th>Yang terjadi pada akun dan pengguna</th></tr>
+    <tr><td><code>settlement</code></td><td><span class="pill ok">Lunas</span></td><td>Langganan aktif, tanggal berakhir dimajukan, bukti bayar dikirim ke email.</td></tr>
+    <tr><td><code>capture</code> (kartu, risiko aman)</td><td><span class="pill ok">Lunas</span></td><td>Sama dengan settlement. Bila risikonya perlu ditinjau, tagihan ditahan sampai jelas.</td></tr>
+    <tr><td><code>pending</code></td><td><span class="pill wait">Menunggu</span></td><td>Tagihan tetap terbuka. Nomor virtual account dan batas waktunya tetap tampil di halaman Langganan.</td></tr>
+    <tr><td><code>deny</code></td><td><span class="pill no">Gagal</span></td><td>Ditolak penerbit. Pengguna diberi tahu dan bisa mencoba lagi dengan metode lain.</td></tr>
+    <tr><td><code>cancel</code></td><td><span class="pill no">Dibatalkan</span></td><td>Tagihan ditutup. Akun tidak berubah.</td></tr>
+    <tr><td><code>expire</code></td><td><span class="pill no">Kedaluwarsa</span></td><td>Batas waktu bayar terlewat. Tagihan ditutup dan pengguna dapat membuat tagihan baru kapan saja.</td></tr>
+    <tr><td><code>refund</code> / <code>partial_refund</code></td><td><span class="pill info">Dikembalikan</span></td><td>Dicatat di riwayat tagihan. Bila penuh, masa langganan dari pembayaran itu ditarik kembali.</td></tr>
+  </table>
+
+  <h3>Skenario yang sudah diperhitungkan</h3>
+  <div class="grid2">
+    <div class="card">
+      <h4>Pengguna menutup halaman pembayaran</h4>
+      <p style="font-size:8.8pt;color:var(--ink-soft);margin:4px 0 0">Tagihan tetap menunggu. Saat halaman Langganan dibuka lagi, tagihan yang belum selesai tampil dengan tombol lanjutkan pembayaran.</p>
+    </div>
+    <div class="card">
+      <h4>Virtual account baru dibayar besok</h4>
+      <p style="font-size:8.8pt;color:var(--ink-soft);margin:4px 0 0">Aktivasi tetap berjalan karena dipicu pemberitahuan Midtrans, bukan kehadiran pengguna. Tanggal berakhir dihitung dari saat pembayaran diterima.</p>
+    </div>
+    <div class="card">
+      <h4>Pemberitahuan datang lebih dari sekali</h4>
+      <p style="font-size:8.8pt;color:var(--ink-soft);margin:4px 0 0">Satu nomor pesanan hanya boleh mengaktifkan langganan sekali. Pemberitahuan berulang dicatat, tetapi tidak menambah masa langganan.</p>
+    </div>
+    <div class="card">
+      <h4>Pemberitahuan tidak sampai</h4>
+      <p style="font-size:8.8pt;color:var(--ink-soft);margin:4px 0 0">Saat halaman Langganan dibuka dengan tagihan yang masih menunggu, server memeriksa status langsung ke Midtrans lalu menyelaraskan catatannya.</p>
+    </div>
+    <div class="card">
+      <h4>Pembayaran ganda</h4>
+      <p style="font-size:8.8pt;color:var(--ink-soft);margin:4px 0 0">Tombol Bayar dimatikan selama tagihan masih diproses. Bila tetap terjadi, kelebihannya dikembalikan atau menjadi perpanjangan, sesuai pilihan pengguna.</p>
+    </div>
+    <div class="card">
+      <h4>Langganan berakhir tanpa perpanjangan</h4>
+      <p style="font-size:8.8pt;color:var(--ink-soft);margin:4px 0 0">Pencatatan penjualan baru dihentikan, tetapi data toko tetap tersimpan dan bisa diunduh. Akses terbuka penuh begitu pembayaran berikutnya diterima.</p>
+    </div>
+  </div>
+
+  <h3>Kebijakan pembatalan dan pengembalian dana</h3>
+  <table class="t">
+    <tr><th style="width:42mm">Hal</th><th>Ketentuan</th></tr>
+    <tr><td>Masa coba</td><td>14 hari, penuh, tanpa data pembayaran dan tanpa penagihan otomatis di akhirnya.</td></tr>
+    <tr><td>Penyerahan produk</td><td>Digital dan seketika. Tidak ada barang fisik, ongkos kirim, maupun waktu tunggu pengiriman.</td></tr>
+    <tr><td>Pembatalan langganan</td><td>Kapan saja. Akses berjalan sampai akhir periode yang sudah dibayar, tanpa biaya pembatalan.</td></tr>
+    <tr><td>Pengembalian dana</td><td>Diajukan lewat kontak dukungan dalam 7 hari sejak pembayaran, untuk salah bayar, pembayaran ganda, atau gangguan yang membuat aplikasi tidak dapat dipakai. Diproses lewat Midtrans ke sumber dana yang sama.</td></tr>
+    <tr><td>Perubahan paket</td><td>Naik paket berlaku seketika dengan perhitungan sisa masa berjalan. Turun paket berlaku pada periode berikutnya.</td></tr>
+  </table>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 8</span></div>
+</section>
+
+<!-- ============ 7b. PEMBAYARAN UNTUK KLIEN ============ -->
+<section class="page compact">
+  <div class="head"><h2>Rencana pembayaran QRIS untuk toko</h2><span class="no">Bagian 6</span></div>
+  <p class="lead">
+Rencana fase berikutnya: membantu toko menerima pembayaran QRIS dari pembelinya lewat layar
+    kasir TokoKu. Bagian 1 sampai 5 menjelaskan yang sudah berjalan, yaitu langganan aplikasi.
+  </p>
+
+  <h3>Kebutuhan yang ingin dijawab</h3>
+  <p>
+    Sebagian besar toko sudah menerima QRIS, tetapi memakai kode statis yang tertempel di meja
+    kasir. Kasir harus memeriksa layar ponsel pembeli untuk memastikan uangnya masuk, nominalnya
+    diketik ulang dengan tangan, dan pembukuan hari itu sering tidak cocok dengan mutasi rekening.
+    Yang dibutuhkan: kode QR bernominal sesuai nota, dan status lunas yang masuk sendiri ke
+    pembukuan.
+  </p>
+
+  <h3>Kedudukan tiap pihak</h3>
+  <table class="t">
+    <tr><th style="width:34mm">Pihak</th><th>Peran</th><th style="width:38mm">Menerima dana?</th></tr>
+    <tr><td><strong>Pembeli di toko</strong></td><td>Membayar belanjaannya dengan memindai kode QR di kasir</td><td>Tidak</td></tr>
+    <tr><td><strong>Toko (klien TokoKu)</strong></td><td>Penjual barang dan <strong>merchant Midtrans</strong> atas transaksi itu. Bertanggung jawab atas barang, harga, retur, dan sengketa dengan pembeli</td><td><strong>Ya, ke rekening toko sendiri</strong></td></tr>
+    <tr><td><strong>Seawise Studio</strong></td><td>Penyedia perangkat lunak. Membuatkan permintaan pembayaran atas nama toko dan mencocokkan statusnya ke nota kasir</td><td><strong>Tidak</strong>, hanya menerima biaya langganan aplikasi</td></tr>
+    <tr><td><strong>Midtrans</strong></td><td>Memproses pembayaran dan menyelesaikan dana ke rekening merchant</td><td>Sebagai pemroses</td></tr>
+  </table>
+
+  <div class="note blue">
+    <b>Model yang dipilih: setiap toko menjadi merchant Midtrans sendiri.</b> TokoKu bermaksud
+    memakai skema Partner, yaitu satu Partner ID yang menaungi banyak Merchant ID. Tiap toko
+    didaftarkan sebagai merchant tersendiri, verifikasi identitas dan kelengkapan usahanya
+    dilakukan Midtrans terhadap toko itu, dan <b>penyelesaian dana berjalan langsung dari Midtrans
+    ke rekening bank toko yang bersangkutan.</b> Dana milik pembeli akhir tidak pernah singgah di
+    rekening Seawise Studio.
+  </div>
+
+  <h3>Alur pembayaran QRIS di kasir</h3>
+  <div class="seq">
+    <div class="lanes"><div>Kasir dan pembeli</div><div>Server TokoKu</div><div>Midtrans</div></div>
+    <div class="row"><span class="n">1</span><span class="txt"><span class="who">Kasir</span>Menyusun belanjaan, menekan Bayar, lalu memilih metode <strong>QRIS</strong>.</span></div>
+    <div class="row"><span class="n">2</span><span class="txt"><span class="who">Server TokoKu &#8594; Midtrans</span>Meminta kode QRIS dinamis sebesar nilai nota, memakai kredensial <strong>Merchant ID milik toko itu</strong>, dengan nomor pesanan yang memuat nomor nota kasir.</span></div>
+    <div class="row"><span class="n">3</span><span class="txt"><span class="who">Kasir dan pembeli</span>Kode QR tampil di layar kasir atau dicetak di struk 58mm. Pembeli memindainya dengan aplikasi bank atau dompet digitalnya.</span></div>
+    <div class="row"><span class="n">4</span><span class="txt"><span class="who">Midtrans &#8594; Server TokoKu</span>Mengirim pemberitahuan status transaksi begitu pembayaran diterima, ke alamat pemberitahuan TokoKu.</span></div>
+    <div class="row"><span class="n">5</span><span class="txt"><span class="who">Server TokoKu</span>Memeriksa keaslian pemberitahuan, mencocokkan nomor pesanan dengan nota yang menunggu, lalu menandai nota <span class="pill ok">lunas</span>. Stok dan laporan ikut terbarui seperti pembayaran tunai.</span></div>
+    <div class="row"><span class="n">6</span><span class="txt"><span class="who">Kasir dan pembeli</span>Layar kasir berubah menjadi lunas tanpa kasir mengetik apa pun. Bila pembeli batal, nota dapat dialihkan ke metode lain atau dibatalkan.</span></div>
+    <div class="row"><span class="n">7</span><span class="txt"><span class="who">Midtrans &#8594; Toko</span>Menyelesaikan dana <strong>langsung ke rekening bank toko</strong> sesuai jadwal penyelesaian yang berlaku bagi merchant tersebut.</span></div>
+  </div>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 9</span></div>
+</section>
+
+<!-- ============ 7c. PENYELESAIAN DANA ============ -->
+<section class="page compact">
+  <div class="head"><h2>Penyelesaian dana dan batasannya</h2><span class="no">Bagian 6</span></div>
+
+  <h3>Ke mana uangnya mengalir</h3>
+  <table class="t">
+    <tr><th style="width:44mm">Hal</th><th>Ketentuan yang dipakai</th></tr>
+    <tr><td>Penerima dana</td><td>Rekening bank atas nama toko, terdaftar pada akun merchant toko itu sendiri.</td></tr>
+    <tr><td>Jadwal penyelesaian</td><td>Mengikuti jadwal Midtrans untuk merchant yang bersangkutan. TokoKu tidak menahan, menunda, atau mempercepatnya.</td></tr>
+    <tr><td>Saldo di aplikasi</td><td>Halaman penyelesaian dana di TokoKu hanya <strong>menampilkan</strong> data dari Midtrans supaya pemilik toko bisa mencocokkan penjualan dengan uang yang masuk. Ini catatan, bukan dompet, dan tidak ada saldo yang dapat dipindahkan dari dalam aplikasi.</td></tr>
+    <tr><td>Retur dan sengketa</td><td>Diajukan oleh toko sebagai merchant lewat mekanisme Midtrans. TokoKu membantu menyiapkan rincian notanya.</td></tr>
+    <tr><td>Biaya transaksi</td><td>Dibebankan Midtrans kepada toko sebagai merchant, terpisah dari biaya langganan aplikasi kepada Seawise Studio.</td></tr>
+    <tr><td>Pendaftaran toko</td><td>Toko mengisi datanya di dalam aplikasi, lalu diteruskan ke proses pendaftaran merchant Midtrans. Verifikasi kelayakan sepenuhnya berada di tangan Midtrans, dan fitur QRIS baru menyala setelah merchant toko itu disetujui.</td></tr>
+  </table>
+
+  <h3>Yang secara tegas tidak kami lakukan</h3>
+  <ul>
+    <li>Tidak menerima dana penjualan toko ke rekening Seawise Studio lalu meneruskannya.</li>
+    <li>Tidak menahan dana toko sebagai saldo yang harus ditarik lebih dulu sebelum bisa dipakai.</li>
+    <li>Tidak memproses transaksi milik toko memakai akun merchant Seawise Studio.</li>
+    <li>Tidak memakai satu kode QRIS bersama untuk banyak toko yang berbeda.</li>
+  </ul>
+
+  <div class="note amber">
+    <b>Catatan mengenai model penampungan dana.</b> Kami memahami ada model lain, yaitu dana
+    penjualan seluruh toko masuk lebih dulu ke akun platform, tercatat sebagai saldo tiap toko,
+    lalu dicairkan ketika toko mengajukan penarikan. Model itu menjadikan penyelenggaranya pihak
+    yang menampung dan meneruskan dana milik pihak lain, sehingga tunduk pada ketentuan perizinan
+    penyelenggara jasa pembayaran dan memerlukan persetujuan khusus dari Midtrans.
+    <b>Seawise Studio tidak menjalankan model tersebut</b>, dan tidak akan menjalankannya kecuali
+    dua syarat terpenuhi lebih dulu: disetujui secara tertulis oleh Midtrans melalui skema yang
+    sesuai, dan seluruh ketentuan perizinan yang berlaku sudah dipenuhi.
+  </div>
+
+  <h3>Yang kami butuhkan dari Midtrans untuk fase ini</h3>
+  <table class="t">
+    <tr><th style="width:44mm">Kebutuhan</th><th>Keperluan</th></tr>
+    <tr><td>Akun Partner</td><td>Menaungi Merchant ID tiap toko klien dalam satu pengelolaan.</td></tr>
+    <tr><td>Alur pendaftaran sub-merchant</td><td>Mendaftarkan toko baru beserta dokumen usahanya tanpa harus keluar dari aplikasi.</td></tr>
+    <tr><td>QRIS dinamis</td><td>Membuat kode QR bernominal sesuai nota kasir, atas nama merchant toko.</td></tr>
+    <tr><td>Pemberitahuan per merchant</td><td>Memastikan pembayaran tercocokkan ke nota dan ke toko yang benar.</td></tr>
+    <tr><td>Data penyelesaian dana</td><td>Menampilkan rekonsiliasi penjualan dan penyelesaian dana kepada pemilik toko.</td></tr>
+  </table>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 10</span></div>
+</section>
+
+<!-- ============ 8. KEAMANAN + KERANGKA UMUM ============ -->
+<section class="page">
+  <div class="head"><h2>Keamanan, dan kerangka untuk aplikasi lain</h2><span class="no">Bagian 7</span></div>
+
+  <h3>Keamanan pembayaran dan data</h3>
+  <table class="t">
+    <tr><th style="width:46mm">Aspek</th><th>Penerapan</th></tr>
+    <tr><td>Data kartu</td><td>Tidak pernah masuk ke sistem TokoKu. Seluruh pengisian terjadi di halaman Midtrans, termasuk verifikasi 3D Secure.</td></tr>
+    <tr><td>Kunci server Midtrans</td><td>Hanya tersimpan sebagai variabel lingkungan di server dan tidak pernah dikirim ke peramban. Permintaan token selalu dibuat dari sisi server.</td></tr>
+    <tr><td>Keaslian pemberitahuan</td><td>Setiap pemberitahuan diperiksa dengan pencocokan tanda tangan SHA512 sebelum diproses. Yang tidak cocok ditolak.</td></tr>
+    <tr><td>Nilai tagihan</td><td>Total selalu dihitung ulang di server dari harga paket yang tersimpan di database. Angka yang datang dari peramban tidak pernah dipercaya.</td></tr>
+    <tr><td>Sambungan</td><td>Seluruh lalu lintas memakai HTTPS. Aplikasi juga memasang header keamanan dasar terhadap penyalahgunaan bingkai dan penebakan tipe berkas.</td></tr>
+    <tr><td>Pemisahan data antar toko</td><td>Setiap baris data terikat pada satu toko dan dijaga aturan keamanan tingkat baris di database, sehingga data satu klien tidak dapat terbaca klien lain.</td></tr>
+    <tr><td>Jejak audit</td><td>Perubahan status langganan dan pembayaran dicatat lengkap dengan waktu dan pelakunya, dan riwayatnya terbuka untuk pemilik toko yang bersangkutan.</td></tr>
+    <tr><td>Pemantauan gangguan</td><td>Kesalahan sistem terpantau otomatis. Data pribadi pengguna sengaja tidak ikut dikirim ke alat pemantauan, dan perekaman layar dimatikan.</td></tr>
+    <tr><td>Dokumen kebijakan</td><td>Kebijakan Privasi dan Syarat &amp; Ketentuan terbit dan dapat dibaca tanpa akun di <code>/kebijakan-privasi</code> dan <code>/syarat-ketentuan</code>.</td></tr>
+  </table>
+
+  <h3>Kerangka yang sama untuk aplikasi Seawise Studio lainnya</h3>
+  <p style="font-size:9.6pt;color:var(--ink-soft)">
+    TokoKu adalah aplikasi pertama yang memakai kerangka ini. Aplikasi lain yang dikembangkan
+    Seawise Studio mengikuti pola perjalanan dan pola integrasi yang sama, dengan yang berubah
+    hanya nama barang yang dijual dan bentuk pemenuhannya.
+  </p>
+
+  <div class="card" style="background:var(--paper);margin-bottom:10px">
+    <div style="font-size:9.6pt;line-height:1.9">
+      Buka aplikasi <span style="color:var(--ink-faint)">&#8594;</span>
+      Telusuri katalog <span style="color:var(--ink-faint)">&#8594;</span>
+      Pilih item <span style="color:var(--ink-faint)">&#8594;</span>
+      Ringkasan pesanan <span style="color:var(--ink-faint)">&#8594;</span>
+      Checkout <span style="color:var(--ink-faint)">&#8594;</span>
+      <strong style="color:var(--green)">Halaman pembayaran Midtrans</strong> <span style="color:var(--ink-faint)">&#8594;</span>
+      Pemberitahuan status <span style="color:var(--ink-faint)">&#8594;</span>
+      Pemenuhan pesanan <span style="color:var(--ink-faint)">&#8594;</span>
+      Riwayat dan bukti bayar
+    </div>
+  </div>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 11</span></div>
+</section>
+
+<!-- ============ 9. KERANGKA UMUM ============ -->
+<section class="page">
+  <div class="head"><h2>Pemetaan tahap dan kontak</h2><span class="no">Bagian 8</span></div>
+  <p class="lead">
+    Tabel berikut memetakan tiap tahap perjalanan pengguna di TokoKu ke bentuknya pada aplikasi
+    Seawise Studio berikutnya. Yang berubah hanya isi katalog dan bentuk pemenuhan pesanan,
+    sedangkan jalur pembayarannya sama persis.
+  </p>
+
+  <table class="t">
+    <tr><th>Tahap</th><th>Pada TokoKu</th><th>Pada aplikasi lain sejenis</th></tr>
+    <tr><td>Katalog</td><td>Tiga paket langganan di halaman fitur</td><td>Daftar produk, layanan, atau jadwal</td></tr>
+    <tr><td>Pilihan pengguna</td><td>Paket dan jumlah bulan</td><td>Barang dan jumlah, atau slot waktu</td></tr>
+    <tr><td>Checkout</td><td>Ringkasan tagihan langganan</td><td>Ringkasan pesanan beserta biaya lain bila ada</td></tr>
+    <tr><td>Pembayaran</td><td>Snap Midtrans</td><td>Snap Midtrans, dengan alur yang sama persis</td></tr>
+    <tr><td>Sumber kebenaran status</td><td>Pemberitahuan server ke server yang diperiksa tanda tangannya</td><td>Sama</td></tr>
+    <tr><td>Pemenuhan</td><td>Langganan aktif seketika</td><td>Akses dibuka, pesanan diproses, atau jadwal dikunci</td></tr>
+    <tr><td>Bukti</td><td>Email bukti bayar dan riwayat tagihan</td><td>Sama</td></tr>
+  </table>
+
+  <h3>Kontak</h3>
+  <table class="t">
+    <tr><th style="width:46mm">Keperluan</th><th>Alamat</th></tr>
+    <tr><td>Penanggung jawab integrasi</td><td>Seawise Studio, seawise.cc@gmail.com</td></tr>
+    <tr><td>Dukungan pengguna</td><td>WhatsApp 0812 3759 7759</td></tr>
+    <tr><td>Website aplikasi</td><td>https://tokoku.seawise.id</td></tr>
+  </table>
+
+  <h3>Yang dapat kami sediakan bila diperlukan</h3>
+  <ul style="font-size:9.4pt;color:var(--ink-soft)">
+    <li>Akun peragaan untuk menelusuri sendiri seluruh tahap di dalam aplikasi.</li>
+    <li>Tangkapan layar tiap halaman yang disebut di dokumen ini, dalam resolusi penuh.</li>
+    <li>Dokumen Kebijakan Privasi dan Syarat &amp; Ketentuan dalam bentuk berkas terpisah.</li>
+    <li>Contoh muatan pemberitahuan dan catatan pengujian pada lingkungan sandbox Midtrans.</li>
+  </ul>
+
+  <div class="note">
+    <b>Penutup.</b> Seluruh jalur pembayaran pada dokumen ini bermuara pada satu prinsip: nilai
+    tagihan selalu dihitung di server, status pembayaran hanya dipercaya dari pemberitahuan resmi
+    Midtrans yang sudah diperiksa keasliannya, dan pengguna selalu bisa melihat status serta
+    riwayat pembayarannya sendiri di dalam aplikasi.
+  </div>
+
+  <div class="footer"><span>TokoKu by Seawise Studio - Alur Transaksi &amp; Customer Journey</span><span>Halaman 12</span></div>
+</section>
+
+</body>
+</html>

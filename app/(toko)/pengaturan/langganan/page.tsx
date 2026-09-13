@@ -1,12 +1,15 @@
 import type { Metadata } from 'next'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { QuotaBars, type Quota } from '@/components/domain/QuotaBars'
+import { SubscriptionCheckout, type CheckoutPlan } from '@/components/domain/SubscriptionCheckout'
 import { WhatsAppButton } from '@/components/domain/WhatsAppButton'
 import { Icon } from '@/components/ui/icons'
 import { requirePermission } from '@/lib/auth'
 import { cn, rupiah, tanggal } from '@/lib/format'
+import { midtransConfigured, midtransMode } from '@/lib/midtrans'
 import { createClient } from '@/lib/supabase/server'
 import { subscriptionState } from '@/lib/subscription'
+import { syncPendingInvoice } from '@/lib/subscription-sync'
 
 export const metadata: Metadata = { title: 'Langganan | TokoKu' }
 export const dynamic = 'force-dynamic'
@@ -28,6 +31,16 @@ const STATUS: Record<string, { label: string; badge: string }> = {
   inactive: { label: 'Nonaktif', badge: 'badge-inactive' },
 }
 
+/** Keadaan tagihan, ditulis untuk pemilik warung bukan untuk programmer. */
+const TAGIHAN: Record<string, { label: string; kelas: string }> = {
+  pending: { label: 'Menunggu pembayaran', kelas: 'badge-trial' },
+  paid: { label: 'Lunas', kelas: 'badge-active' },
+  failed: { label: 'Gagal', kelas: 'badge-low' },
+  expired: { label: 'Kedaluwarsa', kelas: 'badge-inactive' },
+  cancelled: { label: 'Dibatalkan', kelas: 'badge-inactive' },
+  refunded: { label: 'Dikembalikan', kelas: 'badge-inactive' },
+}
+
 /** Selisih HARI KALENDER — orang menghitung tanggal, bukan durasi jam. */
 function sisaHari(iso: string): number {
   const akhir = new Date(new Date(iso).toLocaleDateString('en-CA') + 'T00:00:00').getTime()
@@ -35,28 +48,76 @@ function sisaHari(iso: string): number {
   return Math.round((akhir - kini) / 864e5)
 }
 
-export default async function LanggananPage() {
+export default async function LanggananPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string }>
+}) {
   const session = await requirePermission('settings')
   const supabase = await createClient()
   const orgId = session.org!.id
+  const { status: hasilBayar } = await searchParams
 
-  const [{ data: org }, { data: quota }, { data: events }] = await Promise.all([
-    supabase
-      .from('organizations')
-      .select('name, status, trial_ends_at, subscription_ends_at, plans:plan_id(name, code, price_monthly)')
-      .eq('id', orgId)
-      .maybeSingle(),
-    // `v_client_quota` menyaring sendiri berdasarkan keanggotaan pemanggil
-    // (lihat migrasi 0020), jadi pemilik toko boleh membacanya tanpa tambahan
-    // apa pun — dan angkanya PERSIS sama dengan yang dilihat Super Admin.
-    supabase.from('v_client_quota').select('*').eq('organization_id', orgId).maybeSingle(),
-    supabase
-      .from('subscription_events')
-      .select('id, action, amount, created_at, plan:plan_id(name), from_plan:from_plan_id(name)')
+  /**
+   * Penyelarasan tagihan yang masih menunggu, SEBELUM halaman dirender.
+   *
+   * Dibaca lewat klien ber-RLS dulu, jadi nomor pesanan yang diselaraskan pasti
+   * milik toko ini. Baru setelah itu `syncPendingInvoice` bertanya ke Midtrans.
+   * Urutan ini yang membuat jalur service-role di dalamnya tetap sempit.
+   *
+   * Dikerjakan di sini, bukan di klien, karena hasilnya harus sudah tercermin
+   * pada render pertama: orang yang baru kembali dari halaman pembayaran
+   * membuka halaman ini untuk melihat "sudah aktif atau belum", dan halaman
+   * yang menjawab "belum" lalu berubah sendiri beberapa detik kemudian
+   * mengajari orang untuk tidak mempercayai layarnya.
+   */
+  if (midtransConfigured()) {
+    const { data: menunggu } = await supabase
+      .from('subscription_invoices')
+      .select('order_id')
       .eq('organization_id', orgId)
+      .eq('status', 'pending')
       .order('created_at', { ascending: false })
-      .limit(20),
-  ])
+      .limit(1)
+      .maybeSingle()
+
+    if (menunggu?.order_id) await syncPendingInvoice(menunggu.order_id)
+  }
+
+  const [{ data: org }, { data: quota }, { data: events }, { data: invoices }, { data: plans }] =
+    await Promise.all([
+      supabase
+        .from('organizations')
+        .select(
+          'name, status, trial_ends_at, subscription_ends_at, plan_id, plans:plan_id(name, code, price_monthly)',
+        )
+        .eq('id', orgId)
+        .maybeSingle(),
+      // `v_client_quota` menyaring sendiri berdasarkan keanggotaan pemanggil
+      // (lihat migrasi 0020), jadi pemilik toko boleh membacanya tanpa tambahan
+      // apa pun — dan angkanya PERSIS sama dengan yang dilihat Super Admin.
+      supabase.from('v_client_quota').select('*').eq('organization_id', orgId).maybeSingle(),
+      supabase
+        .from('subscription_events')
+        .select('id, action, amount, created_at, plan:plan_id(name), from_plan:from_plan_id(name)')
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: false })
+        .limit(20),
+      supabase
+        .from('subscription_invoices')
+        .select(
+          'id, order_id, status, amount, months, payment_type, created_at, paid_at, expires_at, period_end, plans:plan_id(name)',
+        )
+        .eq('organization_id', orgId)
+        .order('created_at', { ascending: false })
+        .limit(12),
+      supabase
+        .from('plans')
+        .select('id, name, code, price_monthly')
+        .eq('is_active', true)
+        .gt('price_monthly', 0)
+        .order('price_monthly'),
+    ])
 
   const plan = org?.plans as unknown as {
     name: string
@@ -71,10 +132,7 @@ export default async function LanggananPage() {
    * Tanggal berakhirnya masa aktif — trial MAUPUN berbayar.
    *
    * Statusnya yang menentukan kolom mana yang berlaku, persis seperti
-   * `org_lapsed_at()` dan `lib/subscription.ts`. Sebelum migrasi 0041 kolom
-   * berbayarnya tidak ada sama sekali, jadi toko yang sudah membayar melihat
-   * halaman ini tanpa satu pun tanggal — tidak ada yang bisa dipakai
-   * merencanakan kapan harus memperpanjang.
+   * `org_lapsed_at()` dan `lib/subscription.ts`.
    */
   const aktifSampai =
     org?.status === 'trial'
@@ -98,13 +156,78 @@ export default async function LanggananPage() {
       }
     : null
 
+  const daftarPaket: CheckoutPlan[] = (plans ?? []).map((p) => ({
+    id: p.id,
+    name: p.name,
+    code: p.code,
+    priceMonthly: Number(p.price_monthly ?? 0),
+  }))
+
+  /**
+   * Membayar adalah keputusan pemilik, bukan siapa pun yang memegang izin
+   * `settings`. Gerbangnya harus sama persis dengan `can_manage()` di dalam
+   * `create_subscription_invoice` — kalau berbeda, tombolnya terlihat lalu
+   * ditolak, dan penolakan yang datang setelah ditekan terbaca seperti tombol
+   * rusak.
+   */
+  const bolehBayar = session.role === 'owner' || session.role === 'admin'
+
+  const menunggu = (invoices ?? []).find(
+    (i) => i.status === 'pending' && (!i.expires_at || new Date(i.expires_at) > new Date()),
+  )
+
   return (
     <>
       <PageHeader
         eyebrow="Pengaturan"
         title="Langganan"
-        subtitle="Paket, masa aktif, dan pemakaian kuota toko ini."
+        subtitle="Paket, masa aktif, pembayaran, dan pemakaian kuota toko ini."
       />
+
+      {/* ── Kabar dari halaman pembayaran ─────────────────────────────────
+          Yang ditampilkan mengikuti STATUS TERSIMPAN, bukan alamat halaman.
+          Alamat bisa diketik tangan, dan pembayaran yang belum diteruskan
+          Midtrans tidak boleh terbaca sebagai berhasil hanya karena pengguna
+          mendarat di alamat yang benar. */}
+      {hasilBayar && (
+        <div
+          className={cn(
+            'empty-note',
+            berbayar && hasilBayar === 'berhasil' ? 'is-ok' : hasilBayar === 'gagal' ? '' : 'is-warn',
+          )}
+          style={{ marginBottom: 18 }}
+        >
+          <Icon
+            name={berbayar && hasilBayar === 'berhasil' ? 'check' : 'alert'}
+            size={16}
+            style={{ marginTop: 1 }}
+          />
+          <div style={{ flex: 1 }}>
+            {hasilBayar === 'berhasil' && berbayar ? (
+              <>
+                Pembayaran diterima. Langganan sudah aktif
+                {aktifSampai ? <> sampai <b>{tanggal(aktifSampai)}</b></> : null}. Bukti
+                pembayarannya dikirim ke email yang Anda pakai saat membayar.
+              </>
+            ) : hasilBayar === 'berhasil' ? (
+              <>
+                Pembayaran sedang diproses. Untuk virtual account, aktivasi terjadi begitu
+                pembayaran diteruskan bank, dan Anda tidak perlu menunggu di halaman ini.
+              </>
+            ) : hasilBayar === 'gagal' ? (
+              <>
+                Pembayaran tidak jadi diproses. Tidak ada uang yang terpotong. Anda bisa
+                mencoba lagi dengan metode lain.
+              </>
+            ) : (
+              <>
+                Pembayaran belum selesai. Tagihannya masih terbuka dan bisa dilanjutkan dari
+                halaman ini.
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Paket aktif ───────────────────────────────────────────────────── */}
       <div className="card">
@@ -149,8 +272,8 @@ export default async function LanggananPage() {
                 </>
               ) : sisa === 0 ? (
                 <>
-                  {berbayar ? 'Langganan' : 'Masa coba gratis'} berakhir <b>hari ini</b>. Hubungi
-                  admin TokoKu hari ini juga supaya kasir tidak berhenti besok pagi.
+                  {berbayar ? 'Langganan' : 'Masa coba gratis'} berakhir <b>hari ini</b>.
+                  Bayar hari ini juga supaya kasir tidak berhenti besok pagi.
                 </>
               ) : (
                 <>
@@ -164,9 +287,7 @@ export default async function LanggananPage() {
         )}
 
         {/* Berbayar tapi tanpa tanggal akhir. Bukan kesalahan — NULL memang
-            berarti tanpa batas (lihat migrasi 0041) — tapi kalau didiamkan,
-            halaman ini tidak menjawab pertanyaan yang paling sering ditanyakan
-            di sini. */}
+            berarti tanpa batas (lihat migrasi 0041). */}
         {berbayar && !aktifSampai && (
           <div className="empty-note is-ok" style={{ marginTop: 16 }}>
             <Icon name="check" size={16} style={{ marginTop: 1 }} />
@@ -188,6 +309,16 @@ export default async function LanggananPage() {
         )}
       </div>
 
+      {/* ── Checkout ──────────────────────────────────────────────────────── */}
+      <SubscriptionCheckout
+        plans={daftarPaket}
+        currentPlanId={org?.plan_id ?? null}
+        canPay={bolehBayar}
+        pendingOrderId={menunggu?.order_id ?? null}
+        enabled={midtransConfigured()}
+        sandbox={midtransMode() === 'sandbox'}
+      />
+
       {/* ── Kuota ─────────────────────────────────────────────────────────── */}
       <div className="section-title">Pemakaian Kuota</div>
       <div className="card">
@@ -206,13 +337,67 @@ export default async function LanggananPage() {
         )}
       </div>
 
+      {/* ── Riwayat tagihan ───────────────────────────────────────────────── */}
+      {(invoices ?? []).length > 0 && (
+        <>
+          <div className="section-title">Riwayat Tagihan</div>
+          <div className="table-card">
+            <div className="table-scroll">
+              {/* `.inv-table` berhenti jadi tabel di bawah 640px dan menumpuk.
+                  Sebagai tabel, empat kolomnya butuh 464px pada wadah 341px dan
+                  yang terdorong keluar layar justru NOMINALNYA — angka yang
+                  dicari orang saat mencocokkan tagihan dengan mutasi rekening.
+                  Pola yang sama dengan .trx-table dan .shift-table. */}
+              <table className="inv-table">
+                <tbody>
+                  {(invoices ?? []).map((i) => {
+                    const p = i.plans as unknown as { name: string } | null
+                    const t = TAGIHAN[i.status] ?? TAGIHAN.pending
+                    return (
+                      <tr key={i.id}>
+                        <td className="iv-code">
+                          <div className="cell-name inv-code">{i.order_id}</div>
+                          <div className="cell-sub">
+                            {p?.name ?? '-'} · {i.months} bulan
+                            {i.payment_type ? ` · ${i.payment_type}` : ''}
+                          </div>
+                        </td>
+                        <td className="iv-status" style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                          <span className={cn('badge', t.kelas)}>{t.label}</span>
+                        </td>
+                        <td
+                          className="iv-amount"
+                          style={{ textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}
+                        >
+                          {rupiah(Number(i.amount ?? 0))}
+                        </td>
+                        <td
+                          className="iv-date"
+                          style={{
+                            textAlign: 'right',
+                            color: 'var(--color-ink-faint)',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {tanggal(i.paid_at ?? i.created_at)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
+
       {/* ── Hubungi admin ─────────────────────────────────────────────────── */}
-      <div className="section-title">Butuh Ubah Paket?</div>
+      <div className="section-title">Butuh Bantuan?</div>
       <div className="card">
         <p style={{ margin: 0, fontSize: 13, color: 'var(--color-ink-soft)', lineHeight: 1.6 }}>
-          Naik paket, perpanjang, atau tanya tagihan: semuanya lewat admin TokoKu. Pesan
-          WhatsApp-nya sudah terisi nama toko dan paket Anda, jadi tidak perlu menjelaskan dari
-          awal.
+          Tanya tagihan, minta bukti bayar, atau ada pembayaran yang belum masuk: hubungi admin
+          TokoKu. Pesan WhatsApp-nya sudah terisi nama toko dan paket Anda, jadi tidak perlu
+          menjelaskan dari awal.
         </p>
         <WhatsAppButton
           storeName={org?.name ?? session.org!.name}
@@ -221,7 +406,7 @@ export default async function LanggananPage() {
         />
       </div>
 
-      {/* ── Riwayat ───────────────────────────────────────────────────────── */}
+      {/* ── Riwayat langganan ─────────────────────────────────────────────── */}
       <div className="section-title">Riwayat Langganan</div>
       <div className="table-card">
         {(events ?? []).length === 0 ? (

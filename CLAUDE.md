@@ -10,8 +10,16 @@ tampilan, buka file itu dulu.
 
 ## Kondisi terkini — mulai baca dari sini
 
-Terakhir dikerjakan **14 Agustus 2026**. Semua yang di bawah ini sudah dibangun
-dan **46 migrasinya sudah diterapkan** ke Supabase produksi.
+Terakhir dikerjakan **13 September 2026**. Semua yang di bawah ini sudah
+dibangun dan **48 migrasinya sudah diterapkan** ke Supabase produksi.
+
+**Yang dikerjakan 13 Sep:** pembayaran langganan lewat Midtrans Snap (tagihan,
+checkout, pemberitahuan server ke server, penyelarasan), dan satu cacat
+otorisasi lama yang ikut ketahuan saat mengujinya — `can_manage()` menjawab
+NULL untuk orang yang bukan anggota toko, sehingga setiap gerbang PL/pgSQL yang
+memakainya lolos diam-diam. Lihat "Pembayaran langganan" dan "`can_manage()`
+tidak boleh NULL". Kodenya **belum di-deploy** dan kunci Midtrans belum dipasang
+di Vercel; lihat "Yang harus dikerjakan pemilik project".
 
 **Yang dikerjakan 14 Agu**, semuanya sudah di produksi: modul keuangan
 (pengeluaran operasional → arus kas & laba rugi), pelunasan nota tempo yang
@@ -152,8 +160,9 @@ pekerjaan sebelum dijual".
    menyalakannya. Lihat `docs/RENCANA-KEUANGAN.md` — di sana juga tercatat dua
    jebakan yang menunggu: `catalog_version` tidak naik saat setelan organisasi
    berubah, dan cache offline tidak menyimpan `settings` sama sekali.
-4. **Payment gateway.** Perubahan paket masih dikerjakan tangan lewat Super
-   Admin. Sanggup untuk sepuluh klien pertama, tidak untuk seratus.
+4. ~~**Payment gateway**~~ ✅ **kodenya selesai** 13 Sep, tinggal dipasangi
+   kunci dan di-deploy. Lihat "Pembayaran langganan" dan "Yang harus
+   dikerjakan pemilik project".
 5. `features` jsonb sisa: `multi_outlet`, `api`, `support` belum dipakai —
    barangnya memang belum ada. `purchasing`, `reports`, `crm` sudah ditegakkan.
 
@@ -176,6 +185,205 @@ produksi bulan ini semuanya cacat TAMPILAN yang cuma bisa dilihat mata:
 embed yang gagal membuat daftar tampak kosong, tombol Masuk yang hilang saat
 di-hover, dan teks impor yang mepet. Tangkapan layar dari pemilik project jauh
 lebih efektif daripada tebakan agen.
+
+## Pembayaran langganan (Midtrans)
+
+Dibangun 13 Sep, **belum di-deploy**. Sebelum ini perubahan paket dikerjakan
+TANGAN: klien menekan tombol WhatsApp di halaman Langganan, admin membalas, lalu
+admin mengetik sendiri paket dan tanggal berakhirnya di `/admin/klien`. Jalur itu
+sengaja **tidak dibuang** — ia tetap jadi cadangan, dan tanpa kunci Midtrans
+aplikasi memang jatuh ke sana.
+
+Alurnya: `/pengaturan/langganan` → pilih paket & jumlah bulan → tagihan dibuat →
+token Snap diminta → dialihkan ke halaman pembayaran Midtrans → Midtrans
+mengirim pemberitahuan ke `/api/pembayaran/midtrans/notifikasi` → langganan
+aktif.
+
+**OPSIONAL SECARA SENGAJA**, pola yang sama persis dengan `lib/email.ts`. Tanpa
+`MIDTRANS_SERVER_KEY`, kartu checkout tidak dirender sama sekali dan halaman
+kembali ke bentuk lamanya. Tombol bayar yang terlihat lalu gagal saat ditekan
+adalah cacat yang sudah pernah terjadi di sini (lonceng notifikasi di wireframe).
+
+**`MIDTRANS_IS_PRODUCTION` sengaja TIDAK diikat ke `NODE_ENV`.** Selama
+peninjauan merchant berlangsung, aplikasi produksi memang harus berjalan dengan
+kunci Sandbox supaya tim Midtrans bisa menyelesaikan tes transaksi di alamat yang
+sesungguhnya. Diikat ke `NODE_ENV`, keadaan itu mustahil dan satu-satunya jalan
+adalah menipu build. Selama mode Sandbox, kartu checkout memasang spanduk amber
+yang menyebutnya terang-terangan.
+
+### Yang sudah diputuskan dan jangan diubah tanpa alasan
+
+- **Tabel tagihan SENDIRI** (`subscription_invoices`), bukan menumpang
+  `subscription_events`. Yang kedua adalah JEJAK hal yang sudah terjadi dan
+  barisnya tidak pernah berubah lagi; tagihan adalah NIAT yang belum tentu jadi,
+  dan statusnya berubah beberapa kali sepanjang hidupnya. Digabung, riwayat
+  langganan penuh baris "Perpanjangan" atas pembayaran yang tidak pernah selesai.
+  Alasan yang sama dengan dipisahkannya `expenses` dari `purchases`.
+- **NOMINALNYA DIHITUNG SERVER** dari `plans.price_monthly`. Yang dikirim dari
+  layar cuma "paket mana" dan "berapa bulan". Aturan yang sama dengan
+  `discount_total` di migrasi 0039, dan di sini lubangnya lebih telanjang: siapa
+  pun yang bisa membuka DevTools bisa membuat tagihan Enterprise seharga seribu
+  rupiah lalu membayarnya dengan sah, dan tanda tangan Midtrans akan COCOK —
+  karena yang ditandatangani adalah nominal yang kita kirim sendiri.
+- **Nominal diperiksa ULANG saat pemberitahuan masuk.** Bukan terhadap
+  pemalsuan (tanda tangannya sudah menjaga itu), melainkan terhadap nomor pesanan
+  yang tertukar. Tidak cocok berarti tidak ada yang diaktifkan.
+- **`apply_subscription_payment` DICABUT dari `authenticated`.** Fungsi itu bisa
+  membuat toko mana pun aktif; dibiarkan terbuka, ia adalah langganan Enterprise
+  gratis untuk siapa saja yang bisa membaca satu nomor pesanan. Aturan yang sama
+  dengan `_apply_customer_effects` dan `provision_organization`.
+- **IDEMPOTEN per `order_id`.** Midtrans mengulang pemberitahuan sampai menerima
+  200, dan jaringan bisa membuat 200 itu tidak pernah sampai. Tanpa penjagaan
+  ini, satu pembayaran Rp 99.000 bisa menambah tiga bulan.
+- **Periode dihitung dari tanggal akhir yang BERLAKU, bukan dari hari ini.**
+  Toko yang memperpanjang seminggu sebelum habis tidak boleh kehilangan tujuh
+  hari yang sudah dibayarnya; toko yang membayar di tengah masa coba tetap
+  memiliki sisa masa cobanya. Beberapa hari gratis itu murah dibanding satu
+  pemilik toko yang merasa dirugikan karena membayar lebih awal.
+- **`order_id` unik SELAMANYA**, bukan unik per hari. Midtrans menolak nomor
+  pesanan yang pernah dipakai merchant yang sama, termasuk milik tagihan yang
+  dulu kedaluwarsa. Tagihan yang gagal tidak pernah dipakai ulang. Bentuknya
+  `TKS-YYYYMMDD-NNNNNN`, urutannya lintas organisasi — menyertakan id toko akan
+  membocorkan jumlah klien kepada siapa pun yang melihat satu nomor pesanan.
+- **Tagihan menunggu yang SAMA PERSIS dipakai ulang.** Tanpa itu, tiap ketukan
+  pada jaringan warung yang lambat melahirkan satu nomor pesanan baru — dan
+  pembeli yang sudah menyalin nomor virtual account ke aplikasi banknya menemukan
+  nomor itu berubah saat ia kembali ke layar.
+- **Batas waktu bayar 24 jam**, bukan satu atau dua jam. Virtual account sering
+  dibayar besok pagi setelah toko tutup.
+- **Membayar butuh `can_manage` (owner + admin)**, bukan izin `settings`.
+  Halaman Langganan sendiri tetap dijaga `settings` untuk MELIHAT: kasir berhak
+  tahu langganannya sisa berapa. Gerbang tombolnya di UI harus sama persis
+  dengan gerbang di dalam RPC-nya.
+- **Dialihkan ke `redirect_url`, bukan popup Snap.js.** Tab dan popup sering
+  diblokir peramban ponsel kalau pembukaannya terjadi setelah menunggu jawaban
+  server, bukan langsung pada ketukan jari — yang tersisa cuma tombol yang terasa
+  mati. Lagipula tanpa Snap.js tidak ada skrip pihak ketiga baru yang harus ikut
+  dipikirkan saat CSP dipasang nanti.
+- **`.month-picker`, bukan `.tabs`.** `.tabs` dibuat untuk navigasi berlabel
+  panjang dan sengaja bisa digeser. Empat pilihan lama bayar adalah satu
+  perbandingan yang harus terlihat sekaligus. Diukur: memakai `.tabs` di 390px,
+  isinya 323px pada wadah 303px, jadi "12 bulan" terpotong dan terbaca
+  "12 bular".
+- **`.inv-table` menumpuk di bawah 640px**, pola yang sama dengan `.trx-table`
+  dan `.shift-table`. Diukur sebelum diperbaiki: empat kolomnya butuh 464px pada
+  wadah 341px, dan yang terdorong keluar layar justru NOMINALNYA — angka yang
+  dipakai mencocokkan tagihan dengan mutasi rekening.
+
+### Sumber kebenaran, dan jaring pengamannya
+
+Yang menentukan status pembayaran adalah **pemberitahuan server ke server**,
+bukan halaman yang dibuka pengguna: ia bisa menutup peramban tepat setelah
+membayar, dan virtual account sering dibayar saat tidak ada satu pun halaman kita
+yang terbuka.
+
+Tapi pemberitahuan bisa hilang (deploy yang kebetulan berjalan, gangguan
+jaringan, alamat salah ketik di dashboard). Karena itu halaman Langganan yang
+dibuka dengan tagihan masih menunggu **bertanya sendiri ke Midtrans** sebelum
+dirender (`lib/subscription-sync.ts`). Tanpa jaring itu, satu webhook yang hilang
+berarti satu klien yang sudah membayar tetap terkunci sampai ada yang menelepon.
+
+**Hampir semua jawaban route handler adalah 200, dan itu disengaja.** Midtrans
+mengulang sampai menerima 2xx. Nomor pesanan yang tidak dikenal dan nominal yang
+tidak cocok tidak akan pernah membaik dengan diulang, jadi keduanya dijawab 200
+dan dikirim ke Sentry supaya kita yang mengejarnya. Yang dijawab bukan 2xx hanya
+dua: tanda tangan tidak sah (401) dan kegagalan database (500).
+
+### Sudah diuji, dan yang belum
+
+**41 pemeriksaan lulus** (13 Sep, skrip service-role terhadap database produksi,
+memakai tenant `Warung Rina` yang memang sudah di-soft-delete; seluruh keadaannya
+dikembalikan dan database diperiksa bersih sesudahnya).
+
+Lewat RPC langsung: pemanggil bukan anggota ditolak · `apply_subscription_payment`
+ditolak PostgREST untuk pemanggil luar · nominal tidak cocok ditolak tanpa
+menyentuh apa pun · status `pending` tidak mengaktifkan apa pun · lunas
+memindahkan paket, mengisi `subscription_ends_at` pada **23:59:59 WITA**, dan
+menulis riwayat · pemberitahuan berulang tidak menambah masa langganan maupun
+membuat riwayat dobel · perpanjangan menumpuk di atas tanggal lama (+31 hari,
+bukan +31 dari hari ini) · `expire`/`deny`/`cancel` masing-masing jatuh ke status
+yang benar tanpa menyentuh langganan.
+
+Lewat HTTP ke route handler sungguhan (`npm start`, tanda tangan SHA512 dihitung
+sendiri): tanda tangan palsu ditolak 401 dan tidak mengubah apa pun · tanpa tanda
+tangan ditolak 401 · pemberitahuan sah mengaktifkan langganan · kiriman ulang
+dijawab 200 tanpa menambah masa · badan bukan JSON 400 · tanpa `order_id` 400 ·
+nomor pesanan asing dijawab 200 supaya Midtrans berhenti mengulang.
+
+Tata letak diukur di 390px dan 1240px lewat iframe: nol geser horizontal, empat
+pilihan bulan muat, nominal tagihan terlihat penuh.
+
+**BELUM DIUJI: panggilan sungguhan ke Midtrans.** `snapCreateTransaction()`
+belum pernah menerima jawaban dari Midtrans karena belum ada kunci. Bentuk
+muatannya mengikuti dokumentasi Snap, tapi itu tetap satu-satunya bagian yang
+belum dibuktikan bekerja. Yang paling berguna dari pemilik project: pasang kunci
+Sandbox, tekan Bayar Sekarang sekali, dan pastikan halaman Midtrans benar-benar
+terbuka.
+
+## `can_manage()` tidak boleh NULL
+
+**Ditemukan 13 Sep saat menguji migrasi 0047, bukan saat menulisnya** — persis
+seperti FK lintas tenant di migrasi 0044. Ujinya sederhana: panggil
+`create_subscription_invoice` sebagai pemanggil yang bukan anggota toko itu, dan
+harapkan penolakan. Tagihannya justru dibuat.
+
+Sebabnya satu kata yang tidak ada. `user_role_in()` menjawab NULL untuk yang
+bukan anggota, jadi `can_manage()` menjawab `null in ('owner','admin')` = **NULL,
+bukan false**. Di dalam POLICY itu tidak berbahaya, karena `using (NULL)` memang
+tidak lolos — seluruh RLS yang memakainya selama ini sudah benar. Di dalam
+PL/pgSQL ia terbalik:
+
+    if not public.can_manage(p_org) then raise exception 'forbidden'; end if;
+
+`not NULL` bernilai NULL, dan `if NULL then` tidak pernah masuk ke cabangnya.
+Gerbangnya dilewati tanpa suara, dan fungsi-fungsi ini semuanya SECURITY DEFINER
+sehingga RLS di dalamnya juga tidak lagi menahan.
+
+**Bentuk kegagalannya yang paling ganjil:** anggota toko yang izinnya KURANG
+justru tertahan dengan benar (kasir menjawab `'cashier'`, hasilnya false),
+sementara orang yang sama sekali BUKAN anggota lolos. Gerbang yang menahan orang
+dalam dan meloloskan orang luar tidak akan pernah terlihat dari membaca kodenya.
+
+Tiga fungsi lama dari migrasi 0009 ikut kena: `void_transaction` (membatalkan
+transaksi toko lain, stok ikut kembali dan poin ditarik trigger), `close_shift`,
+dan `set_member_pin`. Ketiganya butuh UUID barang yang dituju, dan UUID itu tidak
+pernah dikirim ke layar toko lain — jadi ini bukan pintu yang terbuka, melainkan
+kunci yang ternyata tidak terpasang di pintu yang tidak punya gagang. Tetap
+ditambal: "sulit ditebak" bukan lapisan keamanan, dan pemanggil berikutnya
+mungkin menerima id yang memang boleh diketahui orang luar.
+
+Migrasi 0048 menambalnya **di helper, bukan di tiap pemanggil** — menambal empat
+pemanggil berarti pemanggil kelima akan mengulanginya. `user_role_in` sengaja
+TIDAK ikut di-coalesce: NULL di sana punya arti yang benar ("bukan anggota").
+Yang salah adalah membandingkannya dengan `<>` lalu memakai hasilnya sebagai
+syarat, dan itu diperbaiki di `set_member_pin` dengan `is distinct from`.
+
+**Aturan umumnya, dan ini berlaku untuk helper berikutnya:** fungsi yang dipakai
+sebagai gerbang harus SELALU menjawab true atau false. Kalau ia boleh NULL,
+setiap `if not <gerbang>` yang memakainya akan lolos diam-diam.
+
+## Yang harus dikerjakan pemilik project (pembayaran Midtrans)
+
+Kodenya selesai dan migrasinya sudah di produksi, tapi **belum di-deploy** dan
+kuncinya belum dipasang. Urutannya:
+
+1. **Ambil kunci Sandbox** di dashboard Midtrans → Settings → Access Keys.
+2. **Pasang env di Vercel** (Production): `MIDTRANS_SERVER_KEY`,
+   `MIDTRANS_IS_PRODUCTION=false`, dan **`SUPABASE_SERVICE_ROLE_KEY`** yang
+   sebelumnya sempat dicatat boleh dihapus. Tanpa yang terakhir, pemberitahuan
+   pembayaran masuk tapi langganannya tidak pernah aktif.
+3. **Daftarkan alamat di dashboard Midtrans** → Settings → Configuration:
+   - Payment Notification URL: `https://tokoku.seawise.id/api/pembayaran/midtrans/notifikasi`
+   - Finish: `https://tokoku.seawise.id/pengaturan/langganan?status=berhasil`
+   - Unfinish: `…?status=tertunda` · Error: `…?status=gagal`
+4. **Deploy**, lalu masuk sebagai pemilik toko dan tekan Bayar Sekarang sekali.
+   Yang dipastikan: halaman Midtrans benar-benar terbuka, dan setelah dibayar
+   dengan kartu uji Sandbox, halaman Langganan menyebut langganannya aktif.
+5. Baru setelah itu kredensial akun peninjauan dikirim ke Midtrans. Dokumennya
+   ada di `Data-Susulan-Onboarding-TokoKu-Midtrans.html` dan cara mengisi
+   formulirnya di `PANDUAN-ISI-FORMULIR-MIDTRANS.md`.
+6. Setelah merchant disetujui: ganti ke kunci Production dan setel
+   `MIDTRANS_IS_PRODUCTION=true`. Spanduk amber "Mode uji coba" hilang sendiri.
 
 ## Penukaran poin di Kasir
 
@@ -371,7 +579,9 @@ Diperbarui 13 Agu. Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan.
 5. ~~Nyalakan Sentry~~ ✅ **selesai** 13 Agu. Diverifikasi dari bundel produksi:
    `sentry-trace` di HTML, DSN di bundel klien, `tracesSampleRate: 0.1`,
    `replaysSessionSampleRate: 0`, `sendDefaultPii: false`.
-6. **Payment gateway.** Perubahan paket masih tangan lewat Super Admin.
+6. ~~Payment gateway~~ ✅ **kodenya selesai** 13 Sep. Midtrans Snap, tagihan
+   tersendiri, aktivasi dari pemberitahuan server ke server. Masih perlu kunci
+   di Vercel dan satu deploy.
 7. **Content-Security-Policy.** Header dasar sudah ada di `next.config.ts`
    (nosniff, SAMEORIGIN, referrer policy). CSP butuh nonce untuk script inline
    Next dan harus diuji per halaman. **Ada satu skrip inline milik kita
@@ -387,10 +597,13 @@ Diperbarui 13 Agu. Yang PRODUKNYA sudah siap; yang di bawah ini soal berjualan.
     0002. Sengaja tidak dibuka di halaman pengaturan platform: sakelar yang
     tidak melakukan apa-apa lebih berbahaya daripada tidak ada sakelar, karena
     ia akan dipercaya justru saat keadaan darurat.
-11. **`createAdminClient()` tidak dipakai di mana pun.** `SUPABASE_SERVICE_ROLE_KEY`
-    karena itu tidak perlu ada di env produksi Vercel — dan kunci yang tidak ada
-    tidak bisa bocor. (Skrip di `scripts/` memakainya dari `.env.local`, bukan
-    dari Vercel.)
+11. ~~`createAdminClient()` tidak dipakai di mana pun~~ — **tidak berlaku lagi
+    sejak 13 Sep.** Route handler pemberitahuan Midtrans memakainya, dan harus:
+    kolom komersial `organizations` sengaja hanya boleh ditulis pemanggil TANPA
+    sesi user (migrasi 0036 & 0041). `SUPABASE_SERVICE_ROLE_KEY` karena itu
+    **wajib ada di env produksi Vercel** begitu pembayaran dinyalakan. Satu
+    jalur kedua memakainya juga, `lib/subscription-sync.ts`, dan alasannya
+    ditulis di kepala file itu.
 
 **Saran cara menjual:** jangan buka pendaftaran umum dulu. Ambil 3–5 klien
 pertama yang bisa didampingi langsung — bukan karena kualitas aplikasinya, tapi
@@ -2706,6 +2919,9 @@ app/
   (auth)/          masuk (panel split beranimasi), daftar-toko, lupa-sandi,
                    atur-sandi, undangan/[token], actions
   auth/konfirmasi  route handler pendaratan tautan email (WAJIB route, bukan page)
+  api/pembayaran/midtrans/notifikasi
+                   pemberitahuan pembayaran server ke server — SUMBER KEBENARAN
+                   status, memakai service role (lihat "Pembayaran langganan")
   (toko)/          beranda, kasir, transaksi/[id], riwayat,
                    laporan/{,shift,pengeluaran,keuangan},
                    produk/{,[id],opname,transfer}, pembelian/{,konsinyasi},
@@ -2741,6 +2957,7 @@ components/
                    OpnameSheet, TransactionRowActions, ImportProducts,
                    ExpenseManager (pengeluaran + drawer kategori),
                    ExportReportButton (ikon unduh + panel CSV/PDF),
+                   SubscriptionCheckout (pilih paket & bulan, lalu Snap),
                    DataError (query gagal ≠ data kosong),
                    ChangePasswordCard, PlatformSettingsForm,
                    ProdukTabs / LaporanTabs / PembelianTabs / SettingsNav,
@@ -2755,6 +2972,8 @@ components/
 lib/
   auth.ts          konteks sesi + requireSession/requirePermission/requireWrite
   email.ts         pengirim email (Resend lewat fetch) — OPSIONAL, gagal ≠ batal
+  midtrans.ts      Snap + pemeriksaan tanda tangan SHA512 — OPSIONAL, tanpa SDK
+  subscription-sync.ts  jaring pengaman kalau pemberitahuan Midtrans tidak sampai
   navigation.ts    SATU daftar menu, disaring izin modul
   notifications.ts isi lonceng topbar — hanya yang bisa ditindaklanjuti
   offline/         db (Dexie v3, stempel tenant + outlet, deviceKey per outlet),
@@ -2777,7 +2996,7 @@ proxy.ts           konvensi middleware Next 16
 app/manifest.ts    manifest PWA — tanpa ini tombol "Instal" tidak pernah muncul
 public/icons/      ikon PWA 192/512 + maskable (dari public/brand/tokoku.png)
 public/sw.js       service worker — app shell offline
-supabase/migrations/  46 file, Postgres 17
+supabase/migrations/  48 file, Postgres 17
 docs/EMAIL-TEMPLATES-SUPABASE.md  template email Indonesia untuk ditempel di dashboard
 ```
 
@@ -2787,6 +3006,8 @@ docs/EMAIL-TEMPLATES-SUPABASE.md  template email Indonesia untuk ditempel di das
 `pull_catalog` (delta sync) · `void_transaction` · `open_shift`/`close_shift` ·
 `adjust_stock` · `accept_invitation` + `invitation_preview` · `register_store` ·
 `provision_organization` (dicabut dari `authenticated`, hanya lewat `register_store`) ·
+`create_subscription_invoice` / `attach_invoice_snap` / `apply_subscription_payment`
+(yang terakhir DICABUT dari `authenticated` — hanya service_role) ·
 `create_purchase` · `record_consignment_intake` / `record_consignment_return` /
 `settle_consignment` / `end_consignment` · `create_outlet` / `set_primary_outlet` /
 `transfer_stock` · `bulk_adjust_stock` (opname satu sesi, atomik) · `import_products` (impor CSV,
@@ -2876,12 +3097,17 @@ lewat `/pengaturan/sinkronisasi` kecuali yang punya transaksi.
 | **Resend** | ✅ jalan | domain `send.seawise.id`, MX + SPF + DKIM + DMARC hijau |
 | **Supabase Custom SMTP** | ✅ jalan | memakai kunci Resend yang sama; template Indonesia sudah dipasang |
 | **Sentry** | ✅ jalan | `NEXT_PUBLIC_SENTRY_DSN` terpasang 13 Agu; diverifikasi dari bundel produksi |
+| **Midtrans** | ⏳ menunggu kunci | kodenya selesai 13 Sep, merchant masih dalam peninjauan. Lihat "Yang harus dikerjakan pemilik project" |
 
 Env produksi yang terpasang: `NEXT_PUBLIC_SUPABASE_URL`,
-`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (tidak dipakai kode
-mana pun — boleh dihapus), `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_APP_NAME`,
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (**WAJIB lagi sejak
+13 Sep** — dipakai route handler pemberitahuan Midtrans), `NEXT_PUBLIC_APP_URL`,
+`NEXT_PUBLIC_APP_NAME`,
 `NEXT_PUBLIC_BRAND_TAGLINE`, `RESEND_API_KEY`, `EMAIL_FROM`,
 `NEXT_PUBLIC_SENTRY_DSN`.
+
+Yang BELUM terpasang dan diperlukan pembayaran: `MIDTRANS_SERVER_KEY` dan
+`MIDTRANS_IS_PRODUCTION`.
 
 **URL Configuration Supabase sudah benar** (Site URL + Redirect URLs menunjuk
 `tokoku.seawise.id`). Jangan diubah tanpa membaca "Reset kata sandi" — salah di

@@ -28,8 +28,25 @@ export const envChecks = (): EnvCheck[] => [
   {
     key: 'SUPABASE_SERVICE_ROLE_KEY',
     value: process.env.SUPABASE_SERVICE_ROLE_KEY,
+    // WAJIB begitu pembayaran Midtrans dipasang: route handler pemberitahuan
+    // memakainya untuk mengaktifkan langganan, dan kolom komersial
+    // `organizations` memang hanya boleh ditulis oleh pemanggil TANPA sesi user
+    // (lihat migrasi 0036 & 0041). Tetap `required: false` supaya aplikasi
+    // tanpa pembayaran online tidak dipaksa memasangnya.
     required: false,
-    hint: 'Project Settings → API Keys → service_role (khusus server)',
+    hint: 'Project Settings → API Keys → service_role (khusus server). Wajib kalau MIDTRANS_SERVER_KEY dipasang.',
+  },
+  {
+    key: 'MIDTRANS_SERVER_KEY',
+    value: process.env.MIDTRANS_SERVER_KEY,
+    required: false,
+    hint: 'Dashboard Midtrans → Settings → Access Keys → Server Key',
+  },
+  {
+    key: 'MIDTRANS_IS_PRODUCTION',
+    value: process.env.MIDTRANS_IS_PRODUCTION,
+    required: false,
+    hint: "'true' untuk kunci Production, kosong atau 'false' untuk Sandbox",
   },
 ]
 

@@ -2355,3 +2355,128 @@ tbody tr:hover { background: var(--color-paper); }
 /* Baris saringan cepat di atas tabel. Membungkus di layar sempit, tidak digeser:
    saringan yang tidak terlihat sama dengan saringan yang tidak ada. */
 .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+
+/* ── Checkout langganan ──────────────────────────────────────────────────────
+   Pemilih paket berbentuk kartu, bukan <select>. Tiga paket dengan harga yang
+   berbeda adalah keputusan yang dibandingkan, dan daftar tutup menyembunyikan
+   dua dari tiganya tepat saat orang sedang menimbang. Di layar sempit ketiganya
+   menumpuk; kartu paket yang dipaksa sebaris di 390px menyisakan ~110px per
+   kartu, dan "Rp 249.000 / bulan" butuh lebih dari itu. */
+.plan-picker { display: grid; gap: 8px; }
+@media (min-width: 640px) { .plan-picker { grid-template-columns: repeat(3, 1fr); } }
+
+.plan-opt {
+  display: flex; flex-direction: column; gap: 4px; text-align: left;
+  padding: 12px 14px; cursor: pointer;
+  background: var(--color-card);
+  border: 1.5px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  transition: border-color .15s ease, background .15s ease;
+}
+.plan-opt:hover:not(:disabled) { border-color: var(--color-ink-faint); }
+.plan-opt:disabled { opacity: .5; cursor: not-allowed; }
+.plan-opt.is-on { border-color: var(--color-forest); background: var(--color-paper); }
+.plan-opt-name {
+  font-size: 13.5px; font-weight: 700; color: var(--color-ink);
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+/* Penanda paket yang sedang dipakai. Tenang, bukan berwarna peringatan: ia
+   keterangan, bukan sesuatu yang harus ditindaklanjuti. */
+.plan-opt-now {
+  font-size: 10px; font-weight: 700; letter-spacing: .03em;
+  padding: 1px 6px; border-radius: 20px;
+  background: var(--color-paper); color: var(--color-ink-soft);
+  border: 1px solid var(--color-line);
+}
+.plan-opt-price { font-size: 12px; color: var(--color-ink-soft); }
+
+.checkout-sum {
+  margin-top: 18px; padding-top: 14px;
+  border-top: 1px solid var(--color-line);
+}
+.checkout-row {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 13px; color: var(--color-ink-soft); padding: 4px 0;
+}
+/* Totalnya lebih besar dan lebih gelap: ia satu-satunya angka yang dicari mata
+   di kartu ini, dan satu-satunya yang akan ditagihkan. */
+.checkout-row.is-total {
+  margin-top: 6px; padding-top: 10px;
+  border-top: 1px solid var(--color-line);
+  font-size: 15px; font-weight: 800; color: var(--color-ink);
+}
+
+/* Baris tagihan di riwayat. Nomor pesanan memakai angka tabular supaya kolom
+   digitnya sejajar antar baris saat dibandingkan dengan mutasi rekening. */
+.inv-code { font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+/* Tautan di dalam spanduk langganan. Digarisbawahi, bukan sekadar dibedakan
+   warnanya: latar spanduknya sendiri sudah berwarna (amber atau coral), jadi
+   warna teks saja tidak cukup membedakannya dari kalimat di sekitarnya. */
+.sub-banner-link {
+  font-weight: 800; text-decoration: underline; text-underline-offset: 2px;
+  color: inherit; white-space: nowrap;
+}
+
+/* Riwayat tagihan langganan berhenti jadi tabel di layar sempit, sama seperti
+   .trx-table, .shift-table, .consign-table, dan .buy-table.
+
+   Diukur sebelum diperbaiki: empat kolomnya butuh 464px pada wadah 341px, dan
+   yang terdorong ke luar layar adalah kolom NOMINAL — satu-satunya angka yang
+   dicari orang saat membuka riwayat tagihan, dan satu-satunya yang dipakai
+   mencocokkan dengan mutasi rekening. Nomor pesanannya sendiri tersisa 76px,
+   jadi "TKS-20260913-000128" pecah beberapa baris.
+
+   Susunannya: nomor pesanan dan nominal di baris pertama (kiri-kanan, keduanya
+   selalu terlihat), lalu keterangan paket dan tanggal di baris kedua, dan
+   lencana statusnya turun ke barisnya sendiri rata kiri. */
+@media (max-width: 639px) {
+  .inv-table thead { display: none; }
+  .inv-table,
+  .inv-table tbody,
+  .inv-table tr,
+  .inv-table td {
+    display: block;
+  }
+  .inv-table tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    column-gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .inv-table tr:last-child { border-bottom: none; }
+  .inv-table td { padding: 0; border-bottom: none; text-align: left !important; }
+  .inv-table .iv-code { grid-column: 1; grid-row: 1; min-width: 0; }
+  .inv-table .iv-amount { grid-column: 2; grid-row: 1; text-align: right !important; }
+  .inv-table .iv-date {
+    grid-column: 2; grid-row: 2; margin-top: 6px;
+    text-align: right !important; font-size: 11.5px;
+  }
+  .inv-table .iv-status { grid-column: 1; grid-row: 2; margin-top: 8px; }
+}
+
+/* Pemilih lama bayar. Memakai .tab untuk rupanya, tapi BUKAN .tabs untuk
+   susunannya, dan itu bukan kerapian.
+
+   `.tabs` dibuat untuk NAVIGASI: labelnya panjang dan tidak sama, jadi barisnya
+   sengaja bisa digeser dan tab yang aktif di-scroll ke dalam layar. Di sini
+   keempat pilihannya adalah satu perbandingan yang harus terlihat sekaligus,
+   dan tidak ada yang menggulir baris pendek untuk menemukan pilihan yang tidak
+   ia tahu ada. Diukur memakai .tabs di 390px: isinya 323px pada wadah 303px,
+   jadi "12 bulan" terpotong 20px dan terbaca "12 bular".
+
+   Dua kolom di bawah 480px, bukan empat yang dipadatkan: empat kolom menyisakan
+   ~74px per sel sementara "12 bulan" sendiri sudah butuh ~58px sebelum padding. */
+.month-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+@media (min-width: 480px) { .month-picker { grid-template-columns: repeat(4, 1fr); } }
+.month-picker .tab { flex: none; min-width: 0; }

@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   graphql_public: {
     Tables: {
@@ -2170,6 +2170,110 @@ export type Database = {
           },
         ]
       }
+      subscription_invoices: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          fraud_status: string | null
+          id: string
+          months: number
+          order_id: string
+          organization_id: string
+          paid_at: string | null
+          payment_type: string | null
+          period_end: string | null
+          period_start: string | null
+          plan_id: string
+          raw_notification: Json | null
+          snap_redirect_url: string | null
+          snap_token: string | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          transaction_id: string | null
+          transaction_status: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          fraud_status?: string | null
+          id?: string
+          months: number
+          order_id: string
+          organization_id: string
+          paid_at?: string | null
+          payment_type?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_id: string
+          raw_notification?: Json | null
+          snap_redirect_url?: string | null
+          snap_token?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          transaction_id?: string | null
+          transaction_status?: string | null
+          unit_price: number
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          fraud_status?: string | null
+          id?: string
+          months?: number
+          order_id?: string
+          organization_id?: string
+          paid_at?: string | null
+          payment_type?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan_id?: string
+          raw_notification?: Json | null
+          snap_redirect_url?: string | null
+          snap_token?: string | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          transaction_id?: string | null
+          transaction_status?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "v_client_overview"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppliers: {
         Row: {
           created_at: string
@@ -3317,6 +3421,19 @@ export type Database = {
         }
         Returns: Json
       }
+      apply_subscription_payment: {
+        Args: { p_order_id: string; p_payload: Json }
+        Returns: Json
+      }
+      attach_invoice_snap: {
+        Args: {
+          p_expires: string
+          p_order_id: string
+          p_token: string
+          p_url: string
+        }
+        Returns: undefined
+      }
       bulk_adjust_stock: {
         Args: {
           p_items: Json
@@ -3349,6 +3466,10 @@ export type Database = {
       create_outlet: { Args: { p_org: string; p_payload: Json }; Returns: Json }
       create_purchase: {
         Args: { p_org: string; p_payload: Json }
+        Returns: Json
+      }
+      create_subscription_invoice: {
+        Args: { p_months: number; p_org: string; p_plan: string }
         Returns: Json
       }
       create_transaction: {
@@ -3450,6 +3571,13 @@ export type Database = {
       }
     }
     Enums: {
+      invoice_status:
+        | "pending"
+        | "paid"
+        | "failed"
+        | "expired"
+        | "cancelled"
+        | "refunded"
       member_role: "owner" | "admin" | "cashier"
       member_status: "invited" | "active" | "disabled"
       org_status: "trial" | "active" | "suspended" | "inactive"
@@ -3492,12 +3620,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3521,11 +3649,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3546,11 +3674,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3571,11 +3699,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3588,11 +3716,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3607,6 +3735,14 @@ export const Constants = {
   },
   public: {
     Enums: {
+      invoice_status: [
+        "pending",
+        "paid",
+        "failed",
+        "expired",
+        "cancelled",
+        "refunded",
+      ],
       member_role: ["owner", "admin", "cashier"],
       member_status: ["invited", "active", "disabled"],
       org_status: ["trial", "active", "suspended", "inactive"],

@@ -7,6 +7,7 @@ import { InstallPrompt } from './InstallPrompt'
 import { Sidebar } from './Sidebar'
 import { SubscriptionBanner } from './SubscriptionBanner'
 import { Topbar } from './Topbar'
+import { midtransConfigured } from '@/lib/midtrans'
 import { subscriptionState } from '@/lib/subscription'
 
 /**
@@ -32,6 +33,16 @@ export async function AppShell({
 }) {
   const items = visibleNav(session.role, session.permissions)
   const subscription = subscriptionState(session.org)
+  /**
+   * Tautan "bayar sekarang" di spanduk hanya untuk yang benar-benar bisa
+   * membayar: pemilik atau admin toko, dan hanya kalau pembayaran online
+   * memang dipasang. Gerbangnya sama persis dengan tombol di halaman Langganan
+   * dan dengan `can_manage()` di dalam `create_subscription_invoice`.
+   */
+  const bisaBayarLangganan =
+    midtransConfigured() &&
+    session.permissions.settings &&
+    (session.role === 'owner' || session.role === 'admin')
   // Dihitung di server, sekali per render halaman. Lihat catatan "tidak
   // dipoll" di NotificationBell.
   const notices = await getNotifications(session)
@@ -54,7 +65,7 @@ export async function AppShell({
           logoUrl={session.org?.logoUrl}
           notices={notices}
         />
-        <SubscriptionBanner state={subscription} />
+        <SubscriptionBanner state={subscription} bisaBayar={bisaBayarLangganan} />
         {/* Sesudah spanduk langganan, bukan sebelumnya: langganan yang habis
             menghentikan penjualan hari ini, sementara ini cuma ajakan. */}
         <InstallPrompt />
