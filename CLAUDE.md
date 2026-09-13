@@ -3089,6 +3089,7 @@ sama dengan tempat klien asli nanti tinggal.
 |---|---|---|---|
 | **Toko Dewi** (Denpasar) | active, Growth | 10 produk · 47 trx sah · 3 anggota · 1 pelanggan · 2 outlet (MAIN + Cabang Renon) · 6 nota pembelian · 1 pengeluaran | bahan peragaan penjualan, sengaja dipertahankan |
 | **Leuca de Perfume** (Denpasar) | trial 14 hari | 1 produk · 1 anggota · 1 outlet | dibuat pemilik project saat menguji alur pendaftaran dari awal |
+| **Toko Contoh Midtrans** (Denpasar) | trial sampai **31 Des 2026**, Growth | 12 produk · 14 trx (7 hari) · 1 pelanggan · 2 perangkat | akun peninjauan Midtrans, dibuat 13 Sep. Lihat di bawah |
 
 Setelan Toko Dewi yang sudah dinyalakan: **poin loyalty ON**, **batas diskon
 kasir 10%**, **satu produk berpromo**, dan `subscription_ends_at` disetel jauh
@@ -3105,6 +3106,43 @@ tipis karena HPP data contohnya disetel dekat dengan harga jual.
 **Sudah dipensiunkan** (soft delete, sandi akunnya diacak): Warung Rina,
 Warung Barokah, dan dua sisa "Uji Trial Bersama". Salinan JSON-nya ada di
 `backup-demo-*/` di mesin pemilik project, tidak ikut ter-commit.
+
+### Toko Contoh Midtrans: akun peninjauan Midtrans
+
+Dibuat 13 Sep untuk memenuhi permintaan Midtrans melampirkan kredensial akun yang
+bisa dipakai menelusuri platform dan melakukan tes transaksi. Alamat email dan
+sandinya dipegang pemilik project dan **sengaja tidak ditulis di sini**: repo ini
+publik, dan menuliskan alamat login sebuah akun yang kredensialnya memang akan
+diedarkan ke pihak luar cuma memperbesar permukaannya tanpa menolong siapa pun.
+Keduanya ada di `midtrans-data.local.json` yang di-gitignore.
+
+Isinya disemai `scripts/seed-review-tenant.mjs`. Dua setelan sengaja diubah
+tangan setelah itu, dan keduanya punya alasan:
+
+- **Trial diperpanjang sampai 31 Des 2026**, bukan 14 hari bawaan. Peninjauan
+  Midtrans bisa berlangsung lebih lama dari dua minggu, dan reviewer yang
+  mendarat di spanduk merah "masa coba berakhir" akan menyimpulkan aplikasinya
+  tidak jalan, bukan bahwa masa cobanya habis.
+- **Dinaikkan dari Starter ke Growth.** Bukan demi tampilan: Starter memberi
+  **2 perangkat**, dan dua-duanya sudah terpakai (K1 dari penyemaian, K2 saat
+  layar Kasir dibuka pertama kali). Perangkat mendaftarkan dirinya sendiri tiap
+  kali Kasir dibuka di browser baru, jadi reviewer yang membukanya di komputernya
+  sendiri akan jadi perangkat ketiga dan **ditolak TK001** — layar Kasir gagal
+  terbuka, tepat pada layar yang paling ingin ia lihat. Growth memberi 8.
+  Efek sampingnya menyenangkan: laba kotor, produk terlaris, metode bayar, dan
+  periode 90 hari ikut terbuka, jadi Laporan tampil utuh.
+
+Statusnya tetap `trial`, bukan `active`, supaya tombol Bayar Sekarang tetap
+berbunyi "Berlangganan" seperti yang dilihat calon klien sungguhan.
+
+Sudah diperiksa lewat layar sesudahnya: Beranda menampilkan omset hari ini dan
+dua peringatan stok menipis (bukan Rp 0), Kasir menampilkan grid 12 produk dengan
+pil kategori, Laporan menampilkan grafik **7 batang** bukan satu, dan halaman
+Langganan menampilkan spanduk "Mode uji coba" beserta tombol Bayar Sekarang.
+
+**Kalau tokonya perlu dibuang setelah peninjauan selesai**, pakai
+`scripts/retire-demo.mjs --confirm --only "Toko Contoh Midtrans"` — bukan DELETE
+langsung, yang akan meng-cascade ke transaksi dan ledgernya.
 
 ### Kredensial
 
